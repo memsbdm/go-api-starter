@@ -18,7 +18,7 @@ func init() {
 var ErrInvalidJSON = errors.New("invalid json")
 
 var validationMessages = map[string]error{
-	"RegisterUserRequest.Username.required": errors.New("username is required"),
+	"registerUserRequest.Username.required": errors.New("username is required"),
 }
 
 // ValidateRequest takes a payload from an HTTP request and verifies it. It can return an error for an invalid JSON or

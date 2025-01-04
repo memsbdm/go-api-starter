@@ -40,8 +40,8 @@ func handleError(w http.ResponseWriter, err error) {
 
 // errorResponse represents an error response body format
 type errorResponse struct {
-	Success  bool     `json:"success"`
-	Messages []string `json:"messages"`
+	Success  bool     `json:"success" example:"false"`
+	Messages []string `json:"messages" example:"Error message 1, Error message 2"`
 }
 
 // newErrorResponse is a helper function to create an error response body
@@ -83,8 +83,8 @@ func handleValidationError(w http.ResponseWriter, errs []error) {
 
 // userResponse represents a user response body
 type userResponse struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
+	ID       int    `json:"id" example:"1"`
+	Username string `json:"username" example:"john"`
 }
 
 // newUserResponse is a helper function to create a response body for handling user data

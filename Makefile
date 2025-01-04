@@ -31,6 +31,9 @@ run:
 seed:
 	@go run cmd/seed/main.go
 
+swag:
+	@swag init -g cmd/http/main.go -o ./docs
+
 # Live reload
 watch:
 	@if command -v air > /dev/null; then \
@@ -48,4 +51,4 @@ watch:
 		fi; \
 	fi
 
-.PHONY:  all build clean itest migration-down migration-reset migration-up test run seed watch
+.PHONY:  all build clean itest migration-down migration-reset migration-up test run seed swag watch

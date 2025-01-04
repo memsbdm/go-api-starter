@@ -59,3 +59,8 @@ Seed the database:
 ```bash
 make seed
 ```
+
+Generate swagger documentation:
+```bash
+make swag
+```

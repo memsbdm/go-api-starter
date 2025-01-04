@@ -1,0 +1,102 @@
+definitions:
+  http.errorResponse:
+    properties:
+      messages:
+        example:
+        - Error message 1
+        - ' Error message 2'
+        items:
+          type: string
+        type: array
+      success:
+        example: false
+        type: boolean
+    type: object
+  http.registerUserRequest:
+    properties:
+      username:
+        example: john
+        type: string
+    required:
+    - username
+    type: object
+  http.userResponse:
+    properties:
+      id:
+        example: 1
+        type: integer
+      username:
+        example: john
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: Register request
+        in: body
+        name: registerUserRequest
+        required: true
+        schema:
+          $ref: '#/definitions/http.registerUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User created
+          schema:
+            $ref: '#/definitions/http.userResponse'
+        "409":
+          description: Duplication error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+      summary: Register a new user
+      tags:
+      - Users
+  /v1/users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a user by id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User displayed
+          schema:
+            $ref: '#/definitions/http.userResponse'
+        "400":
+          description: Incorrect User ID
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "404":
+          description: Data not found error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+      summary: Get a user
+      tags:
+      - Users
+swagger: "2.0"

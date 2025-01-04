@@ -3,7 +3,9 @@ package http
 import (
 	"errors"
 	"fmt"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"go-starter/config"
+	_ "go-starter/docs"
 	"log/slog"
 	"net/http"
 	"time"
@@ -17,6 +19,7 @@ type Server struct {
 // New creates a new HTTP server
 func New(config *config.HTTP, userHandler UserHandler) *Server {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /swagger/", httpSwagger.WrapHandler)
 	mux.HandleFunc("GET /v1/users/{id}", userHandler.GetByID)
 	mux.HandleFunc("POST /v1/users", userHandler.Register)
 
