@@ -15,6 +15,35 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1/health": {
+            "get": {
+                "description": "Get database health information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Get database health information",
+                "responses": {
+                    "200": {
+                        "description": "DB information",
+                        "schema": {
+                            "$ref": "#/definitions/http.healthResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/users": {
             "post": {
                 "description": "Create a new user account",
@@ -135,6 +164,47 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": false
+                }
+            }
+        },
+        "http.healthResponse": {
+            "type": "object",
+            "properties": {
+                "idle": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "in_use": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "max_idle_closed": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "max_lifetime_closed": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "It's healthy'"
+                },
+                "open_connections": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "up"
+                },
+                "wait_count": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "wait_duration": {
+                    "type": "string",
+                    "example": "0s"
                 }
             }
         },

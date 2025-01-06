@@ -12,6 +12,36 @@ definitions:
         example: false
         type: boolean
     type: object
+  http.healthResponse:
+    properties:
+      idle:
+        example: "1"
+        type: string
+      in_use:
+        example: "0"
+        type: string
+      max_idle_closed:
+        example: "0"
+        type: string
+      max_lifetime_closed:
+        example: "0"
+        type: string
+      message:
+        example: It's healthy'
+        type: string
+      open_connections:
+        example: "1"
+        type: string
+      status:
+        example: up
+        type: string
+      wait_count:
+        example: "0"
+        type: string
+      wait_duration:
+        example: 0s
+        type: string
+    type: object
   http.registerUserRequest:
     properties:
       username:
@@ -32,6 +62,25 @@ definitions:
 info:
   contact: {}
 paths:
+  /v1/health:
+    get:
+      consumes:
+      - application/json
+      description: Get database health information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DB information
+          schema:
+            $ref: '#/definitions/http.healthResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+      summary: Get database health information
+      tags:
+      - Health
   /v1/users:
     post:
       consumes:

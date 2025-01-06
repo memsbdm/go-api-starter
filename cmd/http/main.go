@@ -25,24 +25,27 @@ func main() {
 	ctx := context.Background()
 	db, err := postgres.New(ctx, cfg.DB)
 	if err != nil {
-		slog.Error("Failed to connect to database")
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
 	defer func() {
 		err := db.Close()
 		if err != nil {
-			slog.Error("Failed to close database connection")
+			slog.Error(err.Error())
 		}
 	}()
 	slog.Info("Successfully connected to the database")
 
 	// Dependency injection
+	// Health
+	healthHandler := http.NewHealthHandler()
+
 	// User
 	userRepo := repositories.NewUserRepository(db)
 	userService := services.NewUserService(userRepo)
 	userHandler := http.NewUserHandler(userService)
 
 	// Init and start server
-	srv := http.New(cfg.HTTP, *userHandler)
+	srv := http.New(cfg.HTTP, *healthHandler, *userHandler)
 	srv.Serve()
 }

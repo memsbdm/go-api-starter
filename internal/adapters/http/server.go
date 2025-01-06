@@ -17,9 +17,10 @@ type Server struct {
 }
 
 // New creates a new HTTP server
-func New(config *config.HTTP, userHandler UserHandler) *Server {
+func New(config *config.HTTP, healthHandler HealthHandler, userHandler UserHandler) *Server {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /swagger/", httpSwagger.WrapHandler)
+	mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
+	mux.HandleFunc("GET /v1/health", healthHandler.Health)
 	mux.HandleFunc("GET /v1/users/{id}", userHandler.GetByID)
 	mux.HandleFunc("POST /v1/users", userHandler.Register)
 
