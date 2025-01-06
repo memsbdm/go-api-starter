@@ -29,7 +29,8 @@ func ValidateRequest(w http.ResponseWriter, r *http.Request, payload interface{}
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			slog.Error("error closing body: %v", err)
+			errMsg := fmt.Sprintf("failed to close body: %v", err)
+			slog.Error(errMsg)
 		}
 	}()
 	decoder := json.NewDecoder(r.Body)
