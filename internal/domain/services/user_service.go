@@ -6,27 +6,53 @@ import (
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
+	"time"
 )
 
 // UserService implements ports.UserService interface and provides access to the user repository
 type UserService struct {
-	repo ports.UserRepository
+	repo  ports.UserRepository
+	cache ports.CacheService
 }
 
 // NewUserService creates a new user services instance
-func NewUserService(repo ports.UserRepository) *UserService {
+func NewUserService(repo ports.UserRepository, cache ports.CacheService) *UserService {
 	return &UserService{
-		repo: repo,
+		repo:  repo,
+		cache: cache,
 	}
 }
 
 // GetByID gets a user by ID
 func (us *UserService) GetByID(ctx context.Context, id int) (*entities.User, error) {
-	user, err := us.repo.GetByID(ctx, id)
+	var user *entities.User
+
+	cacheKey := us.cache.GenerateCacheKey("user", id)
+	cachedUser, err := us.cache.Get(ctx, cacheKey)
+
+	if err == nil {
+		err := us.cache.Deserialize(cachedUser, &user)
+		if err != nil {
+			return nil, domain.ErrInternal
+		}
+		return user, nil
+	}
+
+	user, err = us.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return nil, err
 		}
+		return nil, domain.ErrInternal
+	}
+
+	userSerialized, err := us.cache.Serialize(user)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	err = us.cache.Set(ctx, cacheKey, userSerialized, time.Hour)
+	if err != nil {
 		return nil, domain.ErrInternal
 	}
 
@@ -42,5 +68,19 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 		}
 		return nil, domain.ErrInternal
 	}
+	cacheKey := us.cache.GenerateCacheKey("user", user.ID)
+	userSerialized, err := us.cache.Serialize(user)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+	err = us.cache.Set(ctx, cacheKey, userSerialized, time.Hour)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+	err = us.cache.DeleteByPrefix(ctx, "users:*")
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
 	return created, nil
 }

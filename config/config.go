@@ -8,6 +8,7 @@ type (
 		Application *App
 		DB          *DB
 		HTTP        *HTTP
+		Redis       *Redis
 	}
 
 	// App contains all the environment variables for the application
@@ -26,6 +27,12 @@ type (
 	// HTTP contains all the environment variables for the http server
 	HTTP struct {
 		Port int
+	}
+
+	// Redis contains all the environment variables for the cache service
+	Redis struct {
+		Addr     string
+		Password string
 	}
 )
 
@@ -46,9 +53,15 @@ func New() *Container {
 		Port: env.GetInt("HTTP_PORT"),
 	}
 
+	redis := &Redis{
+		Addr:     env.GetString("REDIS_ADDR"),
+		Password: env.GetString("REDIS_PASSWORD"),
+	}
+
 	return &Container{
 		Application: app,
 		DB:          db,
 		HTTP:        http,
+		Redis:       redis,
 	}
 }
