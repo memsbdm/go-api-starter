@@ -6,6 +6,7 @@ import (
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
+	"go-starter/internal/domain/utils"
 	"time"
 )
 
@@ -24,14 +25,13 @@ func NewUserService(repo ports.UserRepository, cache ports.CacheService) *UserSe
 }
 
 // GetByID gets a user by ID
-func (us *UserService) GetByID(ctx context.Context, id int) (*entities.User, error) {
+func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	var user *entities.User
 
-	cacheKey := us.cache.GenerateCacheKey("user", id)
+	cacheKey := utils.GenerateCacheKey("user", id)
 	cachedUser, err := us.cache.Get(ctx, cacheKey)
-
-	if err == nil {
-		err := us.cache.Deserialize(cachedUser, &user)
+	if cachedUser != nil {
+		err := utils.Deserialize(cachedUser, &user)
 		if err != nil {
 			return nil, domain.ErrInternal
 		}
@@ -46,7 +46,7 @@ func (us *UserService) GetByID(ctx context.Context, id int) (*entities.User, err
 		return nil, domain.ErrInternal
 	}
 
-	userSerialized, err := us.cache.Serialize(user)
+	userSerialized, err := utils.Serialize(user)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}
@@ -55,7 +55,6 @@ func (us *UserService) GetByID(ctx context.Context, id int) (*entities.User, err
 	if err != nil {
 		return nil, domain.ErrInternal
 	}
-
 	return user, nil
 }
 
@@ -68,8 +67,8 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 		}
 		return nil, domain.ErrInternal
 	}
-	cacheKey := us.cache.GenerateCacheKey("user", user.ID)
-	userSerialized, err := us.cache.Serialize(user)
+	cacheKey := utils.GenerateCacheKey("user", user.ID)
+	userSerialized, err := utils.Serialize(user)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}

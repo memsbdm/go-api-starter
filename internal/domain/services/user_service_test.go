@@ -5,7 +5,9 @@ package services_test
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"go-starter/internal/adapters/storage/postgres/repositories/mocks"
+	"go-starter/internal/adapters/storage/redis"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/services"
@@ -20,8 +22,10 @@ var (
 
 func setup() {
 	once.Do(func() {
+		cacheRepo := redis.NewMock()
+		cacheService := services.NewCacheService(cacheRepo)
 		userRepo := mocks.MockUserRepository()
-		userService = services.NewUserService(userRepo)
+		userService = services.NewUserService(userRepo, cacheService)
 	})
 }
 
@@ -75,33 +79,32 @@ func TestUserService_GetByID(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		input       int
 		expectedErr error
-		setupMock   func()
+		setupMock   func() entities.UserID
 	}{
 		{
 			name:        "get user by id successfully",
-			input:       0,
 			expectedErr: nil,
-			setupMock: func() {
-				_, _ = userService.Register(context.Background(), &entities.User{
-					Username: "not empty",
+			setupMock: func() entities.UserID {
+				user, _ := userService.Register(context.Background(), &entities.User{
+					Username: "example",
 				})
+				return user.ID
 			},
 		},
 		{
 			name:        "get non-existing user by id",
-			input:       -1,
 			expectedErr: domain.ErrUserNotFound,
-			setupMock:   func() {},
+			setupMock: func() entities.UserID {
+				return entities.UserID(uuid.New())
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setupMock()
-
-			_, err := userService.GetByID(context.Background(), tt.input)
+			inputID := tt.setupMock()
+			_, err := userService.GetByID(context.Background(), inputID)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
 			}

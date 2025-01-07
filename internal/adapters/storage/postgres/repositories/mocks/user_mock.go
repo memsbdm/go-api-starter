@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
@@ -9,7 +10,7 @@ import (
 )
 
 type db struct {
-	data map[int]*entities.User
+	data map[entities.UserID]*entities.User
 	mu   sync.Mutex
 }
 
@@ -22,14 +23,14 @@ type UserRepository struct {
 func MockUserRepository() *UserRepository {
 	return &UserRepository{
 		db: db{
-			data: map[int]*entities.User{},
+			data: map[entities.UserID]*entities.User{},
 			mu:   sync.Mutex{},
 		},
 	}
 }
 
 // GetByID gets a user by ID from the database
-func (ur *UserRepository) GetByID(ctx context.Context, id int) (*entities.User, error) {
+func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
 	defer cancel()
 
@@ -58,8 +59,9 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 		}
 	}
 
+	id := uuid.New()
 	newUser := &entities.User{
-		ID:       len(ur.db.data),
+		ID:       entities.UserID(id),
 		Username: user.Username,
 	}
 	ur.db.data[newUser.ID] = newUser

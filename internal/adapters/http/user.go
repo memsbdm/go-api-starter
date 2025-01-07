@@ -1,12 +1,12 @@
 package http
 
 import (
+	"github.com/google/uuid"
 	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
-	"strconv"
 )
 
 // UserHandler represents the HTTP handler for user-related requests
@@ -37,13 +37,14 @@ func NewUserHandler(svc ports.UserService) *UserHandler {
 func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
-	userID, err := strconv.Atoi(id)
+	userID, err := uuid.Parse(id)
+
 	if err != nil {
 		handleError(w, domain.ErrInvalidUserId)
 		return
 	}
 
-	user, err := uh.svc.GetByID(ctx, userID)
+	user, err := uh.svc.GetByID(ctx, entities.UserID(userID))
 	if err != nil {
 		handleError(w, err)
 		return

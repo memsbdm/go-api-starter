@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/google/uuid"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 )
@@ -21,12 +22,13 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 // GetByID gets a user by ID from the database
-func (ur *UserRepository) GetByID(ctx context.Context, id int) (*entities.User, error) {
+func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	query := `SELECT id, username FROM users WHERE id = $1`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 	user := &entities.User{}
-	err := ur.db.QueryRowContext(ctx, query, id).Scan(&user.ID, &user.Username)
+	var uuidStr string
+	err := ur.db.QueryRowContext(ctx, query, id.String()).Scan(&uuidStr, &user.Username)
 
 	if err != nil {
 		switch {
@@ -36,6 +38,13 @@ func (ur *UserRepository) GetByID(ctx context.Context, id int) (*entities.User, 
 			return nil, err
 		}
 	}
+
+	parsedID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		return nil, domain.ErrCannotParseUUID
+	}
+	user.ID = entities.UserID(parsedID)
+
 	return user, nil
 }
 
@@ -45,7 +54,8 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	err := ur.db.QueryRowContext(ctx, query, user.Username).Scan(&user.ID, &user.Username)
+	var uuidStr string
+	err := ur.db.QueryRowContext(ctx, query, user.Username).Scan(&uuidStr, &user.Username)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_username_key"`:
@@ -54,5 +64,11 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 			return nil, err
 		}
 	}
+	parsedID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		return nil, domain.ErrCannotParseUUID
+	}
+	user.ID = entities.UserID(parsedID)
+
 	return user, nil
 }
