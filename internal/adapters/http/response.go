@@ -96,14 +96,16 @@ type healthResponse struct {
 
 // userResponse represents a user response body
 type userResponse struct {
-	ID       uuid.UUID `json:"id" example:"1"`
-	Username string    `json:"username" example:"john"`
+	ID              uuid.UUID `json:"id" example:"1"`
+	Username        string    `json:"username" example:"john"`
+	IsEmailVerified bool      `json:"is_email_verified" example:"true"`
 }
 
 // newUserResponse is a helper function to create a response body for handling user data
 func newUserResponse(user *entities.User) userResponse {
 	return userResponse{
-		ID:       user.ID.UUID(),
-		Username: user.Username,
+		ID:              user.ID.UUID(),
+		Username:        user.Username,
+		IsEmailVerified: user.IsEmailVerified,
 	}
 }

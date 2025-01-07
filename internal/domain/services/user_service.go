@@ -27,10 +27,10 @@ func NewUserService(repo ports.UserRepository, cache ports.CacheService) *UserSe
 // GetByID gets a user by ID
 func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	var user *entities.User
-
 	cacheKey := utils.GenerateCacheKey("user", id)
 	cachedUser, err := us.cache.Get(ctx, cacheKey)
-	if cachedUser != nil {
+
+	if err == nil {
 		err := utils.Deserialize(cachedUser, &user)
 		if err != nil {
 			return nil, domain.ErrInternal
@@ -60,6 +60,12 @@ func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entiti
 
 // Register creates a new user
 func (us *UserService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
+	hashedPassword, err := utils.HashPassword(user.Password)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+	user.Password = hashedPassword
+
 	created, err := us.repo.Create(ctx, user)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserUsernameAlreadyExists) {

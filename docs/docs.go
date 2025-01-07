@@ -211,9 +211,14 @@ const docTemplate = `{
         "http.registerUserRequest": {
             "type": "object",
             "required": [
+                "password",
                 "username"
             ],
             "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "secret"
+                },
                 "username": {
                     "type": "string",
                     "example": "john"
@@ -224,8 +229,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "string",
+                    "example": "1"
+                },
+                "is_email_verified": {
+                    "type": "boolean",
+                    "example": true
                 },
                 "username": {
                     "type": "string",

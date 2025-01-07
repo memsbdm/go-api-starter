@@ -6,8 +6,10 @@ type UserID uuid.UUID
 
 // User is an entity that represents a user
 type User struct {
-	ID       UserID `json:"id"`
-	Username string `json:"username"`
+	ID              UserID
+	Username        string
+	Password        string
+	IsEmailVerified bool
 }
 
 func (id UserID) UUID() uuid.UUID {

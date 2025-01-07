@@ -10,22 +10,6 @@ func GenerateCacheKey(prefix string, params any) string {
 	return fmt.Sprintf("%s:%v", prefix, params)
 }
 
-// GenerateCacheKeyParams generates a cache params based on the input parameters
-func GenerateCacheKeyParams(params ...any) string {
-	var str string
-
-	for i, param := range params {
-		str += fmt.Sprintf("%v", param)
-
-		last := len(params) - 1
-		if i != last {
-			str += "-"
-		}
-	}
-
-	return str
-}
-
 // Serialize marshals the input data into an array of bytes
 func Serialize(data any) ([]byte, error) {
 	return json.Marshal(data)

@@ -57,6 +57,7 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 // registerUserRequest represents the request body for creating a user
 type registerUserRequest struct {
 	Username string `json:"username" validate:"required" example:"john"`
+	Password string `json:"password" validate:"required" example:"secret"`
 }
 
 // Register godoc

@@ -44,17 +44,24 @@ definitions:
     type: object
   http.registerUserRequest:
     properties:
+      password:
+        example: secret
+        type: string
       username:
         example: john
         type: string
     required:
+    - password
     - username
     type: object
   http.userResponse:
     properties:
       id:
-        example: 1
-        type: integer
+        example: "1"
+        type: string
+      is_email_verified:
+        example: true
+        type: boolean
       username:
         example: john
         type: string

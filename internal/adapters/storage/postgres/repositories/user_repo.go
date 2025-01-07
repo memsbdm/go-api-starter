@@ -50,12 +50,12 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 
 // Create creates a new user in the database
 func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
-	query := `INSERT INTO users (username) VALUES ($1) RETURNING id, username`
+	query := `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
 	var uuidStr string
-	err := ur.db.QueryRowContext(ctx, query, user.Username).Scan(&uuidStr, &user.Username)
+	err := ur.db.QueryRowContext(ctx, query, user.Username, user.Password).Scan(&uuidStr, &user.Username)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_username_key"`:
