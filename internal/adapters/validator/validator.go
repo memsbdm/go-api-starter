@@ -19,6 +19,9 @@ var ErrInvalidJSON = errors.New("invalid json")
 
 var validationMessages = map[string]error{
 	"registerUserRequest.Username.required": errors.New("username is required"),
+	"registerUserRequest.Password.required": errors.New("password is required"),
+	"loginRequest.Username.required":        errors.New("username is required"),
+	"loginRequest.Password.required":        errors.New("password is required"),
 }
 
 // ValidateRequest takes a payload from an HTTP request and verifies it. It can return an error for an invalid JSON or

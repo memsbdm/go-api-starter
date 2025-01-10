@@ -41,7 +41,34 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 
 	parsedID, err := uuid.Parse(uuidStr)
 	if err != nil {
-		return nil, domain.ErrCannotParseUUID
+		return nil, domain.ErrInternal
+	}
+	user.ID = entities.UserID(parsedID)
+
+	return user, nil
+}
+
+// GetByUsername gets a user by username from the database
+func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
+	query := `SELECT id, username, password FROM users WHERE username = $1`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+	user := &entities.User{}
+	var uuidStr string
+	err := ur.db.QueryRowContext(ctx, query, username).Scan(&uuidStr, &user.Username, &user.Password)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, domain.ErrUserNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	parsedID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		return nil, domain.ErrInternal
 	}
 	user.ID = entities.UserID(parsedID)
 
@@ -66,7 +93,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 	}
 	parsedID, err := uuid.Parse(uuidStr)
 	if err != nil {
-		return nil, domain.ErrCannotParseUUID
+		return nil, domain.ErrInternal
 	}
 	user.ID = entities.UserID(parsedID)
 

@@ -15,6 +15,52 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/v1/auth/login": {
+            "post": {
+                "description": "Authenticate a user account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login a user",
+                "parameters": [
+                    {
+                        "description": "Login request",
+                        "name": "LoginRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.loginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User logged in",
+                        "schema": {
+                            "$ref": "#/definitions/http.loginResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized / credentials error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/health": {
             "get": {
                 "description": "Get database health information",
@@ -60,11 +106,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Register request",
-                        "name": "registerUserRequest",
+                        "name": "RegisterUserRequest",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.registerUserRequest"
+                            "$ref": "#/definitions/http.RegisterUserRequest"
                         }
                     }
                 ],
@@ -96,8 +142,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/users/{id}": {
+        "/v1/users/{uuid}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a user by id",
                 "consumes": [
                     "application/json"
@@ -111,9 +162,10 @@ const docTemplate = `{
                 "summary": "Get a user",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
+                        "format": "uuid",
                         "description": "User ID",
-                        "name": "id",
+                        "name": "uuid",
                         "in": "path",
                         "required": true
                     }
@@ -127,6 +179,18 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Incorrect User ID",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden error",
                         "schema": {
                             "$ref": "#/definitions/http.errorResponse"
                         }
@@ -148,6 +212,23 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "http.RegisterUserRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "secret123"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john"
+                }
+            }
+        },
         "http.errorResponse": {
             "type": "object",
             "properties": {
@@ -208,7 +289,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.registerUserRequest": {
+        "http.loginRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -217,11 +298,19 @@ const docTemplate = `{
             "properties": {
                 "password": {
                     "type": "string",
-                    "example": "secret"
+                    "example": "secret123"
                 },
                 "username": {
                     "type": "string",
                     "example": "john"
+                }
+            }
+        },
+        "http.loginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
                 }
             }
         },
@@ -242,17 +331,25 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and the access token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
+	Version:          "1.0",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Go Starter API",
+	Description:      "This is a simple starter API written in Go using net/http, PostgreSQL database, and Redis cache.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

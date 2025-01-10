@@ -109,3 +109,15 @@ func newUserResponse(user *entities.User) userResponse {
 		IsEmailVerified: user.IsEmailVerified,
 	}
 }
+
+// loginResponse represents a successful authentication body
+type loginResponse struct {
+	Token string `json:"token"`
+}
+
+// newLoginResponse is a helper function to create a response body for handling successful auth
+func newLoginResponse(token string) loginResponse {
+	return loginResponse{
+		Token: token,
+	}
+}

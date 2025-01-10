@@ -1,8 +1,11 @@
 package http
 
 import (
+	"context"
+	"go-starter/internal/domain/ports"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -64,4 +67,46 @@ type responseWriter struct {
 func (rw *responseWriter) WriteHeader(code int) {
 	rw.statusCode = code
 	rw.ResponseWriter.WriteHeader(code)
+}
+
+const (
+	// authorizationHeaderKey is the key for authorization header in the request
+	authorizationHeaderKey = "Authorization"
+	// authorizationType is the accepted authorization type
+	authorizationType = "bearer"
+	// authorizationPayloadKey is the key for authorization payload in the context
+	authorizationPayloadKey = "authorization_payload"
+)
+
+func authMiddleware(authService *ports.AuthService, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authorizationHeader := r.Header.Get(authorizationHeaderKey)
+		if len(authorizationHeader) == 0 {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		fields := strings.Fields(authorizationHeader)
+		if len(fields) != 2 {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		if strings.ToLower(fields[0]) != strings.ToLower(authorizationType) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		accessToken := fields[1]
+		tokenPayload, err := (*authService).ValidateToken(accessToken)
+		if err != nil {
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), authorizationPayloadKey, tokenPayload)
+		r = r.WithContext(ctx)
+
+		next.ServeHTTP(w, r)
+	})
 }

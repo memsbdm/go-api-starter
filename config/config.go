@@ -9,6 +9,7 @@ type (
 		DB          *DB
 		HTTP        *HTTP
 		Redis       *Redis
+		Security    *Security
 	}
 
 	// App contains all the environment variables for the application
@@ -34,6 +35,11 @@ type (
 		Addr     string
 		Password string
 	}
+
+	// Security contains all the security-related environment variables
+	Security struct {
+		JWTSecret []byte
+	}
 )
 
 // New creates a new container instance
@@ -58,10 +64,15 @@ func New() *Container {
 		Password: env.GetString("REDIS_PASSWORD"),
 	}
 
+	security := &Security{
+		JWTSecret: []byte(env.GetString("JWT_SECRET")),
+	}
+
 	return &Container{
 		Application: app,
 		DB:          db,
 		HTTP:        http,
 		Redis:       redis,
+		Security:    security,
 	}
 }

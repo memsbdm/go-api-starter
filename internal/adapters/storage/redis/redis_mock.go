@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"go-starter/internal/domain"
 	"go-starter/internal/domain/ports"
 	"strings"
 	"sync"
@@ -37,7 +38,7 @@ func (rm *RedisMock) Get(ctx context.Context, key string) ([]byte, error) {
 	if value, ok := rm.data[key]; ok {
 		return value, nil
 	}
-	return nil, nil
+	return nil, domain.ErrCacheNotFound
 }
 
 // Delete removes the value from the redis database

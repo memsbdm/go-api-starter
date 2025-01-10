@@ -63,8 +63,23 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 	newUser := &entities.User{
 		ID:       entities.UserID(id),
 		Username: user.Username,
+		Password: user.Password,
 	}
 	ur.db.data[newUser.ID] = newUser
 
 	return newUser, nil
+}
+
+// GetByUsername gets a user by username from the database
+func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
+	defer cancel()
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+	for _, v := range ur.db.data {
+		if v.Username == username {
+			return v, nil
+		}
+	}
+	return nil, domain.ErrUserNotFound
 }

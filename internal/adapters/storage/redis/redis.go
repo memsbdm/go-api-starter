@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/redis/go-redis/v9"
 	"go-starter/config"
+	"go-starter/internal/domain"
 	"go-starter/internal/domain/ports"
 	"time"
 )
@@ -38,7 +39,10 @@ func (r *Redis) Set(ctx context.Context, key string, value []byte, ttl time.Dura
 func (r *Redis) Get(ctx context.Context, key string) ([]byte, error) {
 	res, err := r.client.Get(ctx, key).Result()
 	bytes := []byte(res)
-	return bytes, err
+	if err != nil {
+		return nil, domain.ErrCacheNotFound
+	}
+	return bytes, nil
 }
 
 // Delete removes the value from the redis database

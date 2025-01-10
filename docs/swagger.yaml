@@ -1,4 +1,16 @@
 definitions:
+  http.RegisterUserRequest:
+    properties:
+      password:
+        example: secret123
+        type: string
+      username:
+        example: john
+        type: string
+    required:
+    - password
+    - username
+    type: object
   http.errorResponse:
     properties:
       messages:
@@ -42,10 +54,10 @@ definitions:
         example: 0s
         type: string
     type: object
-  http.registerUserRequest:
+  http.loginRequest:
     properties:
       password:
-        example: secret
+        example: secret123
         type: string
       username:
         example: john
@@ -53,6 +65,11 @@ definitions:
     required:
     - password
     - username
+    type: object
+  http.loginResponse:
+    properties:
+      token:
+        type: string
     type: object
   http.userResponse:
     properties:
@@ -68,7 +85,41 @@ definitions:
     type: object
 info:
   contact: {}
+  description: This is a simple starter API written in Go using net/http, PostgreSQL
+    database, and Redis cache.
+  title: Go Starter API
+  version: "1.0"
 paths:
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user account
+      parameters:
+      - description: Login request
+        in: body
+        name: LoginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/http.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User logged in
+          schema:
+            $ref: '#/definitions/http.loginResponse'
+        "401":
+          description: Unauthorized / credentials error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+      summary: Login a user
+      tags:
+      - Auth
   /v1/health:
     get:
       consumes:
@@ -96,10 +147,10 @@ paths:
       parameters:
       - description: Register request
         in: body
-        name: registerUserRequest
+        name: RegisterUserRequest
         required: true
         schema:
-          $ref: '#/definitions/http.registerUserRequest'
+          $ref: '#/definitions/http.RegisterUserRequest'
       produces:
       - application/json
       responses:
@@ -122,17 +173,18 @@ paths:
       summary: Register a new user
       tags:
       - Users
-  /v1/users/{id}:
+  /v1/users/{uuid}:
     get:
       consumes:
       - application/json
       description: Get a user by id
       parameters:
       - description: User ID
+        format: uuid
         in: path
-        name: id
+        name: uuid
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -144,6 +196,14 @@ paths:
           description: Incorrect User ID
           schema:
             $ref: '#/definitions/http.errorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "403":
+          description: Forbidden error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
         "404":
           description: Data not found error
           schema:
@@ -152,7 +212,15 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/http.errorResponse'
+      security:
+      - BearerAuth: []
       summary: Get a user
       tags:
       - Users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the access token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

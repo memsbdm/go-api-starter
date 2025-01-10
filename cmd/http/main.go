@@ -13,6 +13,14 @@ import (
 	"os"
 )
 
+// @title					Go Starter API
+// @version					1.0
+// @description				This is a simple starter API written in Go using net/http, PostgreSQL database, and Redis cache.
+//
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
+// @description				Type "Bearer" followed by a space and the access token.
 func main() {
 	// Load environment variables
 	cfg := config.New()
@@ -63,7 +71,11 @@ func main() {
 	userService := services.NewUserService(userRepo, cacheService)
 	userHandler := http.NewUserHandler(userService)
 
+	// Auth
+	authService := services.NewAuthService(cfg.Security, userService)
+	authHandler := http.NewAuthHandler(authService)
+
 	// Init and start server
-	srv := http.New(cfg.HTTP, *healthHandler, *userHandler)
+	srv := http.New(cfg.HTTP, *healthHandler, *authHandler, *userHandler, authService)
 	srv.Serve()
 }
