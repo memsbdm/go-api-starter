@@ -78,7 +78,7 @@ const (
 	authorizationPayloadKey = "authorization_payload"
 )
 
-func authMiddleware(authService *ports.AuthService, next http.Handler) http.Handler {
+func authMiddleware(tokenService *ports.TokenService, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authorizationHeader := r.Header.Get(authorizationHeaderKey)
 		if len(authorizationHeader) == 0 {
@@ -98,7 +98,7 @@ func authMiddleware(authService *ports.AuthService, next http.Handler) http.Hand
 		}
 
 		accessToken := fields[1]
-		tokenPayload, err := (*authService).ValidateToken(accessToken)
+		tokenPayload, err := (*tokenService).ValidateToken(accessToken)
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return

@@ -1,6 +1,9 @@
 package config
 
-import "go-starter/pkg/env"
+import (
+	"go-starter/pkg/env"
+	"time"
+)
 
 type (
 	// Container contains environment variables for the application, database and http server
@@ -9,7 +12,7 @@ type (
 		DB          *DB
 		HTTP        *HTTP
 		Redis       *Redis
-		Security    *Security
+		Token       *Token
 	}
 
 	// App contains all the environment variables for the application
@@ -36,9 +39,10 @@ type (
 		Password string
 	}
 
-	// Security contains all the security-related environment variables
-	Security struct {
+	// Token contains all the environment variables for the token service
+	Token struct {
 		JWTSecret []byte
+		Duration  time.Duration
 	}
 )
 
@@ -64,8 +68,9 @@ func New() *Container {
 		Password: env.GetString("REDIS_PASSWORD"),
 	}
 
-	security := &Security{
+	token := &Token{
 		JWTSecret: []byte(env.GetString("JWT_SECRET")),
+		Duration:  env.GetDuration("TOKEN_DURATION"),
 	}
 
 	return &Container{
@@ -73,6 +78,6 @@ func New() *Container {
 		DB:          db,
 		HTTP:        http,
 		Redis:       redis,
-		Security:    security,
+		Token:       token,
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"go-starter/config"
+	"go-starter/internal/adapters/auth"
 	"go-starter/internal/adapters/http"
 	"go-starter/internal/adapters/logger"
 	"go-starter/internal/adapters/storage/postgres"
@@ -63,6 +64,9 @@ func main() {
 	// Health
 	healthHandler := http.NewHealthHandler()
 
+	// Token
+	tokenService := auth.NewTokenService(cfg.Token)
+
 	// Cache
 	cacheService := services.NewCacheService(cache)
 
@@ -72,10 +76,10 @@ func main() {
 	userHandler := http.NewUserHandler(userService)
 
 	// Auth
-	authService := services.NewAuthService(cfg.Security, userService)
+	authService := services.NewAuthService(userService, tokenService)
 	authHandler := http.NewAuthHandler(authService)
 
 	// Init and start server
-	srv := http.New(cfg.HTTP, *healthHandler, *authHandler, *userHandler, authService)
+	srv := http.New(cfg.HTTP, *healthHandler, *authHandler, *userHandler, tokenService)
 	srv.Serve()
 }

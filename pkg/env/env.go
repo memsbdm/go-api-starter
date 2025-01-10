@@ -5,6 +5,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"os"
 	"strconv"
+	"time"
 )
 
 // GetString takes a key and returns the associated value in .env file. If there is no key it panics.
@@ -25,4 +26,13 @@ func GetInt(key string) int {
 		panic(fmt.Sprintf("environment variable %s is not an int", key))
 	}
 	return i
+}
+
+func GetDuration(key string) time.Duration {
+	val := GetString(key)
+	d, err := time.ParseDuration(val)
+	if err != nil {
+		panic(fmt.Sprintf("environment variable %s is not a duration", key))
+	}
+	return d
 }

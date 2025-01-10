@@ -18,12 +18,12 @@ type Server struct {
 }
 
 // New creates a new HTTP server
-func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandler, userHandler UserHandler, authService ports.AuthService) *Server {
+func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandler, userHandler UserHandler, tokenService ports.TokenService) *Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
 	mux.HandleFunc("GET /v1/health", healthHandler.Health)
 	mux.HandleFunc("POST /v1/auth/login", authHandler.Login)
-	mux.Handle("GET /v1/users/{uuid}", authMiddleware(&authService, http.HandlerFunc(userHandler.GetByID)))
+	mux.Handle("GET /v1/users/{uuid}", authMiddleware(&tokenService, http.HandlerFunc(userHandler.GetByID)))
 	mux.HandleFunc("POST /v1/users", userHandler.Register)
 
 	handler := loggingMiddleware(corsMiddleware(mux))
