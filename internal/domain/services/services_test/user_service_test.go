@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
+	"go-starter/internal/domain/utils"
 	"testing"
 )
 
@@ -107,6 +108,40 @@ func TestUserService_GetByID(t *testing.T) {
 				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
 			}
 		})
+	}
+}
+
+func TestUserService_GetById_Cache(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	userToCreate := &entities.User{
+		Username: "get_by_id_cache_init",
+		Password: "secret123",
+	}
+	createdUser, err := userService.Register(ctx, userToCreate)
+	if err != nil {
+		t.Errorf("error while registering user: %v", err)
+	}
+
+	_, err = userService.GetByID(ctx, createdUser.ID)
+	if err != nil {
+		t.Errorf("error while fetching user: %v", err)
+	}
+
+	// Act & Assert
+	cachedUser, err := cacheService.Get(ctx, utils.GenerateCacheKey("user", createdUser.ID))
+	if err != nil {
+		t.Errorf("error while getting user from cache: %v", err)
+	}
+	var deserializedUser entities.User
+	err = utils.Deserialize(cachedUser, &deserializedUser)
+	if err != nil {
+		t.Errorf("error while deserializing user: %v", err)
+	}
+	if deserializedUser.ID != createdUser.ID {
+		t.Errorf("deserialized user does not match cache")
 	}
 }
 
