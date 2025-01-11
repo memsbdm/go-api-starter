@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain"
@@ -19,6 +20,36 @@ func NewUserHandler(svc ports.UserService) *UserHandler {
 	return &UserHandler{
 		svc: svc,
 	}
+}
+
+// Me godoc
+//
+//	@Summary		Get authenticated user information
+//	@Description	Get information of logged-in user
+//	@Tags			Users
+//	@Produce		json
+//	@Success		200	{object}	userResponse	"User displayed"
+//	@Failure		401	{object}	errorResponse	"Unauthorized error"
+//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Router			/v1/users/me [get]
+//	@Security		BearerAuth
+func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	authPayload, err := getAuthPayload(ctx, authorizationPayloadKey)
+	if err != nil {
+		handleError(w, domain.ErrInternal)
+		return
+	}
+	fmt.Println(authPayload)
+	user, err := uh.svc.GetByID(ctx, authPayload.UserID)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	response := newUserResponse(user)
+	handleSuccess(w, http.StatusOK, response)
 }
 
 // GetByID godoc
@@ -84,6 +115,7 @@ type RegisterUserRequest struct {
 //	@Produce		json
 //	@Param			RegisterUserRequest	body RegisterUserRequest true "Register request"
 //	@Success		200	{object}	userResponse	"User created"
+//	@Failure		403	{object}	errorResponse	"Forbidden error"
 //	@Failure		409	{object}	errorResponse	"Duplication error"
 //	@Failure		422	{object}	errorResponse	"Validation error"
 //	@Failure		500	{object}	errorResponse	"Internal server error"

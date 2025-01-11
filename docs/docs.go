@@ -121,6 +121,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/http.userResponse"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
                     "409": {
                         "description": "Duplication error",
                         "schema": {
@@ -129,6 +135,43 @@ const docTemplate = `{
                     },
                     "422": {
                         "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get information of logged-in user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get authenticated user information",
+                "responses": {
+                    "200": {
+                        "description": "User displayed",
+                        "schema": {
+                            "$ref": "#/definitions/http.userResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
                         "schema": {
                             "$ref": "#/definitions/http.errorResponse"
                         }

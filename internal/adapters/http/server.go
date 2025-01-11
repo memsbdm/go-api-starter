@@ -19,12 +19,21 @@ type Server struct {
 
 // New creates a new HTTP server
 func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandler, userHandler UserHandler, tokenService ports.TokenService) *Server {
+	auth := func() Middleware {
+		return authMiddleware(&tokenService)
+	}
+
+	guest := func() Middleware {
+		return guestMiddleware(&tokenService)
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
 	mux.HandleFunc("GET /v1/health", healthHandler.Health)
 	mux.HandleFunc("POST /v1/auth/login", authHandler.Login)
-	mux.Handle("GET /v1/users/{uuid}", Chain(userHandler.GetByID, authMiddleware(&tokenService)))
-	mux.Handle("POST /v1/users", Chain(userHandler.Register, guestMiddleware(&tokenService)))
+	mux.Handle("GET /v1/users/me", Chain(userHandler.Me, auth()))
+	mux.Handle("GET /v1/users/{uuid}", Chain(userHandler.GetByID, auth()))
+	mux.Handle("POST /v1/users", Chain(userHandler.Register, guest()))
 
 	handler := loggingMiddleware(corsMiddleware(mux))
 	return &Server{

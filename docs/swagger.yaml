@@ -158,6 +158,10 @@ paths:
           description: User created
           schema:
             $ref: '#/definitions/http.userResponse'
+        "403":
+          description: Forbidden error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
         "409":
           description: Duplication error
           schema:
@@ -215,6 +219,29 @@ paths:
       security:
       - BearerAuth: []
       summary: Get a user
+      tags:
+      - Users
+  /v1/users/me:
+    get:
+      description: Get information of logged-in user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User displayed
+          schema:
+            $ref: '#/definitions/http.userResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get authenticated user information
       tags:
       - Users
 securityDefinitions:
