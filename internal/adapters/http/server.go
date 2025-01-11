@@ -23,8 +23,8 @@ func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandl
 	mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
 	mux.HandleFunc("GET /v1/health", healthHandler.Health)
 	mux.HandleFunc("POST /v1/auth/login", authHandler.Login)
-	mux.Handle("GET /v1/users/{uuid}", authMiddleware(&tokenService, http.HandlerFunc(userHandler.GetByID)))
-	mux.HandleFunc("POST /v1/users", userHandler.Register)
+	mux.Handle("GET /v1/users/{uuid}", Chain(userHandler.GetByID, authMiddleware(&tokenService)))
+	mux.Handle("POST /v1/users", Chain(userHandler.Register, guestMiddleware(&tokenService)))
 
 	handler := loggingMiddleware(corsMiddleware(mux))
 	return &Server{

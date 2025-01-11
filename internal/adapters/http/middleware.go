@@ -2,12 +2,22 @@ package http
 
 import (
 	"context"
+	"go-starter/internal/domain"
 	"go-starter/internal/domain/ports"
 	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 )
+
+type Middleware func(http.HandlerFunc) http.HandlerFunc
+
+func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
+	for _, m := range middlewares {
+		f = m(f)
+	}
+	return f
+}
 
 // corsMiddleware defines CORS specifications
 func corsMiddleware(next http.Handler) http.Handler {
@@ -78,35 +88,64 @@ const (
 	authorizationPayloadKey = "authorization_payload"
 )
 
-func authMiddleware(tokenService *ports.TokenService, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authorizationHeader := r.Header.Get(authorizationHeaderKey)
-		if len(authorizationHeader) == 0 {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
+func authMiddleware(tokenService *ports.TokenService) Middleware {
+	return func(f http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			authorizationHeader := r.Header.Get(authorizationHeaderKey)
+			if len(authorizationHeader) == 0 {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			fields := strings.Fields(authorizationHeader)
+			if len(fields) != 2 {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			if strings.ToLower(fields[0]) != strings.ToLower(authorizationType) {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			accessToken := fields[1]
+			tokenPayload, err := (*tokenService).ValidateToken(accessToken)
+			if err != nil {
+				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), authorizationPayloadKey, tokenPayload)
+			r = r.WithContext(ctx)
+
+			f(w, r)
 		}
+	}
+}
 
-		fields := strings.Fields(authorizationHeader)
-		if len(fields) != 2 {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
+func guestMiddleware(tokenService *ports.TokenService) Middleware {
+	return func(f http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			authorizationHeader := r.Header.Get(authorizationHeaderKey)
+			if len(authorizationHeader) == 0 {
+				f(w, r)
+				return
+			}
+
+			fields := strings.Fields(authorizationHeader)
+			if len(fields) != 2 || strings.ToLower(fields[0]) != strings.ToLower(authorizationType) {
+				f(w, r)
+				return
+			}
+
+			accessToken := fields[1]
+			_, err := (*tokenService).ValidateToken(accessToken)
+			if err == nil {
+				handleError(w, domain.ErrForbidden)
+				return
+			}
+
+			f(w, r)
 		}
-
-		if strings.ToLower(fields[0]) != strings.ToLower(authorizationType) {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		accessToken := fields[1]
-		tokenPayload, err := (*tokenService).ValidateToken(accessToken)
-		if err != nil {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), authorizationPayloadKey, tokenPayload)
-		r = r.WithContext(ctx)
-
-		next.ServeHTTP(w, r)
-	})
+	}
 }
