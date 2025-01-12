@@ -14,7 +14,7 @@ type AuthService struct {
 	tokenSvc ports.TokenService
 }
 
-// NewAuthService creates an auth service instance
+// NewAuthService creates a token service instance
 func NewAuthService(userSvc ports.UserService, tokenSvc ports.TokenService) *AuthService {
 	return &AuthService{
 		userSvc:  userSvc,
@@ -29,7 +29,7 @@ func (as *AuthService) Login(ctx context.Context, username, password string) (st
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return "", "", domain.ErrInvalidCredentials
 		}
-		return "", "", err
+		return "", "", domain.ErrInternal
 	}
 
 	err = utils.ComparePassword(password, user.Password)
@@ -37,12 +37,12 @@ func (as *AuthService) Login(ctx context.Context, username, password string) (st
 		return "", "", domain.ErrInvalidCredentials
 	}
 
-	accessToken, err := as.tokenSvc.CreateToken(user, false)
+	accessToken, err := as.tokenSvc.GenerateToken(user)
 	if err != nil {
 		return "", "", domain.ErrInternal
 	}
 
-	refreshToken, err := as.tokenSvc.CreateRefreshToken(user)
+	refreshToken, err := as.tokenSvc.GenerateRefreshToken(user)
 	if err != nil {
 		return "", "", domain.ErrInternal
 	}

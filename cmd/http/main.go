@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"go-starter/config"
-	"go-starter/internal/adapters/auth"
 	"go-starter/internal/adapters/http"
 	"go-starter/internal/adapters/logger"
 	"go-starter/internal/adapters/storage/postgres"
 	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/adapters/storage/redis"
+	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/services"
 	"log/slog"
 	"os"
@@ -68,7 +68,8 @@ func main() {
 	cacheService := services.NewCacheService(cache)
 
 	// Token
-	tokenService := auth.NewTokenService(cfg.Token, cacheService)
+	tokenRepo := token.NewJWTTokenImpl()
+	tokenService := services.NewTokenService(cfg.Token, tokenRepo, cacheService)
 
 	// User
 	userRepo := repositories.NewUserRepository(db)

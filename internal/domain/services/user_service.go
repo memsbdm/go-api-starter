@@ -16,7 +16,7 @@ type UserService struct {
 	cache ports.CacheService
 }
 
-// NewUserService creates a new user services instance
+// NewUserService creates a new user service instance
 func NewUserService(repo ports.UserRepository, cache ports.CacheService) *UserService {
 	return &UserService{
 		repo:  repo,

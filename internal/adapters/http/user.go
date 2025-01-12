@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain"
@@ -41,7 +40,7 @@ func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 		handleError(w, domain.ErrInternal)
 		return
 	}
-	fmt.Println(authPayload)
+
 	user, err := uh.svc.GetByID(ctx, authPayload.UserID)
 	if err != nil {
 		handleError(w, err)

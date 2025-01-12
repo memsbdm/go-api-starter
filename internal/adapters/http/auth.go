@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// AuthHandler represents the HTTP handler for auth-related requests
+// AuthHandler represents the HTTP handler for token-related requests
 type AuthHandler struct {
 	svc ports.AuthService
 }

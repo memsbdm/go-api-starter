@@ -4,9 +4,9 @@ package services_test
 
 import (
 	"go-starter/config"
-	"go-starter/internal/adapters/auth"
 	"go-starter/internal/adapters/storage/postgres/repositories/mocks"
 	"go-starter/internal/adapters/storage/redis"
+	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/services"
 	"time"
 )
@@ -20,11 +20,12 @@ var (
 func init() {
 	cacheRepo := redis.NewMock()
 	cacheService = services.NewCacheService(cacheRepo)
-	tokenService := auth.NewTokenService(&config.Token{
+	tokenRepo := token.NewJWTTokenImpl()
+	tokenService := services.NewTokenService(&config.Token{
 		TokenDuration:        10 * time.Minute,
 		RefreshTokenDuration: 1 * time.Hour,
 		JWTSecret:            []byte("secret"),
-	}, cacheService)
+	}, tokenRepo, cacheService)
 	userRepo := mocks.MockUserRepository()
 	userService = services.NewUserService(userRepo, cacheService)
 	authService = services.NewAuthService(userService, tokenService)

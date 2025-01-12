@@ -93,25 +93,25 @@ func authMiddleware(tokenService *ports.TokenService) Middleware {
 		return func(w http.ResponseWriter, r *http.Request) {
 			authorizationHeader := r.Header.Get(authorizationHeaderKey)
 			if len(authorizationHeader) == 0 {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				handleError(w, domain.ErrUnauthorized)
 				return
 			}
 
 			fields := strings.Fields(authorizationHeader)
 			if len(fields) != 2 {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				handleError(w, domain.ErrUnauthorized)
 				return
 			}
 
 			if strings.ToLower(fields[0]) != strings.ToLower(authorizationType) {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				handleError(w, domain.ErrUnauthorized)
 				return
 			}
 
 			accessToken := fields[1]
 			tokenPayload, err := (*tokenService).ValidateToken(accessToken)
 			if err != nil {
-				http.Error(w, "Invalid token", http.StatusUnauthorized)
+				handleError(w, domain.ErrUnauthorized)
 				return
 			}
 

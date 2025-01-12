@@ -11,6 +11,9 @@ var (
 	// ErrUnauthorized represents an unauthorized error
 	ErrUnauthorized = errors.New("unauthorized")
 
+	// ErrInvalidToken represents an invalid token error
+	ErrInvalidToken = errors.New("invalid token")
+
 	// ErrInvalidCredentials represents a login error
 	ErrInvalidCredentials = errors.New("invalid credentials")
 
@@ -27,5 +30,5 @@ var (
 	// ErrCacheNotFound represents an empty cache value for a given key
 	ErrCacheNotFound = errors.New("cache not found")
 	// ErrTokenPayloadNotFound represents an authorization token payload not found
-	ErrTokenPayloadNotFound = errors.New("token payload not found, maybe missing auth middleware")
+	ErrTokenPayloadNotFound = errors.New("token payload not found, maybe missing token middleware")
 )

@@ -116,7 +116,7 @@ type loginResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// newLoginResponse is a helper function to create a response body for handling successful auth
+// newLoginResponse is a helper function to create a response body for handling successful token
 func newLoginResponse(accessToken, refreshToken string) loginResponse {
 	return loginResponse{
 		AccessToken:  accessToken,
