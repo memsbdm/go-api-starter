@@ -6,6 +6,7 @@ import (
 	"go-starter/config"
 	"go-starter/internal/adapters/storage/postgres/repositories/mocks"
 	"go-starter/internal/adapters/storage/redis"
+	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/services"
 	"time"
@@ -18,7 +19,8 @@ var (
 )
 
 func init() {
-	cacheRepo := redis.NewMock()
+	timeGenerator := timegen.NewRealTimeGenerator()
+	cacheRepo := redis.NewMock(timeGenerator)
 	cacheService = services.NewCacheService(cacheRepo)
 	tokenRepo := token.NewJWTTokenImpl()
 	tokenService := services.NewTokenService(&config.Token{

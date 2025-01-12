@@ -4,9 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go-starter/internal/adapters/storage/redis"
+	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/domain"
+	"go-starter/internal/domain/services"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestCacheService_Get(t *testing.T) {
@@ -18,7 +22,7 @@ func TestCacheService_Get(t *testing.T) {
 	key := "cache_get_init"
 	value := []byte("value")
 
-	err := cacheService.Set(ctx, key, value, 0)
+	err := cacheService.Set(ctx, key, value, time.Hour)
 	if err != nil {
 		t.Fatalf("failed to set cache: %v", err)
 	}
@@ -71,7 +75,7 @@ func TestCacheService_Delete(t *testing.T) {
 		key:   "cache_delete_init",
 		value: []byte("value"),
 	}
-	err := cacheService.Set(ctx, keyValueToStore.key, keyValueToStore.value, 0)
+	err := cacheService.Set(ctx, keyValueToStore.key, keyValueToStore.value, time.Hour)
 	if err != nil {
 		t.Fatalf("failed to set cache: %v", err)
 	}
@@ -120,7 +124,7 @@ func TestCacheService_DeleteByPrefix(t *testing.T) {
 	const testedPrefix = "cache_delete_by_prefix_"
 
 	for i := range 10 {
-		err := cacheService.Set(ctx, fmt.Sprintf("%s%d", testedPrefix, i), []byte("value"), 0)
+		err := cacheService.Set(ctx, fmt.Sprintf("%s%d", testedPrefix, i), []byte("value"), time.Hour)
 		if err != nil {
 			t.Fatalf("failed to set cache for key %d: %v", i, err)
 		}
@@ -128,7 +132,7 @@ func TestCacheService_DeleteByPrefix(t *testing.T) {
 	const otherKey = "cache_deleteByPrefix"
 	otherValue := []byte("value")
 
-	err := cacheService.Set(ctx, otherKey, otherValue, 0)
+	err := cacheService.Set(ctx, otherKey, otherValue, time.Hour)
 	if err != nil {
 		t.Fatalf("failed to set cache: %v", err)
 	}
@@ -151,5 +155,33 @@ func TestCacheService_DeleteByPrefix(t *testing.T) {
 	value, _ := cacheService.Get(ctx, otherKey)
 	if !reflect.DeepEqual(value, otherValue) {
 		t.Errorf("expected value to be %v, got %v", otherValue, value)
+	}
+}
+
+func TestCacheService_CacheExpiration(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
+	cacheMock := redis.NewMock(timeGenerator)
+	cacheSvc := services.NewCacheService(cacheMock)
+
+	ctx := context.Background()
+
+	err := cacheSvc.Set(ctx, "test", []byte("value"), time.Hour)
+	if err != nil {
+		t.Fatalf("failed to set cache: %v", err)
+	}
+	_, err = cacheSvc.Get(ctx, "test")
+	if err != nil {
+		t.Fatalf("failed to get cache: %v", err)
+	}
+
+	timeGenerator.Advance(time.Hour)
+
+	// Act & Assert
+	_, err = cacheSvc.Get(ctx, "test")
+	if err == nil {
+		t.Errorf("expected error %v, nil", domain.ErrCacheNotFound)
 	}
 }
