@@ -52,6 +52,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/http.errorResponse"
                         }
                     },
+                    "403": {
+                        "description": "Forbidden error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -352,7 +358,10 @@ const docTemplate = `{
         "http.loginResponse": {
             "type": "object",
             "properties": {
-                "token": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
                     "type": "string"
                 }
             }

@@ -34,6 +34,7 @@ type loginRequest struct {
 //	@Param			LoginRequest	body loginRequest true "Login request"
 //	@Success		200	{object}	loginResponse	"User logged in"
 //	@Failure		401	{object}	errorResponse	"Unauthorized / credentials error"
+//	@Failure		403	{object}	errorResponse	"Forbidden error"
 //	@Failure		500	{object}	errorResponse	"Internal server error"
 //	@Router			/v1/auth/login [post]
 func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -44,12 +45,12 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		handleValidationError(w, err)
 		return
 	}
-	jwtStr, err := ah.svc.Login(ctx, payload.Username, payload.Password)
+	accessToken, refreshToken, err := ah.svc.Login(ctx, payload.Username, payload.Password)
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
-	response := newLoginResponse(*jwtStr)
+	response := newLoginResponse(accessToken, refreshToken)
 	handleSuccess(w, http.StatusOK, response)
 }

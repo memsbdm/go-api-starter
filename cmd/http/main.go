@@ -64,11 +64,11 @@ func main() {
 	// Health
 	healthHandler := http.NewHealthHandler()
 
-	// Token
-	tokenService := auth.NewTokenService(cfg.Token)
-
 	// Cache
 	cacheService := services.NewCacheService(cache)
+
+	// Token
+	tokenService := auth.NewTokenService(cfg.Token, cacheService)
 
 	// User
 	userRepo := repositories.NewUserRepository(db)

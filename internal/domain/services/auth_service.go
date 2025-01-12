@@ -23,24 +23,29 @@ func NewAuthService(userSvc ports.UserService, tokenSvc ports.TokenService) *Aut
 }
 
 // Login authenticates a user. Returns a token string pointer (could be JWT, session ID, etc.) or an error if login fails
-func (as *AuthService) Login(ctx context.Context, username, password string) (*string, error) {
+func (as *AuthService) Login(ctx context.Context, username, password string) (string, string, error) {
 	user, err := as.userSvc.GetByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
-			return nil, domain.ErrInvalidCredentials
+			return "", "", domain.ErrInvalidCredentials
 		}
-		return nil, err
+		return "", "", err
 	}
 
 	err = utils.ComparePassword(password, user.Password)
 	if err != nil {
-		return nil, domain.ErrInvalidCredentials
+		return "", "", domain.ErrInvalidCredentials
 	}
 
-	jtwStr, err := as.tokenSvc.CreateToken(user)
+	accessToken, err := as.tokenSvc.CreateToken(user, false)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return "", "", domain.ErrInternal
 	}
 
-	return &jtwStr, nil
+	refreshToken, err := as.tokenSvc.CreateRefreshToken(user)
+	if err != nil {
+		return "", "", domain.ErrInternal
+	}
+
+	return accessToken, refreshToken, nil
 }

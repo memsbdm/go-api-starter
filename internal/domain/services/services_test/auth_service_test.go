@@ -55,7 +55,7 @@ func TestAuthService_Login(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			_, err := authService.Login(ctx, tt.input.username, tt.input.password)
+			_, _, err := authService.Login(ctx, tt.input.username, tt.input.password)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
 			}

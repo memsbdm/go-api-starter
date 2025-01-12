@@ -18,12 +18,13 @@ var (
 )
 
 func init() {
-	tokenService := auth.NewTokenService(&config.Token{
-		Duration:  10 * time.Minute,
-		JWTSecret: []byte("secret"),
-	})
 	cacheRepo := redis.NewMock()
 	cacheService = services.NewCacheService(cacheRepo)
+	tokenService := auth.NewTokenService(&config.Token{
+		TokenDuration:        10 * time.Minute,
+		RefreshTokenDuration: 1 * time.Hour,
+		JWTSecret:            []byte("secret"),
+	}, cacheService)
 	userRepo := mocks.MockUserRepository()
 	userService = services.NewUserService(userRepo, cacheService)
 	authService = services.NewAuthService(userService, tokenService)

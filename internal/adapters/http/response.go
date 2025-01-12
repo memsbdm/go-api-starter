@@ -112,12 +112,14 @@ func newUserResponse(user *entities.User) userResponse {
 
 // loginResponse represents a successful authentication body
 type loginResponse struct {
-	Token string `json:"token"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 // newLoginResponse is a helper function to create a response body for handling successful auth
-func newLoginResponse(token string) loginResponse {
+func newLoginResponse(accessToken, refreshToken string) loginResponse {
 	return loginResponse{
-		Token: token,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}
 }

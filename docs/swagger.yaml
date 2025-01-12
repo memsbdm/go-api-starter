@@ -68,7 +68,9 @@ definitions:
     type: object
   http.loginResponse:
     properties:
-      token:
+      access_token:
+        type: string
+      refresh_token:
         type: string
     type: object
   http.userResponse:
@@ -111,6 +113,10 @@ paths:
             $ref: '#/definitions/http.loginResponse'
         "401":
           description: Unauthorized / credentials error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "403":
+          description: Forbidden error
           schema:
             $ref: '#/definitions/http.errorResponse'
         "500":
