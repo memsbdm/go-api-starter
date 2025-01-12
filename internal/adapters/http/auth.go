@@ -32,7 +32,7 @@ type loginRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			LoginRequest	body loginRequest true "Login request"
-//	@Success		200	{object}	loginResponse	"User logged in"
+//	@Success		200	{object}	response[loginResponse]	"User logged in"
 //	@Failure		401	{object}	errorResponse	"Unauthorized / credentials error"
 //	@Failure		403	{object}	errorResponse	"Forbidden error"
 //	@Failure		500	{object}	errorResponse	"Internal server error"

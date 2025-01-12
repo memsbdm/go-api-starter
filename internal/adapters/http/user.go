@@ -27,7 +27,7 @@ func NewUserHandler(svc ports.UserService) *UserHandler {
 //	@Description	Get information of logged-in user
 //	@Tags			Users
 //	@Produce		json
-//	@Success		200	{object}	userResponse	"User displayed"
+//	@Success		200	{object}	response[userResponse]	"User displayed"
 //	@Failure		401	{object}	errorResponse	"Unauthorized error"
 //	@Failure		500	{object}	errorResponse	"Internal server error"
 //	@Router			/v1/users/me [get]
@@ -59,7 +59,7 @@ func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			uuid	path		string		true	"User ID" format(uuid)
-//	@Success		200	{object}	userResponse	"User displayed"
+//	@Success		200	{object}	response[userResponse]	"User displayed"
 //	@Failure		400	{object}	errorResponse	"Incorrect User ID"
 //	@Failure		401	{object}	errorResponse	"Unauthorized error"
 //	@Failure		403	{object}	errorResponse	"Forbidden error"
@@ -113,7 +113,7 @@ type RegisterUserRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			RegisterUserRequest	body RegisterUserRequest true "Register request"
-//	@Success		200	{object}	userResponse	"User created"
+//	@Success		200	{object}	response[userResponse]	"User created"
 //	@Failure		403	{object}	errorResponse	"Forbidden error"
 //	@Failure		409	{object}	errorResponse	"Duplication error"
 //	@Failure		422	{object}	errorResponse	"Validation error"

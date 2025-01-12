@@ -9,18 +9,16 @@ import (
 	"net/http"
 )
 
-// response represents a response body format
-type response struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	Data    any    `json:"data,omitempty"`
+// response represents a generic API success response
+type response[T any] struct {
+	Success bool `json:"success"`
+	Data    T    `json:"data,omitempty"`
 }
 
-// newResponse is a helper function to create a response body
-func newResponse(success bool, message string, data any) response {
-	return response{
-		Success: success,
-		Message: message,
+// newSuccessResponse is a helper function to create a success response
+func newSuccessResponse[T any](data T) response[T] {
+	return response[T]{
+		Success: true,
 		Data:    data,
 	}
 }
@@ -59,7 +57,7 @@ func newErrorResponse(errs []error) errorResponse {
 
 // handleSuccess sends a success response with the specified status code and optional data
 func handleSuccess(w http.ResponseWriter, statusCode int, data any) {
-	rsp := newResponse(true, "Success", data)
+	rsp := newSuccessResponse(data)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	encoder := json.NewEncoder(w)
@@ -122,4 +120,5 @@ func newLoginResponse(accessToken, refreshToken string) loginResponse {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
+
 }

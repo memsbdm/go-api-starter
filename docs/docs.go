@@ -43,7 +43,7 @@ const docTemplate = `{
                     "200": {
                         "description": "User logged in",
                         "schema": {
-                            "$ref": "#/definitions/http.loginResponse"
+                            "$ref": "#/definitions/http.response-http_loginResponse"
                         }
                     },
                     "401": {
@@ -124,7 +124,7 @@ const docTemplate = `{
                     "200": {
                         "description": "User created",
                         "schema": {
-                            "$ref": "#/definitions/http.userResponse"
+                            "$ref": "#/definitions/http.response-http_userResponse"
                         }
                     },
                     "403": {
@@ -173,7 +173,7 @@ const docTemplate = `{
                     "200": {
                         "description": "User displayed",
                         "schema": {
-                            "$ref": "#/definitions/http.userResponse"
+                            "$ref": "#/definitions/http.response-http_userResponse"
                         }
                     },
                     "401": {
@@ -223,7 +223,7 @@ const docTemplate = `{
                     "200": {
                         "description": "User displayed",
                         "schema": {
-                            "$ref": "#/definitions/http.userResponse"
+                            "$ref": "#/definitions/http.response-http_userResponse"
                         }
                     },
                     "400": {
@@ -363,6 +363,28 @@ const docTemplate = `{
                 },
                 "refresh_token": {
                     "type": "string"
+                }
+            }
+        },
+        "http.response-http_loginResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/http.loginResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.response-http_userResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/http.userResponse"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },

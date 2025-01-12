@@ -73,6 +73,20 @@ definitions:
       refresh_token:
         type: string
     type: object
+  http.response-http_loginResponse:
+    properties:
+      data:
+        $ref: '#/definitions/http.loginResponse'
+      success:
+        type: boolean
+    type: object
+  http.response-http_userResponse:
+    properties:
+      data:
+        $ref: '#/definitions/http.userResponse'
+      success:
+        type: boolean
+    type: object
   http.userResponse:
     properties:
       id:
@@ -110,7 +124,7 @@ paths:
         "200":
           description: User logged in
           schema:
-            $ref: '#/definitions/http.loginResponse'
+            $ref: '#/definitions/http.response-http_loginResponse'
         "401":
           description: Unauthorized / credentials error
           schema:
@@ -163,7 +177,7 @@ paths:
         "200":
           description: User created
           schema:
-            $ref: '#/definitions/http.userResponse'
+            $ref: '#/definitions/http.response-http_userResponse'
         "403":
           description: Forbidden error
           schema:
@@ -201,7 +215,7 @@ paths:
         "200":
           description: User displayed
           schema:
-            $ref: '#/definitions/http.userResponse'
+            $ref: '#/definitions/http.response-http_userResponse'
         "400":
           description: Incorrect User ID
           schema:
@@ -236,7 +250,7 @@ paths:
         "200":
           description: User displayed
           schema:
-            $ref: '#/definitions/http.userResponse'
+            $ref: '#/definitions/http.response-http_userResponse'
         "401":
           description: Unauthorized error
           schema:
