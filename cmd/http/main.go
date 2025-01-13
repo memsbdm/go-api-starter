@@ -8,6 +8,7 @@ import (
 	"go-starter/internal/adapters/storage/postgres"
 	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/adapters/storage/redis"
+	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/services"
 	"log/slog"
@@ -61,6 +62,9 @@ func main() {
 	slog.Info("Successfully connected to the cache service")
 
 	// Dependency injection
+
+	timeGenerator := timegen.NewRealTimeGenerator()
+
 	// Health
 	healthHandler := http.NewHealthHandler()
 
@@ -68,7 +72,7 @@ func main() {
 	cacheService := services.NewCacheService(cache)
 
 	// Token
-	tokenRepo := token.NewTokenRepository()
+	tokenRepo := token.NewTokenRepository(timeGenerator)
 	tokenService := services.NewTokenService(cfg.Token, tokenRepo, cacheService)
 
 	// User

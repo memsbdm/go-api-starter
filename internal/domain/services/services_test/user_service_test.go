@@ -1,4 +1,4 @@
-// //go:build !integration
+//go:build !integration
 
 package services_test
 
@@ -17,13 +17,14 @@ func TestUserService_Register(t *testing.T) {
 
 	// Arrange
 	ctx := context.Background()
+	builder := NewTestBuilder().Build()
 
 	userToCreate := &entities.User{
-		Username: "register_init",
+		Username: "example",
 		Password: "secret123",
 	}
 
-	createdUser, err := userService.Register(ctx, userToCreate)
+	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
 		t.Errorf("error while registering user: %v", err)
 	}
@@ -36,7 +37,7 @@ func TestUserService_Register(t *testing.T) {
 		{
 			name: "create user successfully",
 			input: &entities.User{
-				Username: "register",
+				Username: "success",
 				Password: "secret123",
 			},
 			expectedErr: nil,
@@ -55,7 +56,7 @@ func TestUserService_Register(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			result, err := userService.Register(ctx, tt.input)
+			result, err := builder.UserService.Register(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
 			}
@@ -71,13 +72,14 @@ func TestUserService_GetByID(t *testing.T) {
 
 	// Arrange
 	ctx := context.Background()
+	builder := NewTestBuilder().Build()
 
 	userToCreate := &entities.User{
-		Username: "get_by_id_init",
+		Username: "example",
 		Password: "secret123",
 	}
 
-	createdUser, err := userService.Register(ctx, userToCreate)
+	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
 		t.Errorf("error while registering user: %v", err)
 	}
@@ -103,7 +105,7 @@ func TestUserService_GetByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			_, err := userService.GetByID(ctx, tt.input)
+			_, err := builder.UserService.GetByID(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
 			}
@@ -116,22 +118,24 @@ func TestUserService_GetById_Cache(t *testing.T) {
 
 	// Arrange
 	ctx := context.Background()
+	builder := NewTestBuilder().Build()
+
 	userToCreate := &entities.User{
-		Username: "get_by_id_cache_init",
+		Username: "example",
 		Password: "secret123",
 	}
-	createdUser, err := userService.Register(ctx, userToCreate)
+	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
 		t.Errorf("error while registering user: %v", err)
 	}
 
-	_, err = userService.GetByID(ctx, createdUser.ID)
+	_, err = builder.UserService.GetByID(ctx, createdUser.ID)
 	if err != nil {
 		t.Errorf("error while fetching user: %v", err)
 	}
 
 	// Act & Assert
-	cachedUser, err := cacheService.Get(ctx, utils.GenerateCacheKey("user", createdUser.ID))
+	cachedUser, err := builder.CacheService.Get(ctx, utils.GenerateCacheKey("user", createdUser.ID))
 	if err != nil {
 		t.Errorf("error while getting user from cache: %v", err)
 	}
@@ -150,12 +154,14 @@ func TestUserService_GetByUsername(t *testing.T) {
 
 	// Arrange
 	ctx := context.Background()
+	builder := NewTestBuilder().Build()
+
 	userToCreate := &entities.User{
-		Username: "get_by_username_init",
+		Username: "example",
 		Password: "secret123",
 	}
 
-	createdUser, err := userService.Register(ctx, userToCreate)
+	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
 		t.Errorf("error while registering user: %v", err)
 	}
@@ -181,7 +187,7 @@ func TestUserService_GetByUsername(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			result, err := userService.GetByUsername(ctx, tt.input)
+			result, err := builder.UserService.GetByUsername(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
 			}

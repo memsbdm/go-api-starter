@@ -1,3 +1,5 @@
+//go:build !integration
+
 package services_test
 
 import (
@@ -13,12 +15,14 @@ func TestAuthService_Login(t *testing.T) {
 
 	// Arrange
 	ctx := context.Background()
+	builder := NewTestBuilder().Build()
+
 	userToCreate := &entities.User{
-		Username: "login_init",
+		Username: "example",
 		Password: "secret123",
 	}
 
-	_, err := userService.Register(ctx, userToCreate)
+	_, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
 		t.Fatalf("failed to register user: %v", err)
 	}
@@ -55,7 +59,7 @@ func TestAuthService_Login(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			_, _, err := authService.Login(ctx, tt.input.username, tt.input.password)
+			_, _, err := builder.AuthService.Login(ctx, tt.input.username, tt.input.password)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
 			}
