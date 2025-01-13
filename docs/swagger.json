@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is a simple starter API written in Go using net/http, PostgreSQL database, and Redis cache.",
+        "description": "This is a simple starter API written in Go using net/http, PostgresSQL database, and Redis cache.",
         "title": "Go Starter API",
         "contact": {},
         "version": "1.0"

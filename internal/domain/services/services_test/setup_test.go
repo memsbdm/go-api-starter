@@ -22,7 +22,7 @@ func init() {
 	timeGenerator := timegen.NewRealTimeGenerator()
 	cacheRepo := redis.NewMock(timeGenerator)
 	cacheService = services.NewCacheService(cacheRepo)
-	tokenRepo := token.NewJWTTokenImpl()
+	tokenRepo := token.NewTokenRepository()
 	tokenService := services.NewTokenService(&config.Token{
 		TokenDuration:        10 * time.Minute,
 		RefreshTokenDuration: 1 * time.Hour,

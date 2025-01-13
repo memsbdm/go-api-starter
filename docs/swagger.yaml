@@ -101,7 +101,7 @@ definitions:
     type: object
 info:
   contact: {}
-  description: This is a simple starter API written in Go using net/http, PostgreSQL
+  description: This is a simple starter API written in Go using net/http, PostgresSQL
     database, and Redis cache.
   title: Go Starter API
   version: "1.0"

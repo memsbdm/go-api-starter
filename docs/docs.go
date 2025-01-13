@@ -423,7 +423,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Go Starter API",
-	Description:      "This is a simple starter API written in Go using net/http, PostgreSQL database, and Redis cache.",
+	Description:      "This is a simple starter API written in Go using net/http, PostgresSQL database, and Redis cache.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

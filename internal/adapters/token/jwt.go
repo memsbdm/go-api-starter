@@ -7,17 +7,17 @@ import (
 	"time"
 )
 
-// JWTTokenImpl implements ports.TokenRepository interface and provides access to the JWT package
-type JWTTokenImpl struct {
+// TokenRepository implements ports.TokenRepository interface and provides access to the JWT package
+type TokenRepository struct {
 }
 
-// NewJWTTokenImpl creates a new token repository instance
-func NewJWTTokenImpl() *JWTTokenImpl {
-	return &JWTTokenImpl{}
+// NewTokenRepository creates a new token repository instance
+func NewTokenRepository() *TokenRepository {
+	return &TokenRepository{}
 }
 
 // GenerateToken generates a new JWT token for the specified user
-func (jt *JWTTokenImpl) GenerateToken(user *entities.User, duration time.Duration, jwtSecret []byte) (string, error) {
+func (tr *TokenRepository) GenerateToken(user *entities.User, duration time.Duration, jwtSecret []byte) (string, error) {
 	payload := &entities.TokenPayload{
 		UserID:    user.ID,
 		IssuedAt:  time.Now().Unix(),
@@ -29,7 +29,7 @@ func (jt *JWTTokenImpl) GenerateToken(user *entities.User, duration time.Duratio
 }
 
 // ValidateToken checks if the provided token string is valid and returns the associated claims
-func (jt *JWTTokenImpl) ValidateToken(tokenStr string, jwtSecret []byte) (*entities.TokenPayload, error) {
+func (tr *TokenRepository) ValidateToken(tokenStr string, jwtSecret []byte) (*entities.TokenPayload, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &entities.TokenPayload{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
@@ -46,8 +46,8 @@ func (jt *JWTTokenImpl) ValidateToken(tokenStr string, jwtSecret []byte) (*entit
 }
 
 // GenerateRefreshToken creates a new refresh token for a given user
-func (jt *JWTTokenImpl) GenerateRefreshToken(user *entities.User, duration time.Duration, jwtSecret []byte) (string, error) {
-	token, err := jt.GenerateToken(user, duration, jwtSecret)
+func (tr *TokenRepository) GenerateRefreshToken(user *entities.User, duration time.Duration, jwtSecret []byte) (string, error) {
+	token, err := tr.GenerateToken(user, duration, jwtSecret)
 	if err != nil {
 		return "", err
 	}
@@ -56,8 +56,8 @@ func (jt *JWTTokenImpl) GenerateRefreshToken(user *entities.User, duration time.
 }
 
 // ValidateRefreshToken validates a refresh token and returns associated token payload
-func (jt *JWTTokenImpl) ValidateRefreshToken(tokenStr string, jwtSecret []byte) (*entities.TokenPayload, error) {
-	claims, err := jt.ValidateToken(tokenStr, jwtSecret)
+func (tr *TokenRepository) ValidateRefreshToken(tokenStr string, jwtSecret []byte) (*entities.TokenPayload, error) {
+	claims, err := tr.ValidateToken(tokenStr, jwtSecret)
 	if err != nil {
 		return nil, err
 	}

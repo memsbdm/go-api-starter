@@ -16,7 +16,7 @@ import (
 
 // @title					Go Starter API
 // @version					1.0
-// @description				This is a simple starter API written in Go using net/http, PostgreSQL database, and Redis cache.
+// @description				This is a simple starter API written in Go using net/http, PostgresSQL database, and Redis cache.
 //
 // @securityDefinitions.apikey	BearerAuth
 // @in							header
@@ -68,7 +68,7 @@ func main() {
 	cacheService := services.NewCacheService(cache)
 
 	// Token
-	tokenRepo := token.NewJWTTokenImpl()
+	tokenRepo := token.NewTokenRepository()
 	tokenService := services.NewTokenService(cfg.Token, tokenRepo, cacheService)
 
 	// User
