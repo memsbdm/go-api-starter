@@ -2,7 +2,6 @@ package http
 
 import (
 	"github.com/google/uuid"
-	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
@@ -97,48 +96,4 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	response := newUserResponse(user)
 	handleSuccess(w, http.StatusOK, response)
-}
-
-// RegisterUserRequest represents the request body for creating a user
-type RegisterUserRequest struct {
-	Username string `json:"username" validate:"required" example:"john"`
-	Password string `json:"password" validate:"required" example:"secret123"`
-}
-
-// Register godoc
-//
-//	@Summary		Register a new user
-//	@Description	Create a new user account
-//	@Tags			Users
-//	@Accept			json
-//	@Produce		json
-//	@Param			RegisterUserRequest	body RegisterUserRequest true "Register request"
-//	@Success		200	{object}	response[userResponse]	"User created"
-//	@Failure		403	{object}	errorResponse	"Forbidden error"
-//	@Failure		409	{object}	errorResponse	"Duplication error"
-//	@Failure		422	{object}	errorResponse	"Validation error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
-//	@Router			/v1/users [post]
-func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	var payload RegisterUserRequest
-
-	if err := validator.ValidateRequest(w, r, &payload); err != nil {
-		handleValidationError(w, err)
-		return
-	}
-
-	user := entities.User{
-		Username: payload.Username,
-		Password: payload.Password,
-	}
-
-	created, err := uh.svc.Register(ctx, &user)
-	if err != nil {
-		handleError(w, err)
-		return
-	}
-
-	response := newUserResponse(created)
-	handleSuccess(w, http.StatusCreated, response)
 }

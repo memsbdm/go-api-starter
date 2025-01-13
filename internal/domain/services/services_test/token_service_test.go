@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func TestTokenService_ValidateToken(t *testing.T) {
+func TestTokenService_ValidateToken_Expired(t *testing.T) {
 	t.Parallel()
 
 	// Arrange

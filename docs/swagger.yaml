@@ -186,26 +186,7 @@ paths:
       summary: Generate a new access token and refresh token
       tags:
       - Auth
-  /v1/health:
-    get:
-      consumes:
-      - application/json
-      description: Get database health information
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: DB information
-          schema:
-            $ref: '#/definitions/http.healthResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/http.errorResponse'
-      summary: Get database health information
-      tags:
-      - Health
-  /v1/users:
+  /v1/auth/register:
     post:
       consumes:
       - application/json
@@ -242,7 +223,26 @@ paths:
             $ref: '#/definitions/http.errorResponse'
       summary: Register a new user
       tags:
-      - Users
+      - Auth
+  /v1/health:
+    get:
+      consumes:
+      - application/json
+      description: Get database health information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: DB information
+          schema:
+            $ref: '#/definitions/http.healthResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+      summary: Get database health information
+      tags:
+      - Health
   /v1/users/{uuid}:
     get:
       consumes:

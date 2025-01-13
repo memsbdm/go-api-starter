@@ -61,7 +61,7 @@ func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entiti
 	return user, nil
 }
 
-// GetByUsername gets a user by username
+// GetByUsername retrieves a user by their username
 func (us *UserService) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
 	user, err := us.repo.GetByUsername(ctx, username)
 	if err != nil {
@@ -74,7 +74,7 @@ func (us *UserService) GetByUsername(ctx context.Context, username string) (*ent
 	return user, nil
 }
 
-// Register retrieves a user by their username
+// Register registers a new user
 func (us *UserService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {

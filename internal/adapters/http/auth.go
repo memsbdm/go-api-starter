@@ -2,6 +2,7 @@ package http
 
 import (
 	"go-starter/internal/adapters/validator"
+	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
 )
@@ -90,4 +91,48 @@ func (ah *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	response := newLoginResponse(accessToken, refreshToken)
 	handleSuccess(w, http.StatusOK, response)
+}
+
+// RegisterUserRequest represents the request body for creating a user
+type RegisterUserRequest struct {
+	Username string `json:"username" validate:"required" example:"john"`
+	Password string `json:"password" validate:"required" example:"secret123"`
+}
+
+// Register godoc
+//
+//	@Summary		Register a new user
+//	@Description	Create a new user account
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			RegisterUserRequest	body RegisterUserRequest true "Register request"
+//	@Success		200	{object}	response[userResponse]	"User created"
+//	@Failure		403	{object}	errorResponse	"Forbidden error"
+//	@Failure		409	{object}	errorResponse	"Duplication error"
+//	@Failure		422	{object}	errorResponse	"Validation error"
+//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Router			/v1/auth/register [post]
+func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var payload RegisterUserRequest
+
+	if err := validator.ValidateRequest(w, r, &payload); err != nil {
+		handleValidationError(w, err)
+		return
+	}
+
+	user := entities.User{
+		Username: payload.Username,
+		Password: payload.Password,
+	}
+
+	created, err := ah.svc.Register(ctx, &user)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	response := newUserResponse(created)
+	handleSuccess(w, http.StatusCreated, response)
 }

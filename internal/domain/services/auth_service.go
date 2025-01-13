@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"go-starter/internal/domain"
+	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
 )
@@ -73,4 +74,9 @@ func (as *AuthService) RefreshToken(ctx context.Context, refreshToken string) (s
 	}
 
 	return accessToken, newRefreshToken, nil
+}
+
+// Register registers a new user
+func (as *AuthService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
+	return as.userSvc.Register(ctx, user)
 }

@@ -29,11 +29,15 @@ func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandl
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
 	mux.HandleFunc("GET /v1/health", healthHandler.Health)
+
+	// Auth
 	mux.HandleFunc("POST /v1/auth/login", Chain(authHandler.Login, guest()))
+	mux.HandleFunc("POST /v1/auth/register", Chain(authHandler.Register, guest()))
 	mux.HandleFunc("POST /v1/auth/refresh", authHandler.RefreshToken)
+
+	// Users
 	mux.HandleFunc("GET /v1/users/me", Chain(userHandler.Me, auth()))
 	mux.HandleFunc("GET /v1/users/{uuid}", Chain(userHandler.GetByID, auth()))
-	mux.HandleFunc("POST /v1/users", Chain(userHandler.Register, guest()))
 
 	handler := loggingMiddleware(corsMiddleware(mux))
 	return &Server{

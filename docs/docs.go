@@ -125,36 +125,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/health": {
-            "get": {
-                "description": "Get database health information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Health"
-                ],
-                "summary": "Get database health information",
-                "responses": {
-                    "200": {
-                        "description": "DB information",
-                        "schema": {
-                            "$ref": "#/definitions/http.healthResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/users": {
+        "/v1/auth/register": {
             "post": {
                 "description": "Create a new user account",
                 "consumes": [
@@ -164,7 +135,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Users"
+                    "Auth"
                 ],
                 "summary": "Register a new user",
                 "parameters": [
@@ -201,6 +172,35 @@ const docTemplate = `{
                         "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/health": {
+            "get": {
+                "description": "Get database health information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Get database health information",
+                "responses": {
+                    "200": {
+                        "description": "DB information",
+                        "schema": {
+                            "$ref": "#/definitions/http.healthResponse"
                         }
                     },
                     "500": {
