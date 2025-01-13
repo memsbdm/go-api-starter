@@ -73,6 +73,14 @@ definitions:
       refresh_token:
         type: string
     type: object
+  http.refreshTokenRequest:
+    properties:
+      refresh_token:
+        example: eyJhbGciOiJI...
+        type: string
+    required:
+    - refresh_token
+    type: object
   http.response-http_loginResponse:
     properties:
       data:
@@ -114,7 +122,7 @@ paths:
       parameters:
       - description: Login request
         in: body
-        name: LoginRequest
+        name: loginRequest
         required: true
         schema:
           $ref: '#/definitions/http.loginRequest'
@@ -122,7 +130,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: User logged in
+          description: Access and refresh tokens
           schema:
             $ref: '#/definitions/http.response-http_loginResponse'
         "401":
@@ -133,11 +141,49 @@ paths:
           description: Forbidden error
           schema:
             $ref: '#/definitions/http.errorResponse'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/http.errorResponse'
       summary: Login a user
+      tags:
+      - Auth
+  /v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate a new access token and refresh token
+      parameters:
+      - description: Refresh token request
+        in: body
+        name: refreshTokenRequest
+        required: true
+        schema:
+          $ref: '#/definitions/http.refreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Access and refresh tokens
+          schema:
+            $ref: '#/definitions/http.response-http_loginResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+      summary: Generate a new access token and refresh token
       tags:
       - Auth
   /v1/health:

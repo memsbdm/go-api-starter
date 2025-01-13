@@ -66,3 +66,53 @@ func TestAuthService_Login(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthService_RefreshToken(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	builder := NewTestBuilder().Build()
+	userToCreate := &entities.User{
+		Username: "example",
+		Password: "secret123",
+	}
+
+	_, err := builder.UserService.Register(ctx, userToCreate)
+	if err != nil {
+		t.Fatalf("failed to register user: %v", err)
+	}
+
+	_, refreshToken, err := builder.AuthService.Login(ctx, userToCreate.Username, userToCreate.Password)
+	if err != nil {
+		t.Fatalf("failed to login: %v", err)
+	}
+
+	tests := []struct {
+		name        string
+		token       string
+		expectedErr error
+	}{
+		{
+			name:        "Refresh Token Success",
+			token:       refreshToken,
+			expectedErr: nil,
+		},
+		{
+			name:        "Refresh Token Error",
+			token:       refreshToken[:len(refreshToken)-1] + "1",
+			expectedErr: domain.ErrInvalidToken,
+		},
+	}
+
+	// Act & Assert
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			_, _, err := builder.AuthService.RefreshToken(ctx, tt.token)
+			if !errors.Is(err, tt.expectedErr) {
+				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
+			}
+		})
+	}
+}

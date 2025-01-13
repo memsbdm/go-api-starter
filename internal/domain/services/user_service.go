@@ -24,7 +24,10 @@ func NewUserService(repo ports.UserRepository, cache ports.CacheService) *UserSe
 	}
 }
 
-// GetByID gets a user by ID
+// GetByID retrieves a user by their ID.
+// It first attempts to fetch the user from the cache for efficiency.
+// If the user is not found in the cache, it queries the database then stores the result back in the cache.
+// Returns the user entity if found, or an error if the user does not exist or an issue occurs.
 func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	var user *entities.User
 	cacheKey := utils.GenerateCacheKey("user", id)
@@ -71,7 +74,7 @@ func (us *UserService) GetByUsername(ctx context.Context, username string) (*ent
 	return user, nil
 }
 
-// Register creates a new user
+// Register retrieves a user by their username
 func (us *UserService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {

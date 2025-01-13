@@ -22,7 +22,6 @@ func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandl
 	auth := func() Middleware {
 		return authMiddleware(&tokenService)
 	}
-
 	guest := func() Middleware {
 		return guestMiddleware(&tokenService)
 	}
@@ -31,9 +30,10 @@ func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandl
 	mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
 	mux.HandleFunc("GET /v1/health", healthHandler.Health)
 	mux.HandleFunc("POST /v1/auth/login", Chain(authHandler.Login, guest()))
-	mux.Handle("GET /v1/users/me", Chain(userHandler.Me, auth()))
-	mux.Handle("GET /v1/users/{uuid}", Chain(userHandler.GetByID, auth()))
-	mux.Handle("POST /v1/users", Chain(userHandler.Register, guest()))
+	mux.HandleFunc("POST /v1/auth/refresh", authHandler.RefreshToken)
+	mux.HandleFunc("GET /v1/users/me", Chain(userHandler.Me, auth()))
+	mux.HandleFunc("GET /v1/users/{uuid}", Chain(userHandler.GetByID, auth()))
+	mux.HandleFunc("POST /v1/users", Chain(userHandler.Register, guest()))
 
 	handler := loggingMiddleware(corsMiddleware(mux))
 	return &Server{

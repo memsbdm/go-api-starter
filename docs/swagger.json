@@ -23,7 +23,7 @@
                 "parameters": [
                     {
                         "description": "Login request",
-                        "name": "LoginRequest",
+                        "name": "loginRequest",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -33,7 +33,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User logged in",
+                        "description": "Access and refresh tokens",
                         "schema": {
                             "$ref": "#/definitions/http.response-http_loginResponse"
                         }
@@ -46,6 +46,64 @@
                     },
                     "403": {
                         "description": "Forbidden error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/refresh": {
+            "post": {
+                "description": "Generate a new access token and refresh token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Generate a new access token and refresh token",
+                "parameters": [
+                    {
+                        "description": "Refresh token request",
+                        "name": "refreshTokenRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.refreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Access and refresh tokens",
+                        "schema": {
+                            "$ref": "#/definitions/http.response-http_loginResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/http.errorResponse"
                         }
@@ -355,6 +413,18 @@
                 },
                 "refresh_token": {
                     "type": "string"
+                }
+            }
+        },
+        "http.refreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJI..."
                 }
             }
         },

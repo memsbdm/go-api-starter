@@ -14,7 +14,7 @@ type TokenService interface {
 	// GenerateRefreshToken creates a new refresh token for a given user
 	GenerateRefreshToken(user *entities.User) (string, error)
 	// ValidateRefreshToken validates a refresh token and returns associated token payload
-	ValidateRefreshToken(tokenStr string) error
+	ValidateRefreshToken(tokenStr string) (*entities.TokenPayload, error)
 }
 
 type TokenRepository interface {

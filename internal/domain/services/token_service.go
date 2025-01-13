@@ -73,18 +73,18 @@ func (ts *TokenService) GenerateRefreshToken(user *entities.User) (string, error
 }
 
 // ValidateRefreshToken validates a refresh token and returns associated token payload
-func (ts *TokenService) ValidateRefreshToken(tokenStr string) error {
+func (ts *TokenService) ValidateRefreshToken(tokenStr string) (*entities.TokenPayload, error) {
 	claims, err := ts.repo.ValidateRefreshToken(tokenStr, ts.cfg.JWTSecret)
 	if err != nil {
-		return domain.ErrInvalidToken
+		return nil, domain.ErrInvalidToken
 	}
 
 	ctx := context.Background()
 	key := utils.GenerateCacheKey("refresh_token", claims.UserID)
 	_, err = ts.cacheSvc.Get(ctx, key)
 	if err != nil {
-		return domain.ErrInvalidToken
+		return nil, domain.ErrInvalidToken
 	}
 
-	return nil
+	return claims, nil
 }
