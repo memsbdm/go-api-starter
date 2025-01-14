@@ -1,6 +1,8 @@
 package ports
 
 import (
+	"context"
+	"github.com/google/uuid"
 	"go-starter/internal/domain/entities"
 	"time"
 )
@@ -9,21 +11,23 @@ import (
 type TokenService interface {
 	// GenerateAccessToken creates a new access token for a given user
 	GenerateAccessToken(user *entities.User) (string, error)
-	// ValidateAccessToken validates an access token and returns associated token payload
-	ValidateAccessToken(tokenStr string) (*entities.TokenPayload, error)
+	// GetTokenPayload validates a token and returns associated token payload
+	GetTokenPayload(tokenStr string) (*entities.TokenPayload, error)
 	// GenerateRefreshToken creates a new refresh token for a given user
 	GenerateRefreshToken(user *entities.User) (string, error)
 	// ValidateRefreshToken validates a refresh token and returns associated token payload
 	ValidateRefreshToken(tokenStr string) (*entities.TokenPayload, error)
+	// DeleteRefreshToken removes the refresh token from cache
+	DeleteRefreshToken(ctx context.Context, tokenStr string) error
 }
 
 type TokenRepository interface {
 	// GenerateToken creates a new token for a given user
-	GenerateToken(user *entities.User, duration time.Duration, jwtSecret []byte) (string, error)
+	GenerateToken(user *entities.User, duration time.Duration, jwtSecret []byte) (uuid.UUID, string, error)
 	// ValidateToken validates an token token and returns associated token payload
 	ValidateToken(tokenStr string, jwtSecret []byte) (*entities.TokenPayload, error)
 	// GenerateRefreshToken creates a new refresh token for a given user
-	GenerateRefreshToken(user *entities.User, duration time.Duration, jwtSecret []byte) (string, error)
+	GenerateRefreshToken(user *entities.User, duration time.Duration, jwtSecret []byte) (uuid.UUID, string, error)
 	// ValidateRefreshToken validates a refresh token and returns associated token payload
 	ValidateRefreshToken(tokenStr string, jwtSecret []byte) (*entities.TokenPayload, error)
 }

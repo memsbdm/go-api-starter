@@ -10,7 +10,7 @@ import (
 // TokenPayload represents authentication claims
 type TokenPayload struct {
 	ID        uuid.UUID
-	UserID    UserID
+	UserID    uuid.UUID
 	ExpiresAt int64
 	IssuedAt  int64
 }

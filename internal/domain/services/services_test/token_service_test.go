@@ -12,7 +12,8 @@ import (
 	"time"
 )
 
-var tokenTimeToExpire = 2 * time.Hour
+var refreshTokenTimeToExpire = 2 * time.Hour
+var tokenTimeToExpire = 20 * time.Minute
 
 func TestTokenService_ValidateToken(t *testing.T) {
 	t.Parallel()
@@ -54,7 +55,7 @@ func TestTokenService_ValidateToken(t *testing.T) {
 			builder.TimeGenerator.Advance(tt.advance)
 
 			// Act & Assert
-			_, err = builder.TokenService.ValidateAccessToken(accessToken)
+			_, err = builder.TokenService.GetTokenPayload(accessToken)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
@@ -77,7 +78,7 @@ func TestTokenService_ValidateRefreshToken(t *testing.T) {
 		},
 		{
 			name:        "Expired refresh token",
-			advance:     tokenTimeToExpire,
+			advance:     refreshTokenTimeToExpire,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}

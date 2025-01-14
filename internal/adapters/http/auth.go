@@ -75,6 +75,7 @@ type refreshTokenRequest struct {
 //	@Failure		422	{object}	errorResponse	"Validation error"
 //	@Failure		500	{object}	errorResponse	"Internal server error"
 //	@Router			/v1/auth/refresh [post]
+//	@Security		BearerAuth
 func (ah *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var payload refreshTokenRequest
@@ -93,8 +94,8 @@ func (ah *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, http.StatusOK, response)
 }
 
-// RegisterUserRequest represents the request body for creating a user
-type RegisterUserRequest struct {
+// registerUserRequest represents the request body for creating a user
+type registerUserRequest struct {
 	Username string `json:"username" validate:"required" example:"john"`
 	Password string `json:"password" validate:"required" example:"secret123"`
 }
@@ -106,7 +107,7 @@ type RegisterUserRequest struct {
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			RegisterUserRequest	body RegisterUserRequest true "Register request"
+//	@Param			registerUserRequest	body registerUserRequest true "Register request"
 //	@Success		200	{object}	response[userResponse]	"User created"
 //	@Failure		403	{object}	errorResponse	"Forbidden error"
 //	@Failure		409	{object}	errorResponse	"Duplication error"
@@ -115,7 +116,7 @@ type RegisterUserRequest struct {
 //	@Router			/v1/auth/register [post]
 func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	var payload RegisterUserRequest
+	var payload registerUserRequest
 
 	if err := validator.ValidateRequest(w, r, &payload); err != nil {
 		handleValidationError(w, err)
@@ -135,4 +136,33 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	response := newUserResponse(created)
 	handleSuccess(w, http.StatusCreated, response)
+}
+
+// Logout godoc
+//
+//	@Summary		Logout an authenticated user
+//	@Description	Logout an authenticated user
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
+//	@Success		200	{object}	emptyResponse	"Success"
+//	@Failure		400	{object}	errorResponse	"Bad request error"
+//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Router			/v1/auth/logout [delete]
+//	@Security		BearerAuth
+func (ah *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var payload refreshTokenRequest
+	if err := validator.ValidateRequest(w, r, &payload); err != nil {
+		handleValidationError(w, err)
+		return
+	}
+	err := ah.svc.Logout(ctx, payload.RefreshToken)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	handleSuccess(w, http.StatusOK, nil)
 }

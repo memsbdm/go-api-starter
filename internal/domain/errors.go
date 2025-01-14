@@ -10,6 +10,8 @@ var (
 	ErrForbidden = errors.New("forbidden")
 	// ErrUnauthorized represents an unauthorized error
 	ErrUnauthorized = errors.New("unauthorized")
+	// ErrBadRequest represents a bad request error
+	ErrBadRequest = errors.New("bad request")
 
 	// ErrInvalidToken represents an invalid token error
 	ErrInvalidToken = errors.New("invalid token")

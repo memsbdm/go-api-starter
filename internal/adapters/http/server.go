@@ -33,7 +33,8 @@ func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandl
 	// Auth
 	mux.HandleFunc("POST /v1/auth/login", Chain(authHandler.Login, guest()))
 	mux.HandleFunc("POST /v1/auth/register", Chain(authHandler.Register, guest()))
-	mux.HandleFunc("POST /v1/auth/refresh", authHandler.RefreshToken)
+	mux.HandleFunc("POST /v1/auth/refresh", Chain(authHandler.RefreshToken, auth()))
+	mux.HandleFunc("DELETE /v1/auth/logout", Chain(authHandler.Logout, auth()))
 
 	// Users
 	mux.HandleFunc("GET /v1/users/me", Chain(userHandler.Me, auth()))

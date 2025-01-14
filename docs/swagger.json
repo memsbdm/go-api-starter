@@ -65,8 +65,64 @@
                 }
             }
         },
+        "/v1/auth/logout": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Logout an authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout an authenticated user",
+                "parameters": [
+                    {
+                        "description": "Refresh token request",
+                        "name": "refreshTokenRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.refreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/http.emptyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/auth/refresh": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Generate a new access token and refresh token",
                 "consumes": [
                     "application/json"
@@ -133,11 +189,11 @@
                 "parameters": [
                     {
                         "description": "Register request",
-                        "name": "RegisterUserRequest",
+                        "name": "registerUserRequest",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.RegisterUserRequest"
+                            "$ref": "#/definitions/http.registerUserRequest"
                         }
                     }
                 ],
@@ -311,20 +367,12 @@
         }
     },
     "definitions": {
-        "http.RegisterUserRequest": {
+        "http.emptyResponse": {
             "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
             "properties": {
-                "password": {
-                    "type": "string",
-                    "example": "secret123"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "john"
+                "success": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
@@ -425,6 +473,23 @@
                 "refresh_token": {
                     "type": "string",
                     "example": "eyJhbGciOiJI..."
+                }
+            }
+        },
+        "http.registerUserRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "secret123"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john"
                 }
             }
         },

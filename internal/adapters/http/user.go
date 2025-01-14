@@ -40,7 +40,7 @@ func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := uh.svc.GetByID(ctx, authPayload.UserID)
+	user, err := uh.svc.GetByID(ctx, entities.UserID(authPayload.UserID))
 	if err != nil {
 		handleError(w, err)
 		return
@@ -82,13 +82,13 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := entities.UserID(userUUID)
+	userID := userUUID
 	if authPayload.UserID != userID {
 		handleError(w, domain.ErrForbidden)
 		return
 	}
 
-	user, err := uh.svc.GetByID(ctx, userID)
+	user, err := uh.svc.GetByID(ctx, entities.UserID(userID))
 	if err != nil {
 		handleError(w, err)
 		return

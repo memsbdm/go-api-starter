@@ -10,6 +10,7 @@ var domainHttpErrMap = map[error]int{
 	domain.ErrInternal:     http.StatusInternalServerError,
 	domain.ErrForbidden:    http.StatusForbidden,
 	domain.ErrUnauthorized: http.StatusUnauthorized,
+	domain.ErrBadRequest:   http.StatusBadRequest,
 
 	domain.ErrInvalidToken: http.StatusUnauthorized,
 

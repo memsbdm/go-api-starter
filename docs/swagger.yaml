@@ -1,15 +1,9 @@
 definitions:
-  http.RegisterUserRequest:
+  http.emptyResponse:
     properties:
-      password:
-        example: secret123
-        type: string
-      username:
-        example: john
-        type: string
-    required:
-    - password
-    - username
+      success:
+        example: true
+        type: boolean
     type: object
   http.errorResponse:
     properties:
@@ -80,6 +74,18 @@ definitions:
         type: string
     required:
     - refresh_token
+    type: object
+  http.registerUserRequest:
+    properties:
+      password:
+        example: secret123
+        type: string
+      username:
+        example: john
+        type: string
+    required:
+    - password
+    - username
     type: object
   http.response-http_loginResponse:
     properties:
@@ -152,6 +158,38 @@ paths:
       summary: Login a user
       tags:
       - Auth
+  /v1/auth/logout:
+    delete:
+      consumes:
+      - application/json
+      description: Logout an authenticated user
+      parameters:
+      - description: Refresh token request
+        in: body
+        name: refreshTokenRequest
+        required: true
+        schema:
+          $ref: '#/definitions/http.refreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/http.emptyResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout an authenticated user
+      tags:
+      - Auth
   /v1/auth/refresh:
     post:
       consumes:
@@ -183,6 +221,8 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/http.errorResponse'
+      security:
+      - BearerAuth: []
       summary: Generate a new access token and refresh token
       tags:
       - Auth
@@ -194,10 +234,10 @@ paths:
       parameters:
       - description: Register request
         in: body
-        name: RegisterUserRequest
+        name: registerUserRequest
         required: true
         schema:
-          $ref: '#/definitions/http.RegisterUserRequest'
+          $ref: '#/definitions/http.registerUserRequest'
       produces:
       - application/json
       responses:

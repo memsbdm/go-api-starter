@@ -37,6 +37,11 @@ func handleError(w http.ResponseWriter, err error) {
 	_ = encoder.Encode(errResp)
 }
 
+// emptyResponse represents a success response without data
+type emptyResponse struct {
+	Success bool `json:"success" example:"true"`
+}
+
 // errorResponse represents an error response body format
 type errorResponse struct {
 	Success  bool     `json:"success" example:"false"`

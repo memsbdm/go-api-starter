@@ -22,16 +22,17 @@ func NewTokenRepository(timeGenerator ports.TimeGenerator) *TokenRepository {
 }
 
 // GenerateToken generates a new JWT token for the specified user
-func (tr *TokenRepository) GenerateToken(user *entities.User, duration time.Duration, jwtSecret []byte) (string, error) {
+func (tr *TokenRepository) GenerateToken(user *entities.User, duration time.Duration, jwtSecret []byte) (uuid.UUID, string, error) {
 	payload := &entities.TokenPayload{
 		ID:        uuid.New(),
-		UserID:    user.ID,
+		UserID:    user.ID.UUID(),
 		IssuedAt:  tr.timeGenerator.Now().Unix(),
 		ExpiresAt: tr.timeGenerator.Now().Add(duration).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-	return token.SignedString(jwtSecret)
+	signedToken, err := token.SignedString(jwtSecret)
+	return payload.ID, signedToken, err
 }
 
 // ValidateToken checks if the provided token string is valid and returns the associated claims
@@ -56,12 +57,12 @@ func (tr *TokenRepository) ValidateToken(tokenStr string, jwtSecret []byte) (*en
 }
 
 // GenerateRefreshToken creates a new refresh token for a given user
-func (tr *TokenRepository) GenerateRefreshToken(user *entities.User, duration time.Duration, jwtSecret []byte) (string, error) {
-	token, err := tr.GenerateToken(user, duration, jwtSecret)
+func (tr *TokenRepository) GenerateRefreshToken(user *entities.User, duration time.Duration, jwtSecret []byte) (uuid.UUID, string, error) {
+	tokenID, token, err := tr.GenerateToken(user, duration, jwtSecret)
 	if err != nil {
-		return "", err
+		return uuid.Nil, "", err
 	}
-	return token, nil
+	return tokenID, token, nil
 }
 
 // ValidateRefreshToken validates a refresh token and returns associated token payload

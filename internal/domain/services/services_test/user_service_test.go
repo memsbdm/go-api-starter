@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
+	"go-starter/internal/domain/services"
 	"go-starter/internal/domain/utils"
 	"testing"
 )
@@ -135,7 +136,7 @@ func TestUserService_GetById_Cache(t *testing.T) {
 	}
 
 	// Act & Assert
-	cachedUser, err := builder.CacheService.Get(ctx, utils.GenerateCacheKey("user", createdUser.ID))
+	cachedUser, err := builder.CacheService.Get(ctx, utils.GenerateCacheKey(services.UserCachePrefix, createdUser.ID))
 	if err != nil {
 		t.Errorf("error while getting user from cache: %v", err)
 	}

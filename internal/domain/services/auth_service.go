@@ -58,7 +58,7 @@ func (as *AuthService) RefreshToken(ctx context.Context, refreshToken string) (s
 		return "", "", domain.ErrInvalidToken
 	}
 
-	user, err := as.userSvc.GetByID(ctx, claims.UserID)
+	user, err := as.userSvc.GetByID(ctx, entities.UserID(claims.UserID))
 	if err != nil {
 		return "", "", domain.ErrInternal
 	}
@@ -72,11 +72,20 @@ func (as *AuthService) RefreshToken(ctx context.Context, refreshToken string) (s
 	if err != nil {
 		return "", "", domain.ErrInternal
 	}
-
+	err = as.tokenSvc.DeleteRefreshToken(ctx, refreshToken)
 	return accessToken, newRefreshToken, nil
 }
 
 // Register registers a new user
 func (as *AuthService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
 	return as.userSvc.Register(ctx, user)
+}
+
+// Logout deletes the user session
+func (as *AuthService) Logout(ctx context.Context, refreshToken string) error {
+	err := as.tokenSvc.DeleteRefreshToken(ctx, refreshToken)
+	if err != nil && (!errors.Is(err, domain.ErrInvalidToken) || !errors.Is(err, domain.ErrUnauthorized)) {
+		return domain.ErrBadRequest
+	}
+	return err
 }

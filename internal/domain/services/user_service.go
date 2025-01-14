@@ -24,13 +24,15 @@ func NewUserService(repo ports.UserRepository, cache ports.CacheService) *UserSe
 	}
 }
 
+const UserCachePrefix = "user"
+
 // GetByID retrieves a user by their ID.
 // It first attempts to fetch the user from the cache for efficiency.
 // If the user is not found in the cache, it queries the database then stores the result back in the cache.
 // Returns the user entity if found, or an error if the user does not exist or an issue occurs.
 func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	var user *entities.User
-	cacheKey := utils.GenerateCacheKey("user", id)
+	cacheKey := utils.GenerateCacheKey(UserCachePrefix, id)
 	cachedUser, err := us.cache.Get(ctx, cacheKey)
 	if err == nil {
 		err := utils.Deserialize(cachedUser, &user)
