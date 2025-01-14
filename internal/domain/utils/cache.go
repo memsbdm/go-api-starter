@@ -6,8 +6,13 @@ import (
 )
 
 // GenerateCacheKey generates a cache key based on the input parameters
-func GenerateCacheKey(prefix string, params any) string {
-	return fmt.Sprintf("%s:%v", prefix, params)
+func GenerateCacheKey(prefix string, requiredParam any, optionalParams ...any) string {
+	key := prefix
+	key += fmt.Sprintf(":%v", requiredParam)
+	for _, param := range optionalParams {
+		key += fmt.Sprintf(":%v", param)
+	}
+	return key
 }
 
 // Serialize marshals the input data into an array of bytes
