@@ -31,7 +31,7 @@ func NewTestBuilder() *TestBuilder {
 	tokenRepo := token.NewTokenRepository(timeGenerator)
 	userRepo := mocks.MockUserRepository()
 	tokenConfig := &config.Token{
-		TokenDuration:        10 * time.Minute,
+		AccessTokenDuration:  10 * time.Minute,
 		RefreshTokenDuration: 1 * time.Hour,
 		JWTSecret:            []byte("secret"),
 	}

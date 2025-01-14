@@ -26,7 +26,7 @@ func TestUserService_Register(t *testing.T) {
 
 	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
-		t.Errorf("error while registering user: %v", err)
+		t.Fatalf("error while registering user: %v", err)
 	}
 
 	tests := []struct {
@@ -58,10 +58,10 @@ func TestUserService_Register(t *testing.T) {
 			t.Parallel()
 			result, err := builder.UserService.Register(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
-				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 			if err == nil && result.Username != tt.input.Username {
-				t.Fatalf("expected username %s, got %s", tt.input.Username, result.Username)
+				t.Errorf("expected username %s, got %s", tt.input.Username, result.Username)
 			}
 		})
 	}
@@ -81,7 +81,7 @@ func TestUserService_GetByID(t *testing.T) {
 
 	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
-		t.Errorf("error while registering user: %v", err)
+		t.Fatalf("error while registering user: %v", err)
 	}
 
 	tests := []struct {
@@ -107,7 +107,7 @@ func TestUserService_GetByID(t *testing.T) {
 			t.Parallel()
 			_, err := builder.UserService.GetByID(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
-				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 		})
 	}
@@ -126,12 +126,12 @@ func TestUserService_GetById_Cache(t *testing.T) {
 	}
 	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
-		t.Errorf("error while registering user: %v", err)
+		t.Fatalf("error while registering user: %v", err)
 	}
 
 	_, err = builder.UserService.GetByID(ctx, createdUser.ID)
 	if err != nil {
-		t.Errorf("error while fetching user: %v", err)
+		t.Fatalf("error while fetching user: %v", err)
 	}
 
 	// Act & Assert
@@ -139,11 +139,13 @@ func TestUserService_GetById_Cache(t *testing.T) {
 	if err != nil {
 		t.Errorf("error while getting user from cache: %v", err)
 	}
+
 	var deserializedUser entities.User
 	err = utils.Deserialize(cachedUser, &deserializedUser)
 	if err != nil {
 		t.Errorf("error while deserializing user: %v", err)
 	}
+
 	if deserializedUser.ID != createdUser.ID {
 		t.Errorf("deserialized user does not match cache")
 	}
@@ -163,7 +165,7 @@ func TestUserService_GetByUsername(t *testing.T) {
 
 	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
-		t.Errorf("error while registering user: %v", err)
+		t.Fatalf("error while registering user: %v", err)
 	}
 
 	tests := []struct {
@@ -189,10 +191,10 @@ func TestUserService_GetByUsername(t *testing.T) {
 			t.Parallel()
 			result, err := builder.UserService.GetByUsername(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
-				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 			if err == nil && result.Username != tt.input {
-				t.Fatalf("expected username %s, got %s", tt.input, result.Username)
+				t.Errorf("expected username %s, got %s", tt.input, result.Username)
 			}
 		})
 	}

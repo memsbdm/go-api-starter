@@ -25,17 +25,17 @@ func NewTokenService(cfg *config.Token, repo ports.TokenRepository, cacheSvc por
 	}
 }
 
-// GenerateToken generates a new JWT token for the specified user
-func (ts *TokenService) GenerateToken(user *entities.User) (string, error) {
-	token, err := ts.repo.GenerateToken(user, ts.cfg.TokenDuration, ts.cfg.JWTSecret)
+// GenerateAccessToken generates a new access token for the specified user
+func (ts *TokenService) GenerateAccessToken(user *entities.User) (string, error) {
+	token, err := ts.repo.GenerateToken(user, ts.cfg.AccessTokenDuration, ts.cfg.JWTSecret)
 	if err != nil {
 		return "", domain.ErrInternal
 	}
 	return token, nil
 }
 
-// ValidateToken checks if the provided token string is valid and returns the associated claims
-func (ts *TokenService) ValidateToken(tokenStr string) (*entities.TokenPayload, error) {
+// ValidateAccessToken checks if the provided access token is valid and returns the associated claims
+func (ts *TokenService) ValidateAccessToken(tokenStr string) (*entities.TokenPayload, error) {
 	tokenPayload, err := ts.repo.ValidateToken(tokenStr, ts.cfg.JWTSecret)
 	if err != nil {
 		return nil, domain.ErrInvalidToken
@@ -73,16 +73,26 @@ func (ts *TokenService) GenerateRefreshToken(user *entities.User) (string, error
 }
 
 // ValidateRefreshToken validates a refresh token and returns associated token payload
-func (ts *TokenService) ValidateRefreshToken(tokenStr string) (*entities.TokenPayload, error) {
-	claims, err := ts.repo.ValidateRefreshToken(tokenStr, ts.cfg.JWTSecret)
+func (ts *TokenService) ValidateRefreshToken(refreshToken string) (*entities.TokenPayload, error) {
+	claims, err := ts.repo.ValidateRefreshToken(refreshToken, ts.cfg.JWTSecret)
 	if err != nil {
 		return nil, domain.ErrInvalidToken
 	}
 
 	ctx := context.Background()
 	key := utils.GenerateCacheKey("refresh_token", claims.UserID)
-	_, err = ts.cacheSvc.Get(ctx, key)
+	value, err := ts.cacheSvc.Get(ctx, key)
 	if err != nil {
+		return nil, domain.ErrInvalidToken
+	}
+
+	var storedRefreshToken string
+	err = utils.Deserialize(value, &storedRefreshToken)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+
+	if refreshToken != storedRefreshToken {
 		return nil, domain.ErrInvalidToken
 	}
 

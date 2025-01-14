@@ -17,13 +17,13 @@ func main() {
 	ctx := context.Background()
 	db, err := postgres.New(ctx, cfg.DB)
 	if err != nil {
-		slog.Error("Failed to connect to database")
+		slog.Error("failed to connect to database")
 		os.Exit(1)
 	}
 	defer func() {
 		err := db.Close()
 		if err != nil {
-			slog.Error("Failed to close database connection")
+			slog.Error("failed to close database connection")
 		} else {
 			slog.Info("Successfully closed database connection")
 		}

@@ -27,15 +27,15 @@ func NewHealthHandler() *HealthHandler {
 //	@Success		200	{object}	healthResponse	"DB information"
 //	@Failure		500	{object}	errorResponse	"Internal server error"
 //	@Router			/v1/health [get]
-func (hh *HealthHandler) Health(w http.ResponseWriter, r *http.Request) {
+func (hh *HealthHandler) Health(w http.ResponseWriter, _ *http.Request) {
 	resp, err := json.Marshal(postgres.Health())
 	if err != nil {
-		http.Error(w, "Failed to marshal health check response", http.StatusInternalServerError)
+		http.Error(w, "failed to marshal health check response", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(resp); err != nil {
-		errMsg := fmt.Sprintf("Failed to write health check response: %s", err)
+		errMsg := fmt.Sprintf("failed to write health check response: %s", err)
 		slog.Error(errMsg)
 		http.Error(w, errMsg, http.StatusInternalServerError)
 	}

@@ -61,7 +61,7 @@ func TestAuthService_Login(t *testing.T) {
 			t.Parallel()
 			_, _, err := builder.AuthService.Login(ctx, tt.input.username, tt.input.password)
 			if !errors.Is(err, tt.expectedErr) {
-				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 		})
 	}
@@ -90,17 +90,17 @@ func TestAuthService_RefreshToken(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		token       string
+		input       string
 		expectedErr error
 	}{
 		{
 			name:        "Refresh Token Success",
-			token:       refreshToken,
+			input:       refreshToken,
 			expectedErr: nil,
 		},
 		{
 			name:        "Refresh Token Error",
-			token:       refreshToken[:len(refreshToken)-1] + "1",
+			input:       refreshToken[:len(refreshToken)-1] + "1",
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
@@ -109,9 +109,9 @@ func TestAuthService_RefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			_, _, err := builder.AuthService.RefreshToken(ctx, tt.token)
+			_, _, err := builder.AuthService.RefreshToken(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
-				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 		})
 	}

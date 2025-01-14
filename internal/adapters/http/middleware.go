@@ -109,7 +109,7 @@ func authMiddleware(tokenService *ports.TokenService) Middleware {
 			}
 
 			accessToken := fields[1]
-			tokenPayload, err := (*tokenService).ValidateToken(accessToken)
+			tokenPayload, err := (*tokenService).ValidateAccessToken(accessToken)
 			if err != nil {
 				handleError(w, domain.ErrUnauthorized)
 				return
@@ -139,7 +139,7 @@ func guestMiddleware(tokenService *ports.TokenService) Middleware {
 			}
 
 			accessToken := fields[1]
-			_, err := (*tokenService).ValidateToken(accessToken)
+			_, err := (*tokenService).ValidateAccessToken(accessToken)
 			if err == nil {
 				handleError(w, domain.ErrForbidden)
 				return

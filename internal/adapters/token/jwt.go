@@ -2,6 +2,7 @@ package token
 
 import (
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
@@ -23,6 +24,7 @@ func NewTokenRepository(timeGenerator ports.TimeGenerator) *TokenRepository {
 // GenerateToken generates a new JWT token for the specified user
 func (tr *TokenRepository) GenerateToken(user *entities.User, duration time.Duration, jwtSecret []byte) (string, error) {
 	payload := &entities.TokenPayload{
+		ID:        uuid.New(),
 		UserID:    user.ID,
 		IssuedAt:  tr.timeGenerator.Now().Unix(),
 		ExpiresAt: tr.timeGenerator.Now().Add(duration).Unix(),
@@ -34,13 +36,17 @@ func (tr *TokenRepository) GenerateToken(user *entities.User, duration time.Dura
 
 // ValidateToken checks if the provided token string is valid and returns the associated claims
 func (tr *TokenRepository) ValidateToken(tokenStr string, jwtSecret []byte) (*entities.TokenPayload, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &entities.TokenPayload{}, func(token *jwt.Token) (interface{}, error) {
+	parser := jwt.NewParser(jwt.WithTimeFunc(tr.timeGenerator.Now))
+
+	token, err := parser.ParseWithClaims(tokenStr, &entities.TokenPayload{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
+
 	if err != nil {
 		return nil, err
 	}
 
+	// Extract the claims
 	tokenPayload, ok := token.Claims.(*entities.TokenPayload)
 	if !ok || !token.Valid {
 		return nil, domain.ErrUnauthorized

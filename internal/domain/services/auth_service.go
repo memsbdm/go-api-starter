@@ -38,7 +38,7 @@ func (as *AuthService) Login(ctx context.Context, username, password string) (st
 		return "", "", domain.ErrInvalidCredentials
 	}
 
-	accessToken, err := as.tokenSvc.GenerateToken(user)
+	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
 	if err != nil {
 		return "", "", domain.ErrInternal
 	}
@@ -63,7 +63,7 @@ func (as *AuthService) RefreshToken(ctx context.Context, refreshToken string) (s
 		return "", "", domain.ErrInternal
 	}
 
-	accessToken, err := as.tokenSvc.GenerateToken(user)
+	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
 	if err != nil {
 		return "", "", domain.ErrInternal
 	}

@@ -3,11 +3,13 @@ package entities
 import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"time"
 )
 
 // TokenPayload represents authentication claims
 type TokenPayload struct {
+	ID        uuid.UUID
 	UserID    UserID
 	ExpiresAt int64
 	IssuedAt  int64

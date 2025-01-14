@@ -54,7 +54,7 @@ func TestCacheService_Get(t *testing.T) {
 			t.Parallel()
 			value, err := builder.CacheService.Get(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
-				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 			if !reflect.DeepEqual(value, tt.expectedValue) {
 				t.Errorf("expected value %v, got %v", tt.expectedValue, value)
@@ -106,7 +106,7 @@ func TestCacheService_Delete(t *testing.T) {
 			t.Parallel()
 			err := builder.CacheService.Delete(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
-				t.Fatalf("expected error %v, got %v", tt.expectedErr, err)
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 			value, err := builder.CacheService.Get(ctx, tt.input)
 			if !errors.Is(err, domain.ErrCacheNotFound) {
@@ -134,7 +134,7 @@ func TestCacheService_DeleteByPrefix(t *testing.T) {
 			t.Fatalf("failed to set cache for key %d: %v", i, err)
 		}
 	}
-	const otherKey = "other"
+	otherKey := "other"
 	otherValue := []byte("value")
 
 	err := builder.CacheService.Set(ctx, otherKey, otherValue, time.Hour)
@@ -147,6 +147,7 @@ func TestCacheService_DeleteByPrefix(t *testing.T) {
 		t.Fatalf("failed to delete cache by prefix: %v", err)
 	}
 
+	// Act & Assert
 	for i := range 10 {
 		value, err := builder.CacheService.Get(ctx, fmt.Sprintf("%s%d", testedPrefix, i))
 		if err == nil || !errors.Is(err, domain.ErrCacheNotFound) {
@@ -170,17 +171,20 @@ func TestCacheService_CacheExpiration(t *testing.T) {
 	ctx := context.Background()
 	timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
 	builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
-	const key = "example"
-	err := builder.CacheService.Set(ctx, key, []byte("value"), time.Hour)
+	cacheDuration := time.Hour
+	key := "example"
+
+	err := builder.CacheService.Set(ctx, key, []byte("value"), cacheDuration)
 	if err != nil {
 		t.Fatalf("failed to set cache: %v", err)
 	}
+
 	_, err = builder.CacheService.Get(ctx, key)
 	if err != nil {
 		t.Fatalf("failed to get cache: %v", err)
 	}
 
-	timeGenerator.Advance(time.Hour)
+	timeGenerator.Advance(cacheDuration)
 
 	// Act & Assert
 	_, err = builder.CacheService.Get(ctx, key)

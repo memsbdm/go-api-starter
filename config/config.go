@@ -42,7 +42,7 @@ type (
 	// Token contains all the environment variables for the token service
 	Token struct {
 		JWTSecret            []byte
-		TokenDuration        time.Duration
+		AccessTokenDuration  time.Duration
 		RefreshTokenDuration time.Duration
 	}
 )
@@ -71,7 +71,7 @@ func New() *Container {
 
 	token := &Token{
 		JWTSecret:            []byte(env.GetString("JWT_SECRET")),
-		TokenDuration:        env.GetDuration("TOKEN_DURATION"),
+		AccessTokenDuration:  env.GetDuration("ACCESS_TOKEN_DURATION"),
 		RefreshTokenDuration: env.GetDuration("REFRESH_TOKEN_DURATION"),
 	}
 
