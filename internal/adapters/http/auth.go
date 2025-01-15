@@ -147,7 +147,8 @@ func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
 //	@Success		200	{object}	emptyResponse	"Success"
-//	@Failure		400	{object}	errorResponse	"Bad request error"
+//	@Failure		401	{object}	errorResponse	"Unauthorized error"
+//	@Failure		422	{object}	errorResponse	"Validation error"
 //	@Failure		500	{object}	errorResponse	"Internal server error"
 //	@Router			/v1/auth/logout [delete]
 //	@Security		BearerAuth

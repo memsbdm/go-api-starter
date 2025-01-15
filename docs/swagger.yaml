@@ -174,8 +174,12 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/http.emptyResponse'
-        "400":
-          description: Bad request error
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "422":
+          description: Validation error
           schema:
             $ref: '#/definitions/http.errorResponse'
         "500":
