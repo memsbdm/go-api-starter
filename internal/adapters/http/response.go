@@ -6,6 +6,7 @@ import (
 	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain/entities"
 	"net/http"
+	"time"
 )
 
 // response represents a generic API success response structure.
@@ -104,15 +105,19 @@ type healthResponse struct {
 
 // userResponse represents the structure of a response body containing user information.
 type userResponse struct {
-	ID              string `json:"id" example:"6b947a32-8919-4974-9ef3-048a556b0b75"`
-	Username        string `json:"username" example:"john"`
-	IsEmailVerified bool   `json:"is_email_verified" example:"true"`
+	ID              string    `json:"id" example:"6b947a32-8919-4974-9ef3-048a556b0b75"`
+	CreatedAt       time.Time `json:"created_at" example:"2024-08-15T16:23:33.455225Z"`
+	UpdatedAt       time.Time `json:"updated_at" example:"2025-01-15T14:29:33.455225Z"`
+	Username        string    `json:"username" example:"john"`
+	IsEmailVerified bool      `json:"is_email_verified" example:"true"`
 }
 
 // newUserResponse is a helper function that creates a userResponse from a user entity.
 func newUserResponse(user *entities.User) userResponse {
 	return userResponse{
 		ID:              user.ID.String(),
+		CreatedAt:       user.CreatedAt,
+		UpdatedAt:       user.UpdatedAt,
 		Username:        user.Username,
 		IsEmailVerified: user.IsEmailVerified,
 	}

@@ -540,6 +540,10 @@ const docTemplate = `{
         "http.userResponse": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-08-15T16:23:33.455225Z"
+                },
                 "id": {
                     "type": "string",
                     "example": "6b947a32-8919-4974-9ef3-048a556b0b75"
@@ -547,6 +551,10 @@ const docTemplate = `{
                 "is_email_verified": {
                     "type": "boolean",
                     "example": true
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-01-15T14:29:33.455225Z"
                 },
                 "username": {
                     "type": "string",

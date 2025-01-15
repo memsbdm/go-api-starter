@@ -1,6 +1,9 @@
 package entities
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 // UserID is a type that represents a unique identifier for a user, based on UUID.
 type UserID uuid.UUID
@@ -8,6 +11,8 @@ type UserID uuid.UUID
 // User is an entity that represents a user in the system.
 type User struct {
 	ID              UserID
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 	Username        string
 	Password        string
 	IsEmailVerified bool

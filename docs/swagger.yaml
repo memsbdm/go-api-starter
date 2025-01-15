@@ -116,12 +116,18 @@ definitions:
     type: object
   http.userResponse:
     properties:
+      created_at:
+        example: "2024-08-15T16:23:33.455225Z"
+        type: string
       id:
         example: 6b947a32-8919-4974-9ef3-048a556b0b75
         type: string
       is_email_verified:
         example: true
         type: boolean
+      updated_at:
+        example: "2025-01-15T14:29:33.455225Z"
+        type: string
       username:
         example: john
         type: string

@@ -15,6 +15,15 @@ itest:
 	@echo "Running integration tests..."
 	@go test --tags=integration -v ./...
 
+TABLE_NAME=$(wordlist 2, 2, $(MAKECMDGOALS))
+migration:
+	@if [ -z "$(TABLE_NAME)" ]; then \
+		echo "Error: Please specify the table name (e.g., make migration my_table_name)"; \
+		exit 1; \
+	fi
+	@echo "Creating migration..."
+	@cd internal/adapters/storage/postgres/migrations && goose create $(TABLE_NAME) sql
+
 migration-down:
 	@cd internal/adapters/storage/postgres/migrations && goose postgres "$(DB_ADDR)" down
 
@@ -51,4 +60,4 @@ watch:
 		fi; \
 	fi
 
-.PHONY:  all build clean itest migration-down migration-reset migration-up test run seed swag watch
+.PHONY:  all build clean itest migration-down migration migration-reset migration-up test run seed swag watch
