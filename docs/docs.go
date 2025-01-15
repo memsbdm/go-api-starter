@@ -474,13 +474,9 @@ const docTemplate = `{
         },
         "http.refreshTokenRequest": {
             "type": "object",
-            "required": [
-                "refresh_token"
-            ],
             "properties": {
-                "refresh_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJI..."
+                "refreshToken": {
+                    "type": "string"
                 }
             }
         },
@@ -528,7 +524,7 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "string",
-                    "example": "1"
+                    "example": "6b947a32-8919-4974-9ef3-048a556b0b75"
                 },
                 "is_email_verified": {
                     "type": "boolean",

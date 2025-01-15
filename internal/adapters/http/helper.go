@@ -6,10 +6,10 @@ import (
 	"go-starter/internal/domain/entities"
 )
 
-func getAuthPayload(ctx context.Context, key string) (*entities.TokenPayload, error) {
-	payload, ok := ctx.Value(key).(*entities.TokenPayload)
+func getAccessTokenClaims(ctx context.Context, key string) (*entities.AccessTokenClaims, error) {
+	payload, ok := ctx.Value(key).(*entities.AccessTokenClaims)
 	if !ok {
-		return nil, domain.ErrTokenPayloadNotFound
+		return nil, domain.ErrTokenClaimsNotFound
 	}
 	return payload, nil
 }

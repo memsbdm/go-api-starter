@@ -12,10 +12,10 @@ import (
 	"time"
 )
 
-var refreshTokenTimeToExpire = 2 * time.Hour
-var tokenTimeToExpire = 20 * time.Minute
+var refreshTokenExpirationDuration = 2 * time.Hour
+var accessTokenExpirationDuration = 20 * time.Minute
 
-func TestTokenService_ValidateToken(t *testing.T) {
+func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -30,7 +30,7 @@ func TestTokenService_ValidateToken(t *testing.T) {
 		},
 		{
 			name:        "Expired token",
-			advance:     tokenTimeToExpire,
+			advance:     accessTokenExpirationDuration,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
@@ -55,55 +55,7 @@ func TestTokenService_ValidateToken(t *testing.T) {
 			builder.TimeGenerator.Advance(tt.advance)
 
 			// Act & Assert
-			_, err = builder.TokenService.GetTokenPayload(accessToken)
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
-			}
-		})
-	}
-}
-
-func TestTokenService_ValidateRefreshToken(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name        string
-		advance     time.Duration
-		expectedErr error
-	}{
-		{
-			name:        "Valid refresh token",
-			advance:     0,
-			expectedErr: nil,
-		},
-		{
-			name:        "Expired refresh token",
-			advance:     refreshTokenTimeToExpire,
-			expectedErr: domain.ErrInvalidToken,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			// Arrange
-			timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
-			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
-
-			user := &entities.User{
-				ID: entities.UserID(uuid.New()),
-			}
-
-			refreshToken, err := builder.TokenService.GenerateRefreshToken(user)
-			if err != nil {
-				t.Fatalf("failed to login: %v", err)
-			}
-
-			builder.TimeGenerator.Advance(tt.advance)
-
-			// Act & Assert
-			_, err = builder.TokenService.ValidateRefreshToken(refreshToken)
+			_, err = builder.TokenService.ValidateAndParseAccessToken(accessToken)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}

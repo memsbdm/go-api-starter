@@ -9,25 +9,16 @@ import (
 
 // TokenService is an interface for interacting with token-related business logic
 type TokenService interface {
-	// GenerateAccessToken creates a new access token for a given user
 	GenerateAccessToken(user *entities.User) (string, error)
-	// GetTokenPayload validates a token and returns associated token payload
-	GetTokenPayload(tokenStr string) (*entities.TokenPayload, error)
-	// GenerateRefreshToken creates a new refresh token for a given user
-	GenerateRefreshToken(user *entities.User) (string, error)
-	// ValidateRefreshToken validates a refresh token and returns associated token payload
-	ValidateRefreshToken(tokenStr string) (*entities.TokenPayload, error)
-	// DeleteRefreshToken removes the refresh token from cache
-	DeleteRefreshToken(ctx context.Context, tokenStr string) error
+	ValidateAndParseAccessToken(token string) (*entities.AccessTokenClaims, error)
+	GenerateRefreshToken(ctx context.Context, userID entities.UserID) (string, error)
+	ValidateAndParseRefreshToken(ctx context.Context, token string) (*entities.RefreshTokenClaims, error)
+	RevokeRefreshToken(ctx context.Context, refreshToken string) error
 }
 
 type TokenRepository interface {
-	// GenerateToken creates a new token for a given user
-	GenerateToken(user *entities.User, duration time.Duration, jwtSecret []byte) (uuid.UUID, string, error)
-	// ValidateToken validates an token token and returns associated token payload
-	ValidateToken(tokenStr string, jwtSecret []byte) (*entities.TokenPayload, error)
-	// GenerateRefreshToken creates a new refresh token for a given user
-	GenerateRefreshToken(user *entities.User, duration time.Duration, jwtSecret []byte) (uuid.UUID, string, error)
-	// ValidateRefreshToken validates a refresh token and returns associated token payload
-	ValidateRefreshToken(tokenStr string, jwtSecret []byte) (*entities.TokenPayload, error)
+	GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (string, error)
+	ValidateAndParseAccessToken(token string, signature []byte) (*entities.AccessTokenClaims, error)
+	GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (uuid.UUID, string, error)
+	ValidateAndParseRefreshToken(token string, signature []byte) (*entities.RefreshTokenClaims, error)
 }

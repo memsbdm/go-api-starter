@@ -10,7 +10,6 @@ import (
 	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/services"
-	"time"
 )
 
 type TestBuilder struct {
@@ -31,9 +30,10 @@ func NewTestBuilder() *TestBuilder {
 	tokenRepo := token.NewTokenRepository(timeGenerator)
 	userRepo := mocks.MockUserRepository()
 	tokenConfig := &config.Token{
-		AccessTokenDuration:  10 * time.Minute,
-		RefreshTokenDuration: 1 * time.Hour,
-		JWTSecret:            []byte("secret"),
+		AccessTokenDuration:   accessTokenExpirationDuration,
+		RefreshTokenDuration:  refreshTokenExpirationDuration,
+		AccessTokenSignature:  []byte("access"),
+		RefreshTokenSignature: []byte("refresh"),
 	}
 	return &TestBuilder{
 		TimeGenerator: timeGenerator,

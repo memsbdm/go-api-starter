@@ -3,7 +3,6 @@ package http
 import (
 	"github.com/google/uuid"
 	"go-starter/internal/domain"
-	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
 )
@@ -34,13 +33,13 @@ func NewUserHandler(svc ports.UserService) *UserHandler {
 func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	authPayload, err := getAuthPayload(ctx, authorizationPayloadKey)
+	claims, err := getAccessTokenClaims(ctx, authorizationPayloadKey)
 	if err != nil {
 		handleError(w, domain.ErrInternal)
 		return
 	}
 
-	user, err := uh.svc.GetByID(ctx, entities.UserID(authPayload.UserID))
+	user, err := uh.svc.GetByID(ctx, claims.Subject)
 	if err != nil {
 		handleError(w, err)
 		return
@@ -76,19 +75,18 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authPayload, err := getAuthPayload(ctx, authorizationPayloadKey)
+	claims, err := getAccessTokenClaims(ctx, authorizationPayloadKey)
 	if err != nil {
 		handleError(w, domain.ErrInternal)
 		return
 	}
 
-	userID := userUUID
-	if authPayload.UserID != userID {
+	if claims.Subject.UUID() != userUUID {
 		handleError(w, domain.ErrForbidden)
 		return
 	}
 
-	user, err := uh.svc.GetByID(ctx, entities.UserID(userID))
+	user, err := uh.svc.GetByID(ctx, claims.Subject)
 	if err != nil {
 		handleError(w, err)
 		return

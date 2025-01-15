@@ -40,40 +40,15 @@ func (as *AuthService) Login(ctx context.Context, username, password string) (st
 
 	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
 	if err != nil {
-		return "", "", domain.ErrInternal
+		return "", "", err
 	}
 
-	refreshToken, err := as.tokenSvc.GenerateRefreshToken(user)
+	refreshToken, err := as.tokenSvc.GenerateRefreshToken(ctx, user.ID)
 	if err != nil {
-		return "", "", domain.ErrInternal
+		return "", "", err
 	}
 
 	return accessToken, refreshToken, nil
-}
-
-// RefreshToken generates a new access token and a new refresh token. It returns an error if the token is invalid or expired
-func (as *AuthService) RefreshToken(ctx context.Context, refreshToken string) (string, string, error) {
-	claims, err := as.tokenSvc.ValidateRefreshToken(refreshToken)
-	if err != nil {
-		return "", "", domain.ErrInvalidToken
-	}
-
-	user, err := as.userSvc.GetByID(ctx, entities.UserID(claims.UserID))
-	if err != nil {
-		return "", "", domain.ErrInternal
-	}
-
-	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
-	if err != nil {
-		return "", "", domain.ErrInternal
-	}
-
-	newRefreshToken, err := as.tokenSvc.GenerateRefreshToken(user)
-	if err != nil {
-		return "", "", domain.ErrInternal
-	}
-	err = as.tokenSvc.DeleteRefreshToken(ctx, refreshToken)
-	return accessToken, newRefreshToken, nil
 }
 
 // Register registers a new user
@@ -81,11 +56,35 @@ func (as *AuthService) Register(ctx context.Context, user *entities.User) (*enti
 	return as.userSvc.Register(ctx, user)
 }
 
-// Logout deletes the user session
-func (as *AuthService) Logout(ctx context.Context, refreshToken string) error {
-	err := as.tokenSvc.DeleteRefreshToken(ctx, refreshToken)
-	if err != nil && (!errors.Is(err, domain.ErrInvalidToken) || !errors.Is(err, domain.ErrUnauthorized)) {
-		return domain.ErrBadRequest
+func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string) (string, string, error) {
+	claims, err := as.tokenSvc.ValidateAndParseRefreshToken(ctx, previousRefreshToken)
+	if err != nil {
+		return "", "", err
 	}
-	return err
+
+	user, err := as.userSvc.GetByID(ctx, claims.Subject)
+	if err != nil {
+		return "", "", err
+	}
+
+	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err := as.tokenSvc.GenerateRefreshToken(ctx, claims.Subject)
+	if err != nil {
+		return "", "", err
+	}
+
+	err = as.tokenSvc.RevokeRefreshToken(ctx, previousRefreshToken)
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func (as *AuthService) Logout(ctx context.Context, refreshToken string) error {
+	return as.tokenSvc.RevokeRefreshToken(ctx, refreshToken)
 }

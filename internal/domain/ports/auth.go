@@ -10,10 +10,8 @@ type AuthService interface {
 	// Login authenticates a user.
 	// Returns an access token, a refresh token or an error if login fails.
 	Login(ctx context.Context, username, password string) (accessToken string, refreshToken string, err error)
-	// RefreshToken generates a new access token and a new refresh token. It returns an error if the token is invalid or expired
-	RefreshToken(ctx context.Context, previousRefreshToken string) (accessToken string, refreshToken string, err error)
 	// Register registers a new user
 	Register(ctx context.Context, user *entities.User) (*entities.User, error)
-	// Logout deletes the user session
+	Refresh(ctx context.Context, previousRefreshToken string) (string, string, error)
 	Logout(ctx context.Context, refreshToken string) error
 }

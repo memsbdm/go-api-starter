@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	"github.com/google/uuid"
 	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain/entities"
 	"net/http"
@@ -99,15 +98,15 @@ type healthResponse struct {
 
 // userResponse represents a user response body
 type userResponse struct {
-	ID              uuid.UUID `json:"id" example:"1"`
-	Username        string    `json:"username" example:"john"`
-	IsEmailVerified bool      `json:"is_email_verified" example:"true"`
+	ID              string `json:"id" example:"6b947a32-8919-4974-9ef3-048a556b0b75"`
+	Username        string `json:"username" example:"john"`
+	IsEmailVerified bool   `json:"is_email_verified" example:"true"`
 }
 
 // newUserResponse is a helper function to create a response body for handling user data
 func newUserResponse(user *entities.User) userResponse {
 	return userResponse{
-		ID:              user.ID.UUID(),
+		ID:              user.ID.String(),
 		Username:        user.Username,
 		IsEmailVerified: user.IsEmailVerified,
 	}
@@ -125,5 +124,4 @@ func newLoginResponse(accessToken, refreshToken string) loginResponse {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
-
 }

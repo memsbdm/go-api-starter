@@ -57,43 +57,6 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, http.StatusOK, response)
 }
 
-// refreshTokenRequest represents the request body for refresh token
-type refreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token" validate:"required" example:"eyJhbGciOiJI..."`
-}
-
-// RefreshToken godoc
-//
-//	@Summary		Generate a new access token and refresh token
-//	@Description	Generate a new access token and refresh token
-//	@Tags			Auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
-//	@Success		200	{object}	response[loginResponse]	"Access and refresh tokens"
-//	@Failure		401	{object}	errorResponse	"Unauthorized error"
-//	@Failure		422	{object}	errorResponse	"Validation error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
-//	@Router			/v1/auth/refresh [post]
-//	@Security		BearerAuth
-func (ah *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	var payload refreshTokenRequest
-	if err := validator.ValidateRequest(w, r, &payload); err != nil {
-		handleValidationError(w, err)
-		return
-	}
-
-	accessToken, refreshToken, err := ah.svc.RefreshToken(ctx, payload.RefreshToken)
-	if err != nil {
-		handleError(w, err)
-		return
-	}
-
-	response := newLoginResponse(accessToken, refreshToken)
-	handleSuccess(w, http.StatusOK, response)
-}
-
 // registerUserRequest represents the request body for creating a user
 type registerUserRequest struct {
 	Username string `json:"username" validate:"required" example:"john"`
@@ -138,6 +101,43 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, http.StatusCreated, response)
 }
 
+type refreshTokenRequest struct {
+	RefreshToken string
+}
+
+// Refresh godoc
+//
+//	@Summary		Generate a new access token and refresh token
+//	@Description	Generate a new access token and refresh token
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
+//	@Success		200	{object}	response[loginResponse]	"Access and refresh tokens"
+//	@Failure		401	{object}	errorResponse	"Unauthorized error"
+//	@Failure		422	{object}	errorResponse	"Validation error"
+//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Router			/v1/auth/refresh [post]
+//	@Security		BearerAuth
+func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var payload refreshTokenRequest
+
+	if err := validator.ValidateRequest(w, r, &payload); err != nil {
+		handleValidationError(w, err)
+		return
+	}
+
+	accessToken, refreshToken, err := ah.svc.Refresh(ctx, payload.RefreshToken)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	response := newLoginResponse(accessToken, refreshToken)
+	handleSuccess(w, http.StatusOK, response)
+}
+
 // Logout godoc
 //
 //	@Summary		Logout an authenticated user
@@ -153,11 +153,14 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 //	@Security		BearerAuth
 func (ah *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
 	var payload refreshTokenRequest
+
 	if err := validator.ValidateRequest(w, r, &payload); err != nil {
 		handleValidationError(w, err)
 		return
 	}
+
 	err := ah.svc.Logout(ctx, payload.RefreshToken)
 	if err != nil {
 		handleError(w, err)

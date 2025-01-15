@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"go-starter/config"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
@@ -29,40 +30,28 @@ const RefreshTokenCachePrefix = "refresh_token"
 
 // GenerateAccessToken generates a new access token for the specified user
 func (ts *TokenService) GenerateAccessToken(user *entities.User) (string, error) {
-	_, token, err := ts.repo.GenerateToken(user, ts.cfg.AccessTokenDuration, ts.cfg.JWTSecret)
+	token, err := ts.repo.GenerateAccessToken(user, ts.cfg.AccessTokenDuration, ts.cfg.AccessTokenSignature)
 	if err != nil {
 		return "", domain.ErrInternal
 	}
 	return token, nil
 }
 
-// GetTokenPayload checks if the provided token is valid and returns the associated token payload
-func (ts *TokenService) GetTokenPayload(tokenStr string) (*entities.TokenPayload, error) {
-	tokenPayload, err := ts.repo.ValidateToken(tokenStr, ts.cfg.JWTSecret)
+func (ts *TokenService) ValidateAndParseAccessToken(token string) (*entities.AccessTokenClaims, error) {
+	tokenPayload, err := ts.repo.ValidateAndParseAccessToken(token, ts.cfg.AccessTokenSignature)
 	if err != nil {
 		return nil, domain.ErrInvalidToken
 	}
 	return tokenPayload, nil
 }
 
-// GenerateRefreshToken creates a new refresh token for a given user and stores it in cache
-func (ts *TokenService) GenerateRefreshToken(user *entities.User) (string, error) {
-	ctx := context.Background()
-
-	// Generate a new token
-	tokenID, token, err := ts.repo.GenerateRefreshToken(user, ts.cfg.RefreshTokenDuration, ts.cfg.JWTSecret)
+func (ts *TokenService) GenerateRefreshToken(ctx context.Context, userID entities.UserID) (string, error) {
+	tokenID, token, err := ts.repo.GenerateRefreshToken(userID, ts.cfg.AccessTokenDuration, ts.cfg.RefreshTokenSignature)
 	if err != nil {
 		return "", domain.ErrInternal
 	}
 
-	// Store in cache
-	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, user.ID, tokenID)
-	value, err := utils.Serialize(token)
-	if err != nil {
-		return "", domain.ErrInternal
-	}
-
-	err = ts.cacheSvc.Set(ctx, key, value, ts.cfg.RefreshTokenDuration)
+	err = ts.storeRefreshTokenInCache(ctx, userID, tokenID, token)
 	if err != nil {
 		return "", domain.ErrInternal
 	}
@@ -70,40 +59,40 @@ func (ts *TokenService) GenerateRefreshToken(user *entities.User) (string, error
 	return token, nil
 }
 
-// ValidateRefreshToken validates a refresh token and returns associated token payload
-func (ts *TokenService) ValidateRefreshToken(refreshToken string) (*entities.TokenPayload, error) {
-	ctx := context.Background()
-
-	claims, err := ts.repo.ValidateRefreshToken(refreshToken, ts.cfg.JWTSecret)
+func (ts *TokenService) ValidateAndParseRefreshToken(ctx context.Context, token string) (*entities.RefreshTokenClaims, error) {
+	claims, err := ts.repo.ValidateAndParseRefreshToken(token, ts.cfg.RefreshTokenSignature)
 	if err != nil {
 		return nil, domain.ErrInvalidToken
 	}
-
-	// Verify token with cached one
-	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, claims.UserID, claims.ID)
-	value, err := ts.cacheSvc.Get(ctx, key)
-	if err != nil {
-		return nil, domain.ErrInvalidToken
-	}
-
-	var storedRefreshToken string
-	err = utils.Deserialize(value, &storedRefreshToken)
-	if err != nil {
-		return nil, domain.ErrInternal
-	}
-
-	if refreshToken != storedRefreshToken {
+	ok, err := ts.isRefreshTokenInCache(ctx, claims.ID, claims.Subject)
+	if err != nil || !ok {
 		return nil, domain.ErrInvalidToken
 	}
 
 	return claims, nil
 }
 
-func (ts *TokenService) DeleteRefreshToken(ctx context.Context, tokenStr string) error {
-	tokenPayload, err := ts.GetTokenPayload(tokenStr)
+func (ts *TokenService) RevokeRefreshToken(ctx context.Context, refreshToken string) error {
+	claims, err := ts.ValidateAndParseRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return domain.ErrInvalidToken
 	}
-	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, tokenPayload.UserID, tokenPayload.ID)
+	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, claims.Subject, claims.ID)
 	return ts.cacheSvc.Delete(ctx, key)
+}
+
+func (ts *TokenService) storeRefreshTokenInCache(ctx context.Context, userID entities.UserID, refreshTokenID uuid.UUID, refreshToken string) error {
+	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, userID.String(), refreshTokenID.String())
+	return ts.cacheSvc.Set(ctx, key, []byte(refreshToken), ts.cfg.RefreshTokenDuration)
+}
+
+func (ts *TokenService) isRefreshTokenInCache(ctx context.Context, tokenID uuid.UUID, userID entities.UserID) (bool, error) {
+	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, userID.String(), tokenID.String())
+	if value, err := ts.cacheSvc.Get(ctx, key); err != nil {
+		return false, domain.ErrInternal
+	} else if value == nil {
+		return false, nil
+	}
+
+	return true, nil
 }

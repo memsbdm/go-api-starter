@@ -41,7 +41,7 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 
 	parsedID, err := uuid.Parse(uuidStr)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return nil, err
 	}
 	user.ID = entities.UserID(parsedID)
 
@@ -68,7 +68,7 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 
 	parsedID, err := uuid.Parse(uuidStr)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return nil, err
 	}
 	user.ID = entities.UserID(parsedID)
 
@@ -93,7 +93,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 	}
 	parsedID, err := uuid.Parse(uuidStr)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return nil, err
 	}
 	user.ID = entities.UserID(parsedID)
 

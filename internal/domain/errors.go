@@ -31,6 +31,6 @@ var (
 var (
 	// ErrCacheNotFound represents an empty cache value for a given key
 	ErrCacheNotFound = errors.New("cache not found")
-	// ErrTokenPayloadNotFound represents an authorization token payload not found
-	ErrTokenPayloadNotFound = errors.New("token payload not found, maybe missing token middleware")
+	// ErrTokenClaimsNotFound represents an authorization token payload not found
+	ErrTokenClaimsNotFound = errors.New("token payload not found, maybe missing token middleware")
 )
