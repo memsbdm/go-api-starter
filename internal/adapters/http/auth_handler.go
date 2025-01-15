@@ -62,7 +62,7 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 // registerUserRequest represents the structure of the request body used for registering a new user.
 type registerUserRequest struct {
 	Username string `json:"username" validate:"required" example:"john"`
-	Password string `json:"password" validate:"required" example:"secret123"`
+	Password string `json:"password" validate:"required,min=8" example:"secret123"`
 }
 
 // Register godoc
@@ -105,7 +105,7 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 // refreshTokenRequest represents the structure of the request body used for refreshing token or revoke existing one.
 type refreshTokenRequest struct {
-	RefreshToken string
+	RefreshToken string `validate:"required,jwt" example:"eyJhbGci..."`
 }
 
 // Refresh godoc

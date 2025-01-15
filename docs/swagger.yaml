@@ -79,12 +79,16 @@ definitions:
   http.refreshTokenRequest:
     properties:
       refreshToken:
+        example: eyJhbGci...
         type: string
+    required:
+    - refreshToken
     type: object
   http.registerUserRequest:
     properties:
       password:
         example: secret123
+        minLength: 8
         type: string
       username:
         example: john
@@ -118,6 +122,7 @@ definitions:
     properties:
       password:
         example: secret123
+        minLength: 8
         type: string
       password_confirmation:
         example: secret123

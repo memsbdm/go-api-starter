@@ -87,7 +87,7 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // updatePasswordRequest represents the structure of the request body used for updating a user password.
 type updatePasswordRequest struct {
-	Password             string `json:"password" validate:"required" example:"secret123"`
+	Password             string `json:"password" validate:"required,min=8,eqfield=PasswordConfirmation" example:"secret123"`
 	PasswordConfirmation string `json:"password_confirmation" validate:"required" example:"secret123"`
 }
 

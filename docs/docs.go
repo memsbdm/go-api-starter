@@ -538,9 +538,13 @@ const docTemplate = `{
         },
         "http.refreshTokenRequest": {
             "type": "object",
+            "required": [
+                "refreshToken"
+            ],
             "properties": {
                 "refreshToken": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "eyJhbGci..."
                 }
             }
         },
@@ -553,6 +557,7 @@ const docTemplate = `{
             "properties": {
                 "password": {
                     "type": "string",
+                    "minLength": 8,
                     "example": "secret123"
                 },
                 "username": {
@@ -603,6 +608,7 @@ const docTemplate = `{
             "properties": {
                 "password": {
                     "type": "string",
+                    "minLength": 8,
                     "example": "secret123"
                 },
                 "password_confirmation": {
