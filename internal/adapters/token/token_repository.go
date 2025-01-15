@@ -52,28 +52,28 @@ func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature [
 	}
 
 	tokenID := claimsList["id"].(string)
-	subject := claimsList["sub"].(string)
+	subjectID := claimsList["sub"].(string)
 
 	tokenUUID, err := uuid.Parse(tokenID)
 	if err != nil {
 		return nil, err
 	}
 
-	userID, err := uuid.Parse(subject)
+	subjectUUID, err := uuid.Parse(subjectID)
 	if err != nil {
 		return nil, err
 	}
 
 	tokenClaims := &entities.AccessTokenClaims{
-		ID:      tokenUUID,
-		Subject: entities.UserID(userID),
+		ID:      entities.AccessTokenID(tokenUUID),
+		Subject: entities.UserID(subjectUUID),
 	}
 
 	return tokenClaims, nil
 }
 
-func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (uuid.UUID, string, error) {
-	id := uuid.New()
+func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (entities.RefreshTokenID, string, error) {
+	id := entities.RefreshTokenID(uuid.New())
 	claims := jwt.MapClaims{
 		"id":  id.String(),
 		"sub": userID.String(),
@@ -115,7 +115,7 @@ func (tr *TokenRepository) ValidateAndParseRefreshToken(token string, signature 
 	}
 
 	claims := &entities.RefreshTokenClaims{
-		ID:      tokenUUID,
+		ID:      entities.RefreshTokenID(tokenUUID),
 		Subject: entities.UserID(userUUID),
 	}
 

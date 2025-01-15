@@ -2,7 +2,6 @@ package ports
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"go-starter/internal/domain/entities"
 	"time"
 )
@@ -19,6 +18,6 @@ type TokenService interface {
 type TokenRepository interface {
 	GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (string, error)
 	ValidateAndParseAccessToken(token string, signature []byte) (*entities.AccessTokenClaims, error)
-	GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (uuid.UUID, string, error)
+	GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (entities.RefreshTokenID, string, error)
 	ValidateAndParseRefreshToken(token string, signature []byte) (*entities.RefreshTokenClaims, error)
 }

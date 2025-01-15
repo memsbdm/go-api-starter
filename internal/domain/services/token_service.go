@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"go-starter/config"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
@@ -81,13 +80,13 @@ func (ts *TokenService) RevokeRefreshToken(ctx context.Context, refreshToken str
 	return ts.cacheSvc.Delete(ctx, key)
 }
 
-func (ts *TokenService) storeRefreshTokenInCache(ctx context.Context, userID entities.UserID, refreshTokenID uuid.UUID, refreshToken string) error {
+func (ts *TokenService) storeRefreshTokenInCache(ctx context.Context, userID entities.UserID, refreshTokenID entities.RefreshTokenID, refreshToken string) error {
 	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, userID.String(), refreshTokenID.String())
 	return ts.cacheSvc.Set(ctx, key, []byte(refreshToken), ts.cfg.RefreshTokenDuration)
 }
 
-func (ts *TokenService) isRefreshTokenInCache(ctx context.Context, tokenID uuid.UUID, userID entities.UserID) (bool, error) {
-	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, userID.String(), tokenID.String())
+func (ts *TokenService) isRefreshTokenInCache(ctx context.Context, refreshTokenID entities.RefreshTokenID, userID entities.UserID) (bool, error) {
+	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, userID.String(), refreshTokenID.String())
 	if value, err := ts.cacheSvc.Get(ctx, key); err != nil {
 		return false, domain.ErrInternal
 	} else if value == nil {
