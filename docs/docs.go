@@ -213,7 +213,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "User created",
+                        "description": "Created user",
                         "schema": {
                             "$ref": "#/definitions/http.response-http_userResponse"
                         }
@@ -343,23 +343,11 @@ const docTemplate = `{
                     "200": {
                         "description": "User displayed",
                         "schema": {
-                            "$ref": "#/definitions/http.response-http_userResponse"
+                            "$ref": "#/definitions/http.response-http_getUserByIDResponse"
                         }
                     },
                     "400": {
                         "description": "Incorrect User ID",
-                        "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized error",
-                        "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden error",
                         "schema": {
                             "$ref": "#/definitions/http.errorResponse"
                         }
@@ -406,6 +394,19 @@ const docTemplate = `{
                 "success": {
                     "type": "boolean",
                     "example": false
+                }
+            }
+        },
+        "http.getUserByIDResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "6b947a32-8919-4974-9ef3-048a556b0b75"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john"
                 }
             }
         },
@@ -500,6 +501,17 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "john"
+                }
+            }
+        },
+        "http.response-http_getUserByIDResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/http.getUserByIDResponse"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },

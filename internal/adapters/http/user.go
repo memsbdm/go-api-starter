@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/google/uuid"
 	"go-starter/internal/domain"
+	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
 )
@@ -57,10 +58,8 @@ func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			uuid	path		string		true	"User ID" format(uuid)
-//	@Success		200	{object}	response[userResponse]	"User displayed"
+//	@Success		200	{object}	response[getUserByIDResponse]	"User displayed"
 //	@Failure		400	{object}	errorResponse	"Incorrect User ID"
-//	@Failure		401	{object}	errorResponse	"Unauthorized error"
-//	@Failure		403	{object}	errorResponse	"Forbidden error"
 //	@Failure		404	{object}	errorResponse	"Data not found error"
 //	@Failure		500	{object}	errorResponse	"Internal server error"
 //	@Router			/v1/users/{uuid} [get]
@@ -75,23 +74,12 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims, err := extractAccessTokenClaims(ctx)
-	if err != nil {
-		handleError(w, domain.ErrInternal)
-		return
-	}
-
-	if claims.Subject.UUID() != userUUID {
-		handleError(w, domain.ErrForbidden)
-		return
-	}
-
-	user, err := uh.svc.GetByID(ctx, claims.Subject)
+	user, err := uh.svc.GetByID(ctx, entities.UserID(userUUID))
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
-	response := newUserResponse(user)
+	response := newGetUserByIDResponse(user)
 	handleSuccess(w, http.StatusOK, response)
 }

@@ -38,7 +38,7 @@ func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandl
 
 	// Users
 	mux.HandleFunc("GET /v1/users/me", Chain(userHandler.Me, auth()))
-	mux.HandleFunc("GET /v1/users/{uuid}", Chain(userHandler.GetByID, auth()))
+	mux.HandleFunc("GET /v1/users/{uuid}", userHandler.GetByID)
 
 	handler := loggingMiddleware(corsMiddleware(mux))
 	return &Server{

@@ -73,7 +73,7 @@ type registerUserRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			registerUserRequest	body registerUserRequest true "Register request"
-//	@Success		200	{object}	response[userResponse]	"User created"
+//	@Success		200	{object}	response[userResponse]	"Created user"
 //	@Failure		403	{object}	errorResponse	"Forbidden error"
 //	@Failure		409	{object}	errorResponse	"Duplication error"
 //	@Failure		422	{object}	errorResponse	"Validation error"

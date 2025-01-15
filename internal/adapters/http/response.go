@@ -118,6 +118,20 @@ func newUserResponse(user *entities.User) userResponse {
 	}
 }
 
+// getUserByIDResponse represents the structure of a response body containing user information.
+type getUserByIDResponse struct {
+	ID       string `json:"id" example:"6b947a32-8919-4974-9ef3-048a556b0b75"`
+	Username string `json:"username" example:"john"`
+}
+
+// newGetUserByIDResponse is a helper function that creates a userResponse from a user entity.
+func newGetUserByIDResponse(user *entities.User) getUserByIDResponse {
+	return getUserByIDResponse{
+		ID:       user.ID.String(),
+		Username: user.Username,
+	}
+}
+
 // loginResponse represents the structure of a response body for successful authentication.
 type loginResponse struct {
 	AccessToken  string `json:"access_token"`

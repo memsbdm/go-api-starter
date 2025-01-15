@@ -18,6 +18,15 @@ definitions:
         example: false
         type: boolean
     type: object
+  http.getUserByIDResponse:
+    properties:
+      id:
+        example: 6b947a32-8919-4974-9ef3-048a556b0b75
+        type: string
+      username:
+        example: john
+        type: string
+    type: object
   http.healthResponse:
     properties:
       idle:
@@ -83,6 +92,13 @@ definitions:
     required:
     - password
     - username
+    type: object
+  http.response-http_getUserByIDResponse:
+    properties:
+      data:
+        $ref: '#/definitions/http.getUserByIDResponse'
+      success:
+        type: boolean
     type: object
   http.response-http_loginResponse:
     properties:
@@ -243,7 +259,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: User created
+          description: Created user
           schema:
             $ref: '#/definitions/http.response-http_userResponse'
         "403":
@@ -302,17 +318,9 @@ paths:
         "200":
           description: User displayed
           schema:
-            $ref: '#/definitions/http.response-http_userResponse'
+            $ref: '#/definitions/http.response-http_getUserByIDResponse'
         "400":
           description: Incorrect User ID
-          schema:
-            $ref: '#/definitions/http.errorResponse'
-        "401":
-          description: Unauthorized error
-          schema:
-            $ref: '#/definitions/http.errorResponse'
-        "403":
-          description: Forbidden error
           schema:
             $ref: '#/definitions/http.errorResponse'
         "404":
