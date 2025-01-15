@@ -7,7 +7,7 @@ import (
 )
 
 // ExtractAccessTokenClaims retrieves the AccessTokenClaims from the provided context.
-// If the claims are not present or cannot be cast to the expected type, it returns an error.
+// Returns an error if the claims are not present or cannot be cast to the expected type.
 func extractAccessTokenClaims(ctx context.Context) (*entities.AccessTokenClaims, error) {
 	payload, ok := ctx.Value(authorizationPayloadKey).(*entities.AccessTokenClaims)
 	if !ok {

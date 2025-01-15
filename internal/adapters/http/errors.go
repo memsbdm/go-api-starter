@@ -18,4 +18,11 @@ var domainHttpErrMap = map[error]int{
 	domain.ErrInvalidUserId:             http.StatusBadRequest,
 	domain.ErrUserNotFound:              http.StatusNotFound,
 	domain.ErrUserUsernameAlreadyExists: http.StatusConflict,
+
+	// Validation errors
+
+	domain.ErrPasswordRequired:             http.StatusUnprocessableEntity,
+	domain.ErrPasswordsNotMatch:            http.StatusUnprocessableEntity,
+	domain.ErrPasswordTooShort:             http.StatusUnprocessableEntity,
+	domain.ErrPasswordConfirmationRequired: http.StatusUnprocessableEntity,
 }

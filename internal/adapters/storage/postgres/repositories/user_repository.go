@@ -102,3 +102,18 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 
 	return user, nil
 }
+
+// UpdatePassword updates a user password.
+// Returns an error if the update fails (e.g., due to validation issues).
+func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.UserID, newPassword string) error {
+	query := `UPDATE users SET password = $1 WHERE id = $2 `
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	_, err := ur.db.ExecContext(ctx, query, newPassword, userID.String())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

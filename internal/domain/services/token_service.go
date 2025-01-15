@@ -98,7 +98,7 @@ func (ts *TokenService) storeRefreshTokenInCache(ctx context.Context, userID ent
 }
 
 // isRefreshTokenInCache checks if the refresh token is present in the cache for the given user ID and refresh token ID.
-// It returns a boolean indicating presence and an error if the operation fails.
+// Returns a boolean indicating presence and an error if the operation fails.
 func (ts *TokenService) isRefreshTokenInCache(ctx context.Context, refreshTokenID entities.RefreshTokenID, userID entities.UserID) (bool, error) {
 	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, userID.String(), refreshTokenID.String())
 	if value, err := ts.cacheSvc.Get(ctx, key); err != nil {

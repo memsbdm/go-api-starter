@@ -32,6 +32,11 @@ func handleError(w http.ResponseWriter, err error) {
 		status = http.StatusInternalServerError
 	}
 
+	if status == http.StatusUnprocessableEntity {
+		handleValidationError(w, []error{err})
+		return
+	}
+
 	errResp := newErrorResponse([]error{err})
 	encoder := json.NewEncoder(w)
 	w.Header().Set("Content-Type", "application/json")

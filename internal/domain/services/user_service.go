@@ -99,3 +99,29 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 
 	return created, nil
 }
+
+// UpdatePassword updates a user password.
+// Returns an error if the update fails (e.g., due to validation issues).
+func (us *UserService) UpdatePassword(ctx context.Context, userID entities.UserID, params entities.UpdateUserParams) error {
+	if params.Password == nil {
+		return domain.ErrPasswordRequired
+	}
+	if params.PasswordConfirmation == nil {
+		return domain.ErrPasswordConfirmationRequired
+	}
+	if *params.Password != *params.PasswordConfirmation {
+		return domain.ErrPasswordsNotMatch
+	}
+	if len(*params.Password) < domain.PasswordMinLength {
+		return domain.ErrPasswordTooShort
+	}
+	hashedPassword, err := utils.HashPassword(*params.Password)
+	if err != nil {
+		return domain.ErrInternal
+	}
+	err = us.repo.UpdatePassword(ctx, userID, hashedPassword)
+	if err != nil {
+		return domain.ErrInternal
+	}
+	return nil
+}

@@ -27,3 +27,9 @@ func (id UserID) UUID() uuid.UUID {
 func (id UserID) String() string {
 	return id.UUID().String()
 }
+
+// UpdateUserParams holds the parameters required for updating a user's information.
+type UpdateUserParams struct {
+	Password             *string
+	PasswordConfirmation *string
+}

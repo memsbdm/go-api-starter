@@ -114,6 +114,18 @@ definitions:
       success:
         type: boolean
     type: object
+  http.updatePasswordRequest:
+    properties:
+      password:
+        example: secret123
+        type: string
+      password_confirmation:
+        example: secret123
+        type: string
+    required:
+    - password
+    - password_confirmation
+    type: object
   http.userResponse:
     properties:
       created_at:
@@ -365,6 +377,42 @@ paths:
       summary: Get authenticated user information
       tags:
       - Users
+  /v1/users/password:
+    patch:
+      consumes:
+      - application/json
+      description: Update user password
+      parameters:
+      - description: Update user password request
+        in: body
+        name: updatePasswordRequest
+        required: true
+        schema:
+          $ref: '#/definitions/http.updatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/http.emptyResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/http.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user password
+      tags:
+      - Auth
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and the access token.

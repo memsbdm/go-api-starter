@@ -86,3 +86,16 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 
 	return newUser, nil
 }
+
+// UpdatePassword updates a user password.
+// Returns an error if the update fails (e.g., due to validation issues).
+func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.UserID, newPassword string) error {
+	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
+	defer cancel()
+
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+
+	ur.db.data[userID].Username = newPassword
+	return nil
+}

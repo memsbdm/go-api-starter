@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"go-starter/internal/domain"
 	"log/slog"
 	"net/http"
 )
@@ -21,11 +22,13 @@ var ErrInvalidJSON = errors.New("invalid json")
 
 // validationMessages holds custom error messages for specific validation failures.
 var validationMessages = map[string]error{
-	"registerUserRequest.Username.required":     errors.New("username is required"),
-	"registerUserRequest.Password.required":     errors.New("password is required"),
-	"loginRequest.Username.required":            errors.New("username is required"),
-	"loginRequest.Password.required":            errors.New("password is required"),
-	"refreshTokenRequest.RefreshToken.required": errors.New("refresh_token is required"),
+	"registerUserRequest.Username.required":               errors.New("username is required"),
+	"registerUserRequest.Password.required":               errors.New("password is required"),
+	"loginRequest.Username.required":                      errors.New("username is required"),
+	"loginRequest.Password.required":                      errors.New("password is required"),
+	"refreshTokenRequest.RefreshToken.required":           errors.New("refresh_token is required"),
+	"updatePasswordRequest.Password.required":             domain.ErrPasswordRequired,
+	"updatePasswordRequest.PasswordConfirmation.required": domain.ErrPasswordConfirmationRequired,
 }
 
 // ValidateRequest takes a payload from an HTTP request and verifies it.

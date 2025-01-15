@@ -39,6 +39,7 @@ func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandl
 	// Users
 	mux.HandleFunc("GET /v1/users/me", Chain(userHandler.Me, auth()))
 	mux.HandleFunc("GET /v1/users/{uuid}", userHandler.GetByID)
+	mux.HandleFunc("PATCH /v1/users/password", Chain(userHandler.UpdatePassword, auth()))
 
 	handler := loggingMiddleware(corsMiddleware(mux))
 	return &Server{

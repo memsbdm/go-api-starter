@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/google/uuid"
+	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
@@ -82,4 +83,53 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	response := newGetUserByIDResponse(user)
 	handleSuccess(w, http.StatusOK, response)
+}
+
+// updatePasswordRequest represents the structure of the request body used for updating a user password.
+type updatePasswordRequest struct {
+	Password             string `json:"password" validate:"required" example:"secret123"`
+	PasswordConfirmation string `json:"password_confirmation" validate:"required" example:"secret123"`
+}
+
+// UpdatePassword godoc
+//
+//	@Summary		Update user password
+//	@Description	Update user password
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			updatePasswordRequest	body updatePasswordRequest true "Update user password request"
+//	@Success		200	{object}	emptyResponse	"Success"
+//	@Failure		401	{object}	errorResponse	"Unauthorized error"
+//	@Failure		422	{object}	errorResponse	"Validation error"
+//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Router			/v1/users/password [patch]
+//	@Security		BearerAuth
+func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var payload updatePasswordRequest
+	if err := validator.ValidateRequest(w, r, &payload); err != nil {
+		handleValidationError(w, err)
+		return
+	}
+
+	updateUserParams := entities.UpdateUserParams{
+		Password:             &payload.Password,
+		PasswordConfirmation: &payload.PasswordConfirmation,
+	}
+
+	claims, err := extractAccessTokenClaims(ctx)
+	if err != nil {
+		handleError(w, domain.ErrInternal)
+		return
+	}
+
+	err = uh.svc.UpdatePassword(ctx, claims.Subject, updateUserParams)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	handleSuccess(w, http.StatusOK, nil)
 }
