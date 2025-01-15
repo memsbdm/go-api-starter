@@ -44,9 +44,28 @@ func TestUserService_Register(t *testing.T) {
 		"register user with conflicting username": {
 			input: &entities.User{
 				Username: createdUser.Username,
-				Password: "secret123",
+				Password: userToCreate.Password,
 			},
-			expectedErr: domain.ErrUserUsernameAlreadyExists,
+			expectedErr: domain.ErrUsernameAlreadyTaken,
+		},
+		"register user without username": {
+			input: &entities.User{
+				Password: userToCreate.Password,
+			},
+			expectedErr: domain.ErrUsernameRequired,
+		},
+		"register user without password": {
+			input: &entities.User{
+				Username: createdUser.Username,
+			},
+			expectedErr: domain.ErrPasswordRequired,
+		},
+		"register user with short password": {
+			input: &entities.User{
+				Username: createdUser.Username,
+				Password: "short",
+			},
+			expectedErr: domain.ErrPasswordTooShort,
 		},
 	}
 

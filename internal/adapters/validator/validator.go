@@ -22,11 +22,14 @@ var ErrInvalidJSON = errors.New("invalid json")
 
 // validationMessages holds custom error messages for specific validation failures.
 var validationMessages = map[string]error{
-	"registerUserRequest.Username.required":               errors.New("username is required"),
-	"registerUserRequest.Password.required":               errors.New("password is required"),
-	"loginRequest.Username.required":                      errors.New("username is required"),
-	"loginRequest.Password.required":                      errors.New("password is required"),
-	"refreshTokenRequest.RefreshToken.required":           errors.New("refresh_token is required"),
+	// Used in API handlers
+	"loginRequest.Username.required":            domain.ErrUsernameRequired,
+	"loginRequest.Password.required":            domain.ErrPasswordRequired,
+	"refreshTokenRequest.RefreshToken.required": errors.New("refresh_token is required"),
+
+	// Used in services
+	"registerUserRequest.Username.required":               domain.ErrUsernameRequired,
+	"registerUserRequest.Password.required":               domain.ErrPasswordRequired,
 	"updatePasswordRequest.Password.required":             domain.ErrPasswordRequired,
 	"updatePasswordRequest.PasswordConfirmation.required": domain.ErrPasswordConfirmationRequired,
 }

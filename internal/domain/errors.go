@@ -22,8 +22,8 @@ var (
 	ErrInvalidUserId = errors.New("invalid user id")
 	// ErrUserNotFound represents an error when a user is not found.
 	ErrUserNotFound = errors.New("user not found")
-	// ErrUserUsernameAlreadyExists represents a conflict error when trying to create a user with an existing username.
-	ErrUserUsernameAlreadyExists = errors.New("user username already exists")
+	// ErrUsernameAlreadyTaken represents a conflict error when trying to create a user with an existing username.
+	ErrUsernameAlreadyTaken = errors.New("username already exists")
 )
 
 // Errors not returned in responses.

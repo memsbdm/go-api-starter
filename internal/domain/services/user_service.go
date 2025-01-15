@@ -79,6 +79,18 @@ func (us *UserService) GetByUsername(ctx context.Context, username string) (*ent
 // Register creates a new user account in the system.
 // Returns the created user or an error if the registration fails (e.g., due to validation issues).
 func (us *UserService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
+	if user.Username == "" {
+		return nil, domain.ErrUsernameRequired
+	}
+
+	if user.Password == "" {
+		return nil, domain.ErrPasswordRequired
+	}
+
+	if len(user.Password) < domain.PasswordMinLength {
+		return nil, domain.ErrPasswordTooShort
+	}
+
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
 		return nil, domain.ErrInternal
@@ -91,7 +103,7 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 
 	created, err := us.repo.Create(ctx, userToCreate)
 	if err != nil {
-		if errors.Is(err, domain.ErrUserUsernameAlreadyExists) {
+		if errors.Is(err, domain.ErrUsernameAlreadyTaken) {
 			return nil, err
 		}
 		return nil, domain.ErrInternal

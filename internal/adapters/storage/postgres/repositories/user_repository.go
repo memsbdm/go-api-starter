@@ -89,7 +89,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_username_key"`:
-			return nil, domain.ErrUserUsernameAlreadyExists
+			return nil, domain.ErrUsernameAlreadyTaken
 		default:
 			return nil, err
 		}

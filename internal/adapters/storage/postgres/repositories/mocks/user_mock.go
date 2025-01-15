@@ -72,7 +72,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 
 	for _, v := range ur.db.data {
 		if v.Username == user.Username {
-			return nil, domain.ErrUserUsernameAlreadyExists
+			return nil, domain.ErrUsernameAlreadyTaken
 		}
 	}
 
