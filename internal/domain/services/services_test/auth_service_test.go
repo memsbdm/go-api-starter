@@ -34,21 +34,18 @@ func TestAuthService_Login(t *testing.T) {
 		password string
 	}
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		input       *loginRequest
 		expectedErr error
 	}{
-		{
-			name: "Login Success",
+		"login success": {
 			input: &loginRequest{
 				username: userToCreate.Username,
 				password: userToCreate.Password,
 			},
 			expectedErr: nil,
 		},
-		{
-			name: "Login Error",
+		"login with bad credentials": {
 			input: &loginRequest{
 				username: "not-existing",
 				password: "not-existing",
@@ -58,8 +55,8 @@ func TestAuthService_Login(t *testing.T) {
 	}
 
 	// Act & Assert
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			_, _, err := builder.AuthService.Login(ctx, tt.input.username, tt.input.password)
 			if !errors.Is(err, tt.expectedErr) {
@@ -72,25 +69,22 @@ func TestAuthService_Login(t *testing.T) {
 func TestAuthService_Refresh(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		advance     time.Duration
 		expectedErr error
 	}{
-		{
-			name:        "Refresh with a valid refresh token",
+		"refresh with a valid refresh token": {
 			advance:     0,
 			expectedErr: nil,
 		},
-		{
-			name:        "Refresh with an expired refresh token",
+		"refresh with an expired refresh token": {
 			advance:     refreshTokenExpirationDuration,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			// Arrange

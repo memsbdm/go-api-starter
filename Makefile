@@ -23,7 +23,7 @@ migration-up:
 
 test:
 	@echo "Testing..."
-	@go test -race ./... -v
+	@go test ./... -race -v -shuffle on
 
 run:
 	@go run cmd/http/main.go

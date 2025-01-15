@@ -28,20 +28,17 @@ func TestCacheService_Get(t *testing.T) {
 		t.Fatalf("failed to set cache: %v", err)
 	}
 
-	tests := []struct {
-		name          string
+	tests := map[string]struct {
 		input         string
 		expectedValue []byte
 		expectedErr   error
 	}{
-		{
-			name:          "get an existing key",
+		"get an existing key": {
 			input:         key,
 			expectedValue: value,
 			expectedErr:   nil,
 		},
-		{
-			name:          "get an non existing key",
+		"get an non existing key": {
 			input:         "non-existing",
 			expectedValue: nil,
 			expectedErr:   domain.ErrCacheNotFound,
@@ -49,8 +46,8 @@ func TestCacheService_Get(t *testing.T) {
 	}
 
 	// Act & Assert
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			value, err := builder.CacheService.Get(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
@@ -83,26 +80,23 @@ func TestCacheService_Delete(t *testing.T) {
 		t.Fatalf("failed to set cache: %v", err)
 	}
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		input       string
 		expectedErr error
 	}{
-		{
-			name:        "delete an existing key",
+		"delete an existing key": {
 			input:       keyValueToStore.key,
 			expectedErr: nil,
 		},
-		{
-			name:        "delete an non existing key",
+		"delete an non existing key": {
 			input:       "non-existing",
 			expectedErr: nil,
 		},
 	}
 
 	// Act & Assert
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			err := builder.CacheService.Delete(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {

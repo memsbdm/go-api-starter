@@ -19,25 +19,22 @@ var accessTokenExpirationDuration = 20 * time.Minute
 func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		advance     time.Duration
 		expectedErr error
 	}{
-		{
-			name:        "Valid token",
+		"validate and parse valid access token": {
 			advance:     0,
 			expectedErr: nil,
 		},
-		{
-			name:        "Expired token",
+		"validate and parse expired access token": {
 			advance:     accessTokenExpirationDuration,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
@@ -71,25 +68,22 @@ func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
 func TestTokenService_ValidateAndParseRefreshToken(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		advance     time.Duration
 		expectedErr error
 	}{
-		{
-			name:        "Validate and parse valid refresh token",
+		"validate and parse valid refresh token": {
 			advance:     0,
 			expectedErr: nil,
 		},
-		{
-			name:        "Validate and parse expired refresh token",
+		"validate and parse expired refresh token": {
 			advance:     refreshTokenExpirationDuration,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
@@ -120,25 +114,22 @@ func TestTokenService_ValidateAndParseRefreshToken(t *testing.T) {
 func TestTokenService_RevokeRefreshToken(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		advance     time.Duration
 		expectedErr error
 	}{
-		{
-			name:        "Revoke valid refresh token",
+		"revoke valid refresh token": {
 			advance:     0,
 			expectedErr: nil,
 		},
-		{
-			name:        "Revoke expired refresh token",
+		"revoke expired refresh token": {
 			advance:     accessTokenExpirationDuration,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			// Arrange

@@ -30,21 +30,18 @@ func TestUserService_Register(t *testing.T) {
 		t.Fatalf("error while registering user: %v", err)
 	}
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		input       *entities.User
 		expectedErr error
 	}{
-		{
-			name: "create user successfully",
+		"register valid user": {
 			input: &entities.User{
 				Username: "success",
 				Password: "secret123",
 			},
 			expectedErr: nil,
 		},
-		{
-			name: "create user with conflicting username",
+		"register user with conflicting username": {
 			input: &entities.User{
 				Username: createdUser.Username,
 				Password: "secret123",
@@ -54,8 +51,8 @@ func TestUserService_Register(t *testing.T) {
 	}
 
 	// Act & Assert
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			result, err := builder.UserService.Register(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
@@ -85,26 +82,23 @@ func TestUserService_GetByID(t *testing.T) {
 		t.Fatalf("error while registering user: %v", err)
 	}
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		input       entities.UserID
 		expectedErr error
 	}{
-		{
-			name:        "get user by id successfully",
+		"get valid user by id": {
 			input:       createdUser.ID,
 			expectedErr: nil,
 		},
-		{
-			name:        "get non-existing user by id",
+		"get non-existing user by id": {
 			input:       entities.UserID(uuid.New()),
 			expectedErr: domain.ErrUserNotFound,
 		},
 	}
 
 	// Act & Assert
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			_, err := builder.UserService.GetByID(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
@@ -114,7 +108,7 @@ func TestUserService_GetByID(t *testing.T) {
 	}
 }
 
-func TestUserService_GetById_Cache(t *testing.T) {
+func TestUserService_GetByID_Cache(t *testing.T) {
 	t.Parallel()
 
 	// Arrange
@@ -169,26 +163,23 @@ func TestUserService_GetByUsername(t *testing.T) {
 		t.Fatalf("error while registering user: %v", err)
 	}
 
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		input       string
 		expectedErr error
 	}{
-		{
-			name:        "get user by username successfully",
+		"get valid user by username": {
 			input:       createdUser.Username,
 			expectedErr: nil,
 		},
-		{
-			name:        "get non-existing user by username",
+		"get non-existing user by username": {
 			input:       "non-existing",
 			expectedErr: domain.ErrUserNotFound,
 		},
 	}
 
 	// Act & Assert
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			result, err := builder.UserService.GetByUsername(ctx, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
