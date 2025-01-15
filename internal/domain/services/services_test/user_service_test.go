@@ -191,3 +191,73 @@ func TestUserService_GetByUsername(t *testing.T) {
 		})
 	}
 }
+
+func TestUserService_UpdatePassword(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	builder := NewTestBuilder().Build()
+	userToCreate := &entities.User{
+		Username: "example",
+		Password: "secret123",
+	}
+	user, err := builder.UserService.Register(ctx, userToCreate)
+	if err != nil {
+		t.Fatalf("error while registering user: %v", err)
+	}
+
+	validPassword := "secret123"
+	shortPassword := "short"
+	notMatchingPassword := "not-matching"
+
+	tests := map[string]struct {
+		input       entities.UpdateUserParams
+		expectedErr error
+	}{
+		"update password successfully": {
+			input: entities.UpdateUserParams{
+				Password:             &validPassword,
+				PasswordConfirmation: &validPassword,
+			},
+			expectedErr: nil,
+		},
+		"update with short password": {
+			input: entities.UpdateUserParams{
+				Password:             &shortPassword,
+				PasswordConfirmation: &shortPassword,
+			},
+			expectedErr: domain.ErrPasswordTooShort,
+		},
+		"update with non-matching password": {
+			input: entities.UpdateUserParams{
+				Password:             &validPassword,
+				PasswordConfirmation: &notMatchingPassword,
+			},
+			expectedErr: domain.ErrPasswordsNotMatch,
+		},
+		"update with missing password": {
+			input: entities.UpdateUserParams{
+				PasswordConfirmation: &validPassword,
+			},
+			expectedErr: domain.ErrPasswordRequired,
+		},
+		"update with missing password confirmation": {
+			input: entities.UpdateUserParams{
+				Password: &validPassword,
+			},
+			expectedErr: domain.ErrPasswordConfirmationRequired,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			err := builder.UserService.UpdatePassword(ctx, user.ID, tt.input)
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+		})
+	}
+}
