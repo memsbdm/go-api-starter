@@ -11,12 +11,15 @@ import (
 
 var Validate *validator.Validate
 
+// init initializes the validator with required struct validation enabled.
 func init() {
 	Validate = validator.New(validator.WithRequiredStructEnabled())
 }
 
+// ErrInvalidJSON is returned when the JSON payload is invalid.
 var ErrInvalidJSON = errors.New("invalid json")
 
+// validationMessages holds custom error messages for specific validation failures.
 var validationMessages = map[string]error{
 	"registerUserRequest.Username.required":     errors.New("username is required"),
 	"registerUserRequest.Password.required":     errors.New("password is required"),
@@ -25,8 +28,7 @@ var validationMessages = map[string]error{
 	"refreshTokenRequest.RefreshToken.required": errors.New("refresh_token is required"),
 }
 
-// ValidateRequest takes a payload from an HTTP request and verifies it. It can return an error for an invalid JSON or
-// for custom payload validation errors.
+// ValidateRequest takes a payload from an HTTP request and verifies it.
 func ValidateRequest(w http.ResponseWriter, r *http.Request, payload interface{}) []error {
 	maxBytes := 1_048_576 // 1mb
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))

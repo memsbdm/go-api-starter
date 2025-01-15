@@ -9,19 +9,21 @@ import (
 	"time"
 )
 
-// TokenRepository implements ports.TokenRepository interface and provides access to the JWT package
+// TokenRepository implements the ports.TokenRepository interface, providing access to
+// JWT-related functionalities for token management.
 type TokenRepository struct {
 	timeGenerator ports.TimeGenerator
 }
 
-// NewTokenRepository creates a new token repository instance
+// NewTokenRepository creates a new instance of TokenRepository.
 func NewTokenRepository(timeGenerator ports.TimeGenerator) *TokenRepository {
 	return &TokenRepository{
 		timeGenerator: timeGenerator,
 	}
 }
 
-// GenerateAccessToken generates a new JWT access token
+// GenerateAccessToken generates a new JWT access token for the given user.
+// Returns the generated access token as a string or an error if the generation fails.
 func (tr *TokenRepository) GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (string, error) {
 	claims := jwt.MapClaims{
 		"id":  uuid.New().String(),
@@ -35,7 +37,8 @@ func (tr *TokenRepository) GenerateAccessToken(user *entities.User, duration tim
 	return signedToken, err
 }
 
-// ValidateAndParseAccessToken checks if the provided token string is valid and returns an entities.AccessTokenClaims and an error if it fails
+// ValidateAndParseAccessToken validates the given JWT access token and extracts its claims.
+// Returns a structured representation of the token claims or an error if validation fails.
 func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature []byte) (*entities.AccessTokenClaims, error) {
 	parser := jwt.NewParser(jwt.WithTimeFunc(tr.timeGenerator.Now))
 
@@ -72,6 +75,8 @@ func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature [
 	return tokenClaims, nil
 }
 
+// GenerateRefreshToken creates a new JWT refresh token for the given user ID.
+// Returns a unique refresh token ID, the token string, or an error if the operation fails.
 func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (entities.RefreshTokenID, string, error) {
 	id := entities.RefreshTokenID(uuid.New())
 	claims := jwt.MapClaims{
@@ -86,6 +91,8 @@ func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration
 	return id, signedToken, err
 }
 
+// ValidateAndParseRefreshToken validates the given JWT refresh token and extracts its claims.
+// Returns a structured representation of the token claims or an error if validation fails.
 func (tr *TokenRepository) ValidateAndParseRefreshToken(token string, signature []byte) (*entities.RefreshTokenClaims, error) {
 	parser := jwt.NewParser(jwt.WithTimeFunc(tr.timeGenerator.Now))
 

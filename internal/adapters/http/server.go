@@ -12,12 +12,12 @@ import (
 	"time"
 )
 
-// Server is a wrapper for HTTP server
+// Server is a wrapper for HTTP server.
 type Server struct {
 	*http.Server
 }
 
-// New creates a new HTTP server
+// New creates and initializes a new HTTP server.
 func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandler, userHandler UserHandler, tokenService ports.TokenService) *Server {
 	auth := func() Middleware {
 		return authMiddleware(&tokenService)
@@ -52,7 +52,7 @@ func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandl
 	}
 }
 
-// Serve starts the HTTP server
+// Serve starts the HTTP server and listens for incoming requests.
 func (s *Server) Serve() {
 	slog.Info("Starting HTTP server")
 	err := s.ListenAndServe()

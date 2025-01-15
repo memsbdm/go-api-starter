@@ -7,12 +7,12 @@ import (
 	"net/http"
 )
 
-// UserHandler represents the HTTP handler for user-related requests
+// UserHandler represents the HTTP handler for user-related requests.
 type UserHandler struct {
 	svc ports.UserService
 }
 
-// NewUserHandler creates a new UserHandler instance
+// NewUserHandler creates and returns a new UserHandler instance.
 func NewUserHandler(svc ports.UserService) *UserHandler {
 	return &UserHandler{
 		svc: svc,
@@ -33,7 +33,7 @@ func NewUserHandler(svc ports.UserService) *UserHandler {
 func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	claims, err := getAccessTokenClaims(ctx, authorizationPayloadKey)
+	claims, err := extractAccessTokenClaims(ctx)
 	if err != nil {
 		handleError(w, domain.ErrInternal)
 		return
@@ -75,7 +75,7 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims, err := getAccessTokenClaims(ctx, authorizationPayloadKey)
+	claims, err := extractAccessTokenClaims(ctx)
 	if err != nil {
 		handleError(w, domain.ErrInternal)
 		return

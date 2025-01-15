@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-// UserService implements ports.UserService interface and provides access to the user repository
+// UserService implements ports.UserService interface and provides access to the user repository.
 type UserService struct {
 	repo  ports.UserRepository
 	cache ports.CacheService
 }
 
-// NewUserService creates a new user service instance
+// NewUserService creates a new instance of UserService.
 func NewUserService(repo ports.UserRepository, cache ports.CacheService) *UserService {
 	return &UserService{
 		repo:  repo,
@@ -24,12 +24,11 @@ func NewUserService(repo ports.UserRepository, cache ports.CacheService) *UserSe
 	}
 }
 
+// UserCachePrefix is the prefix for caching users.
 const UserCachePrefix = "user"
 
-// GetByID retrieves a user by their ID.
-// It first attempts to fetch the user from the cache for efficiency.
-// If the user is not found in the cache, it queries the database then stores the result back in the cache.
-// Returns the user entity if found, or an error if the user does not exist or an issue occurs.
+// GetByID retrieves a user by their unique identifier.
+// Returns the user entity if found or an error if not found or any other issue occurs.
 func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	var user *entities.User
 	cacheKey := utils.GenerateCacheKey(UserCachePrefix, id)
@@ -63,7 +62,8 @@ func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entiti
 	return user, nil
 }
 
-// GetByUsername retrieves a user by their username
+// GetByUsername retrieves a user by their username.
+// Returns the user entity if found or an error if not found or any other issue occurs.
 func (us *UserService) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
 	user, err := us.repo.GetByUsername(ctx, username)
 	if err != nil {
@@ -76,7 +76,8 @@ func (us *UserService) GetByUsername(ctx context.Context, username string) (*ent
 	return user, nil
 }
 
-// Register registers a new user
+// Register creates a new user account in the system.
+// Returns the created user or an error if the registration fails (e.g., due to validation issues).
 func (us *UserService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {

@@ -8,13 +8,13 @@ import (
 	"net/http"
 )
 
-// response represents a generic API success response
+// response represents a generic API success response structure.
 type response[T any] struct {
 	Success bool `json:"success"`
 	Data    T    `json:"data,omitempty"`
 }
 
-// newSuccessResponse is a helper function to create a success response
+// newSuccessResponse is a helper function that creates a new success response.
 func newSuccessResponse[T any](data T) response[T] {
 	return response[T]{
 		Success: true,
@@ -22,7 +22,9 @@ func newSuccessResponse[T any](data T) response[T] {
 	}
 }
 
-// handleError sends an error response
+// handleError sends an error response to the client.
+// It determines the appropriate HTTP status code based on the provided error
+// and returns a standardized error response format.
 func handleError(w http.ResponseWriter, err error) {
 	status, ok := domainHttpErrMap[err]
 	if !ok {
@@ -36,18 +38,19 @@ func handleError(w http.ResponseWriter, err error) {
 	_ = encoder.Encode(errResp)
 }
 
-// emptyResponse represents a success response without data
+// emptyResponse represents a success response without any data.
+// It indicates that the request was successful, but no additional information is provided.
 type emptyResponse struct {
 	Success bool `json:"success" example:"true"`
 }
 
-// errorResponse represents an error response body format
+// errorResponse represents the format of an error response body.
 type errorResponse struct {
 	Success  bool     `json:"success" example:"false"`
 	Messages []string `json:"messages" example:"Error message 1, Error message 2"`
 }
 
-// newErrorResponse is a helper function to create an error response body
+// newErrorResponse is a helper function that creates an error response body from a slice of error messages.
 func newErrorResponse(errs []error) errorResponse {
 	errsStr := make([]string, len(errs))
 	for i, err := range errs {
@@ -59,7 +62,8 @@ func newErrorResponse(errs []error) errorResponse {
 	}
 }
 
-// handleSuccess sends a success response with the specified status code and optional data
+// handleSuccess sends a success response with the specified status code and optional data.
+// It encodes the response in JSON format and sets the appropriate HTTP headers.
 func handleSuccess(w http.ResponseWriter, statusCode int, data any) {
 	rsp := newSuccessResponse(data)
 	w.Header().Set("Content-Type", "application/json")
@@ -68,7 +72,8 @@ func handleSuccess(w http.ResponseWriter, statusCode int, data any) {
 	_ = encoder.Encode(rsp)
 }
 
-// handleValidationError sends an error response for some specific request validation error
+// handleValidationError sends an error response specifically for request validation errors.
+// It sets the appropriate HTTP status code based on the type of validation error.
 func handleValidationError(w http.ResponseWriter, errs []error) {
 	w.Header().Set("Content-Type", "application/json")
 	errRsp := newErrorResponse(errs)
@@ -84,6 +89,7 @@ func handleValidationError(w http.ResponseWriter, errs []error) {
 
 // Custom responses
 
+// healthResponse represents the structure of the health check response.
 type healthResponse struct {
 	Idle              string `json:"idle" example:"1"`
 	InUse             string `json:"in_use" example:"0"`
@@ -96,14 +102,14 @@ type healthResponse struct {
 	WaitDuration      string `json:"wait_duration" example:"0s"`
 }
 
-// userResponse represents a user response body
+// userResponse represents the structure of a response body containing user information.
 type userResponse struct {
 	ID              string `json:"id" example:"6b947a32-8919-4974-9ef3-048a556b0b75"`
 	Username        string `json:"username" example:"john"`
 	IsEmailVerified bool   `json:"is_email_verified" example:"true"`
 }
 
-// newUserResponse is a helper function to create a response body for handling user data
+// newUserResponse is a helper function that creates a userResponse from a user entity.
 func newUserResponse(user *entities.User) userResponse {
 	return userResponse{
 		ID:              user.ID.String(),
@@ -112,13 +118,13 @@ func newUserResponse(user *entities.User) userResponse {
 	}
 }
 
-// loginResponse represents a successful authentication body
+// loginResponse represents the structure of a response body for successful authentication.
 type loginResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
-// newLoginResponse is a helper function to create a response body for handling successful token
+// newLoginResponse is a helper function that creates a loginResponse with the provided tokens.
 func newLoginResponse(accessToken, refreshToken string) loginResponse {
 	return loginResponse{
 		AccessToken:  accessToken,

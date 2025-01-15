@@ -19,7 +19,8 @@ func NewCacheService(repo ports.CacheRepository) *CacheService {
 	}
 }
 
-// Set stores the value in the cache
+// Set stores the value in the cache with a specified key and time-to-live (TTL).
+// Returns an error if the operation fails (e.g., if the cache is unreachable).
 func (cs *CacheService) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
 	err := cs.repo.Set(ctx, key, value, ttl)
 	if err != nil {
@@ -28,7 +29,9 @@ func (cs *CacheService) Set(ctx context.Context, key string, value []byte, ttl t
 	return nil
 }
 
-// Get retrieves the value from the cache
+// Get retrieves the value associated with the specified key from the cache.
+// Returns the value as a byte slice and an error if the key is not found
+// or if there are issues accessing the cache.
 func (cs *CacheService) Get(ctx context.Context, key string) ([]byte, error) {
 	value, err := cs.repo.Get(ctx, key)
 	if err != nil {
@@ -37,7 +40,8 @@ func (cs *CacheService) Get(ctx context.Context, key string) ([]byte, error) {
 	return value, nil
 }
 
-// Delete removes the value from the cache
+// Delete removes the value associated with the specified key from the cache.
+// Returns an error if the operation fails (e.g., if there are issues accessing the cache).
 func (cs *CacheService) Delete(ctx context.Context, key string) error {
 	err := cs.repo.Delete(ctx, key)
 	if err != nil {
@@ -46,7 +50,8 @@ func (cs *CacheService) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
-// DeleteByPrefix removes the value from the cache with the given prefix
+// DeleteByPrefix removes all values from the cache that match the given prefix.
+// Returns an error if the operation fails (e.g., if there are issues accessing the cache).
 func (cs *CacheService) DeleteByPrefix(ctx context.Context, prefix string) error {
 	err := cs.repo.DeleteByPrefix(ctx, prefix)
 	if err != nil {
@@ -55,7 +60,8 @@ func (cs *CacheService) DeleteByPrefix(ctx context.Context, prefix string) error
 	return nil
 }
 
-// Close closes the connection to the cache server
+// Close closes the connection to the cache server, ensuring that all resources are freed.
+// Returns an error if the operation fails (e.g., if there are issues closing the connection).
 func (cs *CacheService) Close() error {
 	return cs.repo.Close()
 }

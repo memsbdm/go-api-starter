@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// GenerateCacheKey generates a cache key based on the input parameters
+// GenerateCacheKey generates a cache key using a prefix and input parameters.
 func GenerateCacheKey(prefix string, requiredParam any, optionalParams ...any) string {
 	key := prefix
 	key += fmt.Sprintf(":%v", requiredParam)
@@ -15,12 +15,14 @@ func GenerateCacheKey(prefix string, requiredParam any, optionalParams ...any) s
 	return key
 }
 
-// Serialize marshals the input data into an array of bytes
+// Serialize marshals the input data into a byte array.
+// It converts the provided data structure into JSON format.
 func Serialize(data any) ([]byte, error) {
 	return json.Marshal(data)
 }
 
-// Deserialize unmarshals the input data into the output interface
+// Deserialize unmarshal the input byte array into the specified output interface.
+// It converts JSON bytes back into the original data structure.
 func Deserialize(data []byte, output any) error {
 	return json.Unmarshal(data, output)
 }

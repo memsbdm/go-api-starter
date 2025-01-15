@@ -80,14 +80,15 @@ func (rw *responseWriter) WriteHeader(code int) {
 }
 
 const (
-	// authorizationHeaderKey is the key for authorization header in the request
+	// authorizationHeaderKey defines the key used to retrieve the authorization header from the HTTP request.
 	authorizationHeaderKey = "Authorization"
-	// authorizationType is the accepted authorization type
+	// authorizationType specifies the accepted type of authorization.
 	authorizationType = "bearer"
-	// authorizationPayloadKey is the key for authorization payload in the context
+	// authorizationPayloadKey defines the key used to store and retrieve the authorization payload from the context.
 	authorizationPayloadKey = "authorization_payload"
 )
 
+// authMiddleware is a middleware function that validates the authorization token from the incoming HTTP request.
 func authMiddleware(tokenService *ports.TokenService) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
@@ -123,6 +124,9 @@ func authMiddleware(tokenService *ports.TokenService) Middleware {
 	}
 }
 
+// guestMiddleware is a middleware function that allows access to HTTP requests from guests (unauthenticated users).
+// It checks for the presence of an authorization token in the request header. If a valid token is found,
+// it responds with a forbidden error, preventing authenticated users from accessing guest-only routes.
 func guestMiddleware(tokenService *ports.TokenService) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {

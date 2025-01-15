@@ -6,8 +6,10 @@ import (
 	"go-starter/internal/domain/entities"
 )
 
-func getAccessTokenClaims(ctx context.Context, key string) (*entities.AccessTokenClaims, error) {
-	payload, ok := ctx.Value(key).(*entities.AccessTokenClaims)
+// ExtractAccessTokenClaims retrieves the AccessTokenClaims from the provided context.
+// If the claims are not present or cannot be cast to the expected type, it returns an error.
+func extractAccessTokenClaims(ctx context.Context) (*entities.AccessTokenClaims, error) {
+	payload, ok := ctx.Value(authorizationPayloadKey).(*entities.AccessTokenClaims)
 	if !ok {
 		return nil, domain.ErrTokenClaimsNotFound
 	}

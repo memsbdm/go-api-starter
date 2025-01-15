@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-// Redis implements ports.CacheRepository interface and provides access to the redis library
+// Redis implements the ports.CacheRepository interface and provides access to the Redis library.
 type Redis struct {
 	client *redis.Client
 }
 
-// New creates a new instance of Redis
+// New creates a new instance of Redis.
 func New(ctx context.Context, config *config.Redis) (ports.CacheRepository, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     config.Addr,
@@ -30,12 +30,15 @@ func New(ctx context.Context, config *config.Redis) (ports.CacheRepository, erro
 	return &Redis{client}, nil
 }
 
-// Set stores the value in the redis database
+// Set stores the value in the cache with a specified key and time-to-live (TTL).
+// Returns an error if the operation fails (e.g., if the cache is unreachable).
 func (r *Redis) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
 	return r.client.Set(ctx, key, value, ttl).Err()
 }
 
-// Get retrieves the value from the redis database
+// Get retrieves the value associated with the specified key from the cache.
+// Returns the value as a byte slice and an error if the key is not found
+// or if there are issues accessing the cache.
 func (r *Redis) Get(ctx context.Context, key string) ([]byte, error) {
 	res, err := r.client.Get(ctx, key).Result()
 	bytes := []byte(res)
@@ -45,12 +48,14 @@ func (r *Redis) Get(ctx context.Context, key string) ([]byte, error) {
 	return bytes, nil
 }
 
-// Delete removes the value from the redis database
+// Delete removes the value associated with the specified key from the cache.
+// Returns an error if the operation fails (e.g., if there are issues accessing the cache).
 func (r *Redis) Delete(ctx context.Context, key string) error {
 	return r.client.Del(ctx, key).Err()
 }
 
-// DeleteByPrefix removes the value from the redis database with the given prefix
+// DeleteByPrefix removes all values from the cache that match the given prefix.
+// Returns an error if the operation fails (e.g., if there are issues accessing the cache).
 func (r *Redis) DeleteByPrefix(ctx context.Context, prefix string) error {
 	var cursor uint64
 	var keys []string
@@ -77,7 +82,8 @@ func (r *Redis) DeleteByPrefix(ctx context.Context, prefix string) error {
 	return nil
 }
 
-// Close closes the connection to the redis database
+// Close closes the connection to the cache server, ensuring that all resources are freed.
+// Returns an error if the operation fails (e.g., if there are issues closing the connection).
 func (r *Redis) Close() error {
 	return r.client.Close()
 }

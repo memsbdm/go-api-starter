@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// domainHttpErrMap is a map of defined entities error messages and their corresponding http status codes
+// domainHttpErrMap maps domain-specific error types to their corresponding HTTP status codes.
 var domainHttpErrMap = map[error]int{
 	domain.ErrInternal:     http.StatusInternalServerError,
 	domain.ErrForbidden:    http.StatusForbidden,

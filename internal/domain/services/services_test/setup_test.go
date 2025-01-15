@@ -26,9 +26,9 @@ type TestBuilder struct {
 
 func NewTestBuilder() *TestBuilder {
 	timeGenerator := timegen.NewRealTimeGenerator()
-	cacheRepo := redis.NewMock(timeGenerator)
+	cacheRepo := redis.NewCacheMock(timeGenerator)
 	tokenRepo := token.NewTokenRepository(timeGenerator)
-	userRepo := mocks.MockUserRepository()
+	userRepo := mocks.NewUserRepositoryMock()
 	tokenConfig := &config.Token{
 		AccessTokenDuration:   accessTokenExpirationDuration,
 		RefreshTokenDuration:  refreshTokenExpirationDuration,
@@ -46,7 +46,7 @@ func NewTestBuilder() *TestBuilder {
 
 func (tb *TestBuilder) WithTimeGenerator(tg ports.TimeGenerator) *TestBuilder {
 	tb.TimeGenerator = tg
-	tb.CacheRepo = redis.NewMock(tg)
+	tb.CacheRepo = redis.NewCacheMock(tg)
 	tb.TokenRepo = token.NewTokenRepository(tg)
 	return tb
 }

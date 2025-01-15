@@ -15,7 +15,7 @@ var (
 	dbInstance *sql.DB
 )
 
-// New creates a postgres database instance
+// New creates a postgres database instance.
 func New(c context.Context, config *config.DB) (*sql.DB, error) {
 	if dbInstance != nil {
 		return dbInstance, nil
@@ -44,6 +44,7 @@ func New(c context.Context, config *config.DB) (*sql.DB, error) {
 	return dbInstance, nil
 }
 
+// Health checks the health status of the database.
 func Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()

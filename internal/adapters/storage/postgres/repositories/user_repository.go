@@ -9,19 +9,20 @@ import (
 	"go-starter/internal/domain/entities"
 )
 
-// UserRepository implements ports.UserRepository interface and provides access to the database
+// UserRepository implements the ports.UserRepository interface and provides access to the database.
 type UserRepository struct {
 	db *sql.DB
 }
 
-// NewUserRepository creates a new user repository instance
+// NewUserRepository creates and returns a new UserRepository instance.
 func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{
 		db: db,
 	}
 }
 
-// GetByID gets a user by ID from the database
+// GetByID selects a user by their unique identifier from the database.
+// Returns the user entity if found or an error if not found or any other issue occurs.
 func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	query := `SELECT id, username FROM users WHERE id = $1`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -48,7 +49,8 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 	return user, nil
 }
 
-// GetByUsername gets a user by username from the database
+// GetByUsername selects a user by their username from the database.
+// Returns the user entity if found or an error if not found or any other issue occurs.
 func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
 	query := `SELECT id, username, password FROM users WHERE username = $1`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -75,7 +77,8 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 	return user, nil
 }
 
-// Create creates a new user in the database
+// Create inserts a new user into the database.
+// Returns the created user or an error if the operation fails (e.g., due to a database constraint violation).
 func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
 	query := `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)

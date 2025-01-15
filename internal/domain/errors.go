@@ -2,35 +2,34 @@ package domain
 
 import "errors"
 
-// Errors returned in responses
+// Errors returned in responses.
 var (
-	// ErrInternal represents an internal error
+	// ErrInternal represents an internal error.
 	ErrInternal = errors.New("internal error")
-	// ErrForbidden represents a forbidden error
+	// ErrForbidden represents a forbidden error.
 	ErrForbidden = errors.New("forbidden")
-	// ErrUnauthorized represents an unauthorized error
+	// ErrUnauthorized represents an unauthorized error.
 	ErrUnauthorized = errors.New("unauthorized")
-	// ErrBadRequest represents a bad request error
+	// ErrBadRequest represents a bad request error.
 	ErrBadRequest = errors.New("bad request")
 
-	// ErrInvalidToken represents an invalid token error
+	// ErrInvalidToken represents an error for an invalid token.
 	ErrInvalidToken = errors.New("invalid token")
-
-	// ErrInvalidCredentials represents a login error
+	// ErrInvalidCredentials represents an error for invalid login credentials.
 	ErrInvalidCredentials = errors.New("invalid credentials")
 
-	// ErrInvalidUserId represents a wrong user id format error
+	// ErrInvalidUserId represents an error for an invalid user ID format.
 	ErrInvalidUserId = errors.New("invalid user id")
-	// ErrUserNotFound represents a user not found error
+	// ErrUserNotFound represents an error when a user is not found.
 	ErrUserNotFound = errors.New("user not found")
-	// ErrUserUsernameAlreadyExists represents a conflict during a user creation on the username field
+	// ErrUserUsernameAlreadyExists represents a conflict error when trying to create a user with an existing username.
 	ErrUserUsernameAlreadyExists = errors.New("user username already exists")
 )
 
-// Errors not returned in responses
+// Errors not returned in responses.
 var (
-	// ErrCacheNotFound represents an empty cache value for a given key
+	// ErrCacheNotFound represents an error for an empty cache value for a given key.
 	ErrCacheNotFound = errors.New("cache not found")
-	// ErrTokenClaimsNotFound represents an authorization token payload not found
+	// ErrTokenClaimsNotFound represents an error for a missing authorization token payload.
 	ErrTokenClaimsNotFound = errors.New("token payload not found, maybe missing token middleware")
 )

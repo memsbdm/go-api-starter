@@ -7,19 +7,21 @@ import (
 	"net/http"
 )
 
-// AuthHandler represents the HTTP handler for token-related requests
+// AuthHandler is responsible for handling HTTP requests related to authentication operations.
+// It acts as a bridge between the HTTP layer and the authentication service.
 type AuthHandler struct {
 	svc ports.AuthService
 }
 
-// NewAuthHandler creates a new AuthHandler instance
+// NewAuthHandler initializes and returns a new AuthHandler instance.
+// It accepts an implementation of the AuthService interface to handle authentication logic.
 func NewAuthHandler(svc ports.AuthService) *AuthHandler {
 	return &AuthHandler{
 		svc: svc,
 	}
 }
 
-// loginRequest represents the request body for login a user
+// loginRequest represents the structure of the request body used for logging in a user.
 type loginRequest struct {
 	Username string `json:"username" validate:"required" example:"john"`
 	Password string `json:"password" validate:"required" example:"secret123"`
@@ -57,7 +59,7 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, http.StatusOK, response)
 }
 
-// registerUserRequest represents the request body for creating a user
+// registerUserRequest represents the structure of the request body used for registering a new user.
 type registerUserRequest struct {
 	Username string `json:"username" validate:"required" example:"john"`
 	Password string `json:"password" validate:"required" example:"secret123"`
@@ -101,6 +103,7 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, http.StatusCreated, response)
 }
 
+// refreshTokenRequest represents the structure of the request body used for refreshing token or revoke existing one.
 type refreshTokenRequest struct {
 	RefreshToken string
 }

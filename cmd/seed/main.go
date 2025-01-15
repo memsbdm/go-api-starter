@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"go-starter/config"
 	"go-starter/internal/adapters/storage/postgres"
 	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/adapters/storage/postgres/seed"
+	"go-starter/internal/adapters/storage/redis"
+	"go-starter/internal/adapters/timegen"
+	"go-starter/internal/domain/services"
 	"log/slog"
 	"os"
 )
@@ -30,7 +34,14 @@ func main() {
 	}()
 	slog.Info("Successfully connected to the database")
 
+	seedUsers(db)
+}
+
+func seedUsers(db *sql.DB) {
 	userRepo := repositories.NewUserRepository(db)
+	timeGenerator := timegen.NewRealTimeGenerator()
+	cacheService := redis.NewCacheMock(timeGenerator)
+	userService := services.NewUserService(userRepo, cacheService)
 	slog.Info("Seeding users...")
-	seed.Seed(userRepo)
+	seed.Users(userService)
 }

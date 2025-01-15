@@ -3,8 +3,8 @@ package seed
 import (
 	"context"
 	"fmt"
-	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/domain/entities"
+	"go-starter/internal/domain/services"
 )
 
 var usernames = []string{
@@ -17,21 +17,24 @@ var usernames = []string{
 	"walter", "xenia", "yasmin", "zoe",
 }
 
-func Seed(repo *repositories.UserRepository) {
+// Users populates the user repository with a predefined number of user entities.
+func Users(svc *services.UserService) {
 	ctx := context.Background()
 	users := generateUsers(100)
 	for _, user := range users {
-		if _, err := repo.Create(ctx, user); err != nil {
+		if _, err := svc.Register(ctx, user); err != nil {
 			panic(err)
 		}
 	}
 }
 
+// generateUsers creates a slice of user entities with the specified number of users.
 func generateUsers(num int) []*entities.User {
 	users := make([]*entities.User, num)
 	for i := 0; i < num; i++ {
 		users[i] = &entities.User{
 			Username: usernames[i%len(usernames)] + fmt.Sprintf("%d", i),
+			Password: "secret123",
 		}
 	}
 

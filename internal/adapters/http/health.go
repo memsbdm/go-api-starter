@@ -8,11 +8,11 @@ import (
 	"net/http"
 )
 
-// HealthHandler represents the HTTP handler for database health
+// HealthHandler is responsible for handling HTTP requests related to the health status of the database.
 type HealthHandler struct {
 }
 
-// NewHealthHandler creates a new HealthHandler instance
+// NewHealthHandler initializes and returns a new instance of HealthHandler.
 func NewHealthHandler() *HealthHandler {
 	return &HealthHandler{}
 }

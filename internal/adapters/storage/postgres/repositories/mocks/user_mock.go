@@ -14,13 +14,13 @@ type db struct {
 	mu   sync.Mutex
 }
 
-// UserRepository implements ports.UserRepository interface and provides access to the database
+// UserRepository implements the ports.UserRepository interface and provides access to the database.
 type UserRepository struct {
 	db db
 }
 
-// MockUserRepository creates a new mock for a user repository instance
-func MockUserRepository() *UserRepository {
+// NewUserRepositoryMock creates and returns a new mock instance of a user repository.
+func NewUserRepositoryMock() *UserRepository {
 	return &UserRepository{
 		db: db{
 			data: map[entities.UserID]*entities.User{},
@@ -29,7 +29,8 @@ func MockUserRepository() *UserRepository {
 	}
 }
 
-// GetByID gets a user by ID from the database
+// GetByID selects a user by their unique identifier from the database.
+// Returns the user entity if found or an error if not found or any other issue occurs.
 func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
 	defer cancel()
@@ -45,7 +46,23 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 	return user, nil
 }
 
-// Create creates a new user in the database
+// GetByUsername selects a user by their username from the database.
+// Returns the user entity if found or an error if not found or any other issue occurs.
+func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
+	defer cancel()
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+	for _, v := range ur.db.data {
+		if v.Username == username {
+			return v, nil
+		}
+	}
+	return nil, domain.ErrUserNotFound
+}
+
+// Create inserts a new user into the database.
+// Returns the created user or an error if the operation fails (e.g., due to a database constraint violation).
 func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
 	defer cancel()
@@ -68,18 +85,4 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 	ur.db.data[newUser.ID] = newUser
 
 	return newUser, nil
-}
-
-// GetByUsername gets a user by username from the database
-func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
-	defer cancel()
-	ur.db.mu.Lock()
-	defer ur.db.mu.Unlock()
-	for _, v := range ur.db.data {
-		if v.Username == username {
-			return v, nil
-		}
-	}
-	return nil, domain.ErrUserNotFound
 }
