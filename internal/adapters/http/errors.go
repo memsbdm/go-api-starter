@@ -21,6 +21,11 @@ var domainHttpErrMap = map[error]int{
 
 	// Validation errors
 
+	// Users
+	domain.ErrUsernameRequired:             http.StatusUnprocessableEntity,
+	domain.ErrUsernameTooShort:             http.StatusUnprocessableEntity,
+	domain.ErrUsernameTooLong:              http.StatusUnprocessableEntity,
+	domain.ErrUsernameInvalid:              http.StatusUnprocessableEntity,
 	domain.ErrPasswordRequired:             http.StatusUnprocessableEntity,
 	domain.ErrPasswordsNotMatch:            http.StatusUnprocessableEntity,
 	domain.ErrPasswordTooShort:             http.StatusUnprocessableEntity,

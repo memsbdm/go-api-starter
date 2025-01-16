@@ -67,6 +67,27 @@ func TestUserService_Register(t *testing.T) {
 			},
 			expectedErr: domain.ErrPasswordTooShort,
 		},
+		"register user with short username": {
+			input: &entities.User{
+				Username: "abc",
+				Password: userToCreate.Password,
+			},
+			expectedErr: domain.ErrUsernameTooShort,
+		},
+		"register user with long username": {
+			input: &entities.User{
+				Username: "this_is_a_really_long_username",
+				Password: userToCreate.Password,
+			},
+			expectedErr: domain.ErrUsernameTooLong,
+		},
+		"register user with invalid username": {
+			input: &entities.User{
+				Username: " invalid ",
+				Password: userToCreate.Password,
+			},
+			expectedErr: domain.ErrUsernameInvalid,
+		},
 	}
 
 	// Act & Assert

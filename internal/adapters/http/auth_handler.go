@@ -59,9 +59,9 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	handleSuccess(w, http.StatusOK, response)
 }
 
-// registerUserRequest represents the structure of the request body used for registering a new user.
-type registerUserRequest struct {
-	Username string `json:"username" validate:"required" example:"john"`
+// registerRequest represents the structure of the request body used for registering a new user.
+type registerRequest struct {
+	Username string `json:"username" validate:"required,min=4,max=15" example:"john"`
 	Password string `json:"password" validate:"required,min=8" example:"secret123"`
 }
 
@@ -72,7 +72,7 @@ type registerUserRequest struct {
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			registerUserRequest	body registerUserRequest true "Register request"
+//	@Param			registerRequest	body registerRequest true "Register request"
 //	@Success		200	{object}	response[userResponse]	"Created user"
 //	@Failure		403	{object}	errorResponse	"Forbidden error"
 //	@Failure		409	{object}	errorResponse	"Duplication error"
@@ -81,7 +81,7 @@ type registerUserRequest struct {
 //	@Router			/v1/auth/register [post]
 func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	var payload registerUserRequest
+	var payload registerRequest
 
 	if err := validator.ValidateRequest(w, r, &payload); err != nil {
 		handleValidationError(w, err)

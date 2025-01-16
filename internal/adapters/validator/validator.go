@@ -29,9 +29,11 @@ var validationMessages = map[string]error{
 	"refreshTokenRequest.RefreshToken.jwt":      domain.ErrInvalidToken,
 
 	// Users
-	"registerUserRequest.Username.required":               domain.ErrUsernameRequired,
-	"registerUserRequest.Password.required":               domain.ErrPasswordRequired,
-	"registerUserRequest.Password.min":                    domain.ErrPasswordTooShort,
+	"registerRequest.Username.required":                   domain.ErrUsernameRequired,
+	"registerRequest.Username.min":                        domain.ErrUsernameTooShort,
+	"registerRequest.Username.max":                        domain.ErrUsernameTooLong,
+	"registerRequest.Password.required":                   domain.ErrPasswordRequired,
+	"registerRequest.Password.min":                        domain.ErrPasswordTooShort,
 	"updatePasswordRequest.Password.required":             domain.ErrPasswordRequired,
 	"updatePasswordRequest.Password.min":                  domain.ErrPasswordTooShort,
 	"updatePasswordRequest.Password.eqfield":              domain.ErrPasswordsNotMatch,

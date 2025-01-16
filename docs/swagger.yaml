@@ -84,7 +84,7 @@ definitions:
     required:
     - refreshToken
     type: object
-  http.registerUserRequest:
+  http.registerRequest:
     properties:
       password:
         example: secret123
@@ -92,6 +92,8 @@ definitions:
         type: string
       username:
         example: john
+        maxLength: 15
+        minLength: 4
         type: string
     required:
     - password
@@ -274,10 +276,10 @@ paths:
       parameters:
       - description: Register request
         in: body
-        name: registerUserRequest
+        name: registerRequest
         required: true
         schema:
-          $ref: '#/definitions/http.registerUserRequest'
+          $ref: '#/definitions/http.registerRequest'
       produces:
       - application/json
       responses:

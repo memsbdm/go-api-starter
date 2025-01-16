@@ -195,11 +195,11 @@
                 "parameters": [
                     {
                         "description": "Register request",
-                        "name": "registerUserRequest",
+                        "name": "registerRequest",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.registerUserRequest"
+                            "$ref": "#/definitions/http.registerRequest"
                         }
                     }
                 ],
@@ -540,7 +540,7 @@
                 }
             }
         },
-        "http.registerUserRequest": {
+        "http.registerRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -554,6 +554,8 @@
                 },
                 "username": {
                     "type": "string",
+                    "maxLength": 15,
+                    "minLength": 4,
                     "example": "john"
                 }
             }

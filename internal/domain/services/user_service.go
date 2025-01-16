@@ -7,6 +7,7 @@ import (
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
+	"regexp"
 	"time"
 )
 
@@ -79,16 +80,9 @@ func (us *UserService) GetByUsername(ctx context.Context, username string) (*ent
 // Register creates a new user account in the system.
 // Returns the created user or an error if the registration fails (e.g., due to validation issues).
 func (us *UserService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
-	if user.Username == "" {
-		return nil, domain.ErrUsernameRequired
-	}
-
-	if user.Password == "" {
-		return nil, domain.ErrPasswordRequired
-	}
-
-	if len(user.Password) < domain.PasswordMinLength {
-		return nil, domain.ErrPasswordTooShort
+	err := validateRegisterRequest(user)
+	if err != nil {
+		return nil, err
 	}
 
 	hashedPassword, err := utils.HashPassword(user.Password)
@@ -134,6 +128,52 @@ func (us *UserService) UpdatePassword(ctx context.Context, userID entities.UserI
 	err = us.repo.UpdatePassword(ctx, userID, hashedPassword)
 	if err != nil {
 		return domain.ErrInternal
+	}
+	return nil
+}
+
+// validatePassword checks if the provided username meets the required criteria.
+// Returns an error if any validation fails.
+func validateUsername(username string) error {
+	if username == "" {
+		return domain.ErrUsernameRequired
+	}
+	if len(username) < domain.UsernameMinLength {
+		return domain.ErrUsernameTooShort
+	}
+	if len(username) > domain.UsernameMaxLength {
+		return domain.ErrUsernameTooLong
+	}
+	ok, err := regexp.Match("^[a-zA-Z0-9_]*$", []byte(username))
+	if err != nil {
+		return domain.ErrInternal
+	}
+	if !ok {
+		return domain.ErrUsernameInvalid
+	}
+	return nil
+}
+
+// validatePassword checks if the provided password meets the required criteria.
+// Returns an error if any validation fails.
+func validatePassword(password string) error {
+	if password == "" {
+		return domain.ErrPasswordRequired
+	}
+	if len(password) < domain.PasswordMinLength {
+		return domain.ErrPasswordTooShort
+	}
+	return nil
+}
+
+// validateRegisterRequest validates the registration details of a user.
+// Returns an error if any validation fails.
+func validateRegisterRequest(user *entities.User) error {
+	if err := validateUsername(user.Username); err != nil {
+		return err
+	}
+	if err := validatePassword(user.Password); err != nil {
+		return err
 	}
 	return nil
 }

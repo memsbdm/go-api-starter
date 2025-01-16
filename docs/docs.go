@@ -203,11 +203,11 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Register request",
-                        "name": "registerUserRequest",
+                        "name": "registerRequest",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.registerUserRequest"
+                            "$ref": "#/definitions/http.registerRequest"
                         }
                     }
                 ],
@@ -548,7 +548,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.registerUserRequest": {
+        "http.registerRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -562,6 +562,8 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string",
+                    "maxLength": 15,
+                    "minLength": 4,
                     "example": "john"
                 }
             }
