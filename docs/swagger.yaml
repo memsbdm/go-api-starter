@@ -1,5 +1,5 @@
 definitions:
-  http.authTokensResponse:
+  go-starter_internal_adapters_http_responses.AuthTokensResponse:
     properties:
       access_token:
         example: eyJhbGciOi...
@@ -14,13 +14,13 @@ definitions:
         example: 890000
         type: integer
     type: object
-  http.emptyResponse:
+  go-starter_internal_adapters_http_responses.EmptyResponse:
     properties:
       success:
         example: true
         type: boolean
     type: object
-  http.errorResponse:
+  go-starter_internal_adapters_http_responses.ErrorResponse:
     properties:
       messages:
         example:
@@ -33,7 +33,7 @@ definitions:
         example: false
         type: boolean
     type: object
-  http.getUserByIDResponse:
+  go-starter_internal_adapters_http_responses.GetUserByIDResponse:
     properties:
       id:
         example: 6b947a32-8919-4974-9ef3-048a556b0b75
@@ -45,7 +45,7 @@ definitions:
         example: john
         type: string
     type: object
-  http.healthResponse:
+  go-starter_internal_adapters_http_responses.HealthResponse:
     properties:
       idle:
         example: "1"
@@ -75,101 +75,47 @@ definitions:
         example: 0s
         type: string
     type: object
-  http.loginRequest:
-    properties:
-      password:
-        example: secret123
-        type: string
-      username:
-        example: john
-        type: string
-    required:
-    - password
-    - username
-    type: object
-  http.loginResponse:
+  go-starter_internal_adapters_http_responses.LoginResponse:
     properties:
       tokens:
-        $ref: '#/definitions/http.authTokensResponse'
+        $ref: '#/definitions/go-starter_internal_adapters_http_responses.AuthTokensResponse'
       user:
-        $ref: '#/definitions/http.userResponse'
+        $ref: '#/definitions/go-starter_internal_adapters_http_responses.UserResponse'
     type: object
-  http.refreshTokenRequest:
-    properties:
-      refresh_token:
-        example: eyJhbGci...
-        type: string
-    required:
-    - refresh_token
-    type: object
-  http.refreshTokenResponse:
+  go-starter_internal_adapters_http_responses.RefreshTokenResponse:
     properties:
       tokens:
-        $ref: '#/definitions/http.authTokensResponse'
+        $ref: '#/definitions/go-starter_internal_adapters_http_responses.AuthTokensResponse'
     type: object
-  http.registerRequest:
-    properties:
-      name:
-        example: John Doe
-        maxLength: 50
-        minLength: 1
-        type: string
-      password:
-        example: secret123
-        minLength: 8
-        type: string
-      username:
-        example: john
-        maxLength: 15
-        minLength: 4
-        type: string
-    required:
-    - name
-    - password
-    - username
-    type: object
-  http.response-http_getUserByIDResponse:
+  go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_GetUserByIDResponse:
     properties:
       data:
-        $ref: '#/definitions/http.getUserByIDResponse'
+        $ref: '#/definitions/go-starter_internal_adapters_http_responses.GetUserByIDResponse'
       success:
         type: boolean
     type: object
-  http.response-http_loginResponse:
+  go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse:
     properties:
       data:
-        $ref: '#/definitions/http.loginResponse'
+        $ref: '#/definitions/go-starter_internal_adapters_http_responses.LoginResponse'
       success:
         type: boolean
     type: object
-  http.response-http_refreshTokenResponse:
+  go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse:
     properties:
       data:
-        $ref: '#/definitions/http.refreshTokenResponse'
+        $ref: '#/definitions/go-starter_internal_adapters_http_responses.RefreshTokenResponse'
       success:
         type: boolean
     type: object
-  http.response-http_userResponse:
+  go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_UserResponse:
     properties:
       data:
-        $ref: '#/definitions/http.userResponse'
+        $ref: '#/definitions/go-starter_internal_adapters_http_responses.UserResponse'
       success:
         type: boolean
     type: object
-  http.updatePasswordRequest:
-    properties:
-      password:
-        example: secret123
-        minLength: 8
-        type: string
-      password_confirmation:
-        example: secret123
-        type: string
-    required:
-    - password
-    - password_confirmation
-    type: object
-  http.userResponse:
+  go-starter_internal_adapters_http_responses.UserResponse:
     properties:
       created_at:
         example: "2024-08-15T16:23:33.455225Z"
@@ -190,6 +136,60 @@ definitions:
         example: john
         type: string
     type: object
+  internal_adapters_http_handlers.loginRequest:
+    properties:
+      password:
+        example: secret123
+        type: string
+      username:
+        example: john
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  internal_adapters_http_handlers.refreshTokenRequest:
+    properties:
+      refresh_token:
+        example: eyJhbGci...
+        type: string
+    required:
+    - refresh_token
+    type: object
+  internal_adapters_http_handlers.registerRequest:
+    properties:
+      name:
+        example: John Doe
+        maxLength: 50
+        minLength: 1
+        type: string
+      password:
+        example: secret123
+        minLength: 8
+        type: string
+      username:
+        example: john
+        maxLength: 15
+        minLength: 4
+        type: string
+    required:
+    - name
+    - password
+    - username
+    type: object
+  internal_adapters_http_handlers.updatePasswordRequest:
+    properties:
+      password:
+        example: secret123
+        minLength: 8
+        type: string
+      password_confirmation:
+        example: secret123
+        type: string
+    required:
+    - password
+    - password_confirmation
+    type: object
 info:
   contact: {}
   description: This is a simple starter API written in Go using net/http, PostgresSQL
@@ -208,30 +208,30 @@ paths:
         name: loginRequest
         required: true
         schema:
-          $ref: '#/definitions/http.loginRequest'
+          $ref: '#/definitions/internal_adapters_http_handlers.loginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Access and refresh tokens
           schema:
-            $ref: '#/definitions/http.response-http_loginResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse'
         "401":
           description: Unauthorized / credentials error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "403":
           description: Forbidden error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "422":
           description: Validation error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
       summary: Login a user
       tags:
       - Auth
@@ -246,26 +246,26 @@ paths:
         name: refreshTokenRequest
         required: true
         schema:
-          $ref: '#/definitions/http.refreshTokenRequest'
+          $ref: '#/definitions/internal_adapters_http_handlers.refreshTokenRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Success
           schema:
-            $ref: '#/definitions/http.emptyResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
         "401":
           description: Unauthorized error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "422":
           description: Validation error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Logout an authenticated user
@@ -282,26 +282,26 @@ paths:
         name: refreshTokenRequest
         required: true
         schema:
-          $ref: '#/definitions/http.refreshTokenRequest'
+          $ref: '#/definitions/internal_adapters_http_handlers.refreshTokenRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Refresh token response
           schema:
-            $ref: '#/definitions/http.response-http_refreshTokenResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse'
         "401":
           description: Unauthorized error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "422":
           description: Validation error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Generate a new access token and refresh token
@@ -318,30 +318,30 @@ paths:
         name: registerRequest
         required: true
         schema:
-          $ref: '#/definitions/http.registerRequest'
+          $ref: '#/definitions/internal_adapters_http_handlers.registerRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Created user
           schema:
-            $ref: '#/definitions/http.response-http_loginResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse'
         "403":
           description: Forbidden error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "409":
           description: Duplication error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "422":
           description: Validation error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
       summary: Register a new user
       tags:
       - Auth
@@ -356,11 +356,11 @@ paths:
         "200":
           description: DB information
           schema:
-            $ref: '#/definitions/http.healthResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.HealthResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
       summary: Get database health information
       tags:
       - Health
@@ -382,19 +382,19 @@ paths:
         "200":
           description: User displayed
           schema:
-            $ref: '#/definitions/http.response-http_getUserByIDResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_GetUserByIDResponse'
         "400":
           description: Incorrect User ID
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "404":
           description: Data not found error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get a user
@@ -409,15 +409,15 @@ paths:
         "200":
           description: User displayed
           schema:
-            $ref: '#/definitions/http.response-http_userResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_UserResponse'
         "401":
           description: Unauthorized error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get authenticated user information
@@ -434,26 +434,26 @@ paths:
         name: updatePasswordRequest
         required: true
         schema:
-          $ref: '#/definitions/http.updatePasswordRequest'
+          $ref: '#/definitions/internal_adapters_http_handlers.updatePasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Success
           schema:
-            $ref: '#/definitions/http.emptyResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
         "401":
           description: Unauthorized error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "422":
           description: Validation error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/http.errorResponse'
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update user password

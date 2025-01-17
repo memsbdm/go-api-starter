@@ -1,8 +1,9 @@
-package http
+package handlers
 
 import (
 	"encoding/json"
 	"fmt"
+	_ "go-starter/internal/adapters/http/responses"
 	"go-starter/internal/adapters/storage/postgres"
 	"log/slog"
 	"net/http"
@@ -24,8 +25,8 @@ func NewHealthHandler() *HealthHandler {
 //	@Tags			Health
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	healthResponse	"DB information"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Success		200	{object}	responses.HealthResponse	"DB information"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/health [get]
 func (hh *HealthHandler) Health(w http.ResponseWriter, _ *http.Request) {
 	resp, err := json.Marshal(postgres.Health())

@@ -1,6 +1,7 @@
-package http
+package handlers
 
 import (
+	"go-starter/internal/adapters/http/responses"
 	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
@@ -35,28 +36,27 @@ type loginRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			loginRequest	body loginRequest true "Login request"
-//	@Success		200	{object}	response[loginResponse]	"Access and refresh tokens"
-//	@Failure		401	{object}	errorResponse	"Unauthorized / credentials error"
-//	@Failure		403	{object}	errorResponse	"Forbidden error"
-//	@Failure		422	{object}	errorResponse	"Validation error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Success		200	{object}	responses.Response[responses.LoginResponse]	"Access and refresh tokens"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized / credentials error"
+//	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
+//	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/auth/login [post]
 func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var payload loginRequest
-
 	if err := validator.ValidateRequest(w, r, &payload); err != nil {
-		handleValidationError(w, err)
+		responses.HandleValidationError(w, err)
 		return
 	}
 	user, authTokens, err := ah.svc.Login(ctx, payload.Username, payload.Password)
 	if err != nil {
-		handleError(w, err)
+		responses.HandleError(w, err)
 		return
 	}
 
-	response := newLoginResponse(authTokens, user)
-	handleSuccess(w, http.StatusOK, response)
+	response := responses.NewLoginResponse(authTokens, user)
+	responses.HandleSuccess(w, http.StatusOK, response)
 }
 
 // registerRequest represents the structure of the request body used for registering a new user.
@@ -74,18 +74,18 @@ type registerRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			registerRequest	body registerRequest true "Register request"
-//	@Success		200	{object}	response[loginResponse]	"Created user"
-//	@Failure		403	{object}	errorResponse	"Forbidden error"
-//	@Failure		409	{object}	errorResponse	"Duplication error"
-//	@Failure		422	{object}	errorResponse	"Validation error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Success		200	{object}	responses.Response[responses.LoginResponse]	"Created user"
+//	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
+//	@Failure		409	{object}	responses.ErrorResponse	"Duplication error"
+//	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/auth/register [post]
 func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var payload registerRequest
 
 	if err := validator.ValidateRequest(w, r, &payload); err != nil {
-		handleValidationError(w, err)
+		responses.HandleValidationError(w, err)
 		return
 	}
 
@@ -97,18 +97,18 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	created, err := ah.svc.Register(ctx, user)
 	if err != nil {
-		handleError(w, err)
+		responses.HandleError(w, err)
 		return
 	}
 
 	_, authTokens, err := ah.svc.Login(ctx, created.Username, payload.Password)
 	if err != nil {
-		handleError(w, err)
+		responses.HandleError(w, err)
 		return
 	}
 
-	response := newLoginResponse(authTokens, user)
-	handleSuccess(w, http.StatusCreated, response)
+	response := responses.NewLoginResponse(authTokens, user)
+	responses.HandleSuccess(w, http.StatusCreated, response)
 }
 
 // refreshTokenRequest represents the structure of the request body used for refreshing token or revoke existing one.
@@ -124,10 +124,10 @@ type refreshTokenRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
-//	@Success		200	{object}	response[refreshTokenResponse]	"Refresh token response"
-//	@Failure		401	{object}	errorResponse	"Unauthorized error"
-//	@Failure		422	{object}	errorResponse	"Validation error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Success		200	{object}	responses.Response[responses.RefreshTokenResponse]	"Refresh token response"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
+//	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/auth/refresh [post]
 //	@Security		BearerAuth
 func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
@@ -135,18 +135,18 @@ func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var payload refreshTokenRequest
 
 	if err := validator.ValidateRequest(w, r, &payload); err != nil {
-		handleValidationError(w, err)
+		responses.HandleValidationError(w, err)
 		return
 	}
 
 	authTokens, err := ah.svc.Refresh(ctx, payload.RefreshToken)
 	if err != nil {
-		handleError(w, err)
+		responses.HandleError(w, err)
 		return
 	}
 
-	response := newRefreshTokenResponse(authTokens)
-	handleSuccess(w, http.StatusOK, response)
+	response := responses.NewRefreshTokenResponse(authTokens)
+	responses.HandleSuccess(w, http.StatusOK, response)
 }
 
 // Logout godoc
@@ -157,10 +157,10 @@ func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
-//	@Success		200	{object}	emptyResponse	"Success"
-//	@Failure		401	{object}	errorResponse	"Unauthorized error"
-//	@Failure		422	{object}	errorResponse	"Validation error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Success		200	{object}	responses.EmptyResponse	"Success"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
+//	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/auth/logout [delete]
 //	@Security		BearerAuth
 func (ah *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
@@ -169,15 +169,15 @@ func (ah *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	var payload refreshTokenRequest
 
 	if err := validator.ValidateRequest(w, r, &payload); err != nil {
-		handleValidationError(w, err)
+		responses.HandleValidationError(w, err)
 		return
 	}
 
 	err := ah.svc.Logout(ctx, payload.RefreshToken)
 	if err != nil {
-		handleError(w, err)
+		responses.HandleError(w, err)
 		return
 	}
 
-	handleSuccess(w, http.StatusOK, nil)
+	responses.HandleSuccess(w, http.StatusOK, nil)
 }

@@ -1,12 +1,12 @@
-package http
+package apierrors
 
 import (
 	"go-starter/internal/domain"
 	"net/http"
 )
 
-// domainHttpErrMap maps domain-specific error types to their corresponding HTTP status codes.
-var domainHttpErrMap = map[error]int{
+// DomainHttpErrMap maps domain-specific error types to their corresponding HTTP status codes.
+var DomainHttpErrMap = map[error]int{
 	domain.ErrInternal:     http.StatusInternalServerError,
 	domain.ErrForbidden:    http.StatusForbidden,
 	domain.ErrUnauthorized: http.StatusUnauthorized,

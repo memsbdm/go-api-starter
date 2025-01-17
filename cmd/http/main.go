@@ -4,6 +4,7 @@ import (
 	"context"
 	"go-starter/config"
 	"go-starter/internal/adapters/http"
+	"go-starter/internal/adapters/http/handlers"
 	"go-starter/internal/adapters/logger"
 	"go-starter/internal/adapters/storage/postgres"
 	"go-starter/internal/adapters/storage/postgres/repositories"
@@ -66,7 +67,7 @@ func main() {
 	timeGenerator := timegen.NewRealTimeGenerator()
 
 	// Health
-	healthHandler := http.NewHealthHandler()
+	healthHandler := handlers.NewHealthHandler()
 
 	// Cache
 	cacheService := services.NewCacheService(cache)
@@ -78,11 +79,11 @@ func main() {
 	// User
 	userRepo := repositories.NewUserRepository(db)
 	userService := services.NewUserService(userRepo, cacheService)
-	userHandler := http.NewUserHandler(userService)
+	userHandler := handlers.NewUserHandler(userService)
 
 	// Auth
 	authService := services.NewAuthService(userService, tokenService)
-	authHandler := http.NewAuthHandler(authService)
+	authHandler := handlers.NewAuthHandler(authService)
 
 	// Init and start server
 	srv := http.New(cfg.HTTP, *healthHandler, *authHandler, *userHandler, tokenService)

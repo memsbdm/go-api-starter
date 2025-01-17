@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.loginRequest"
+                            "$ref": "#/definitions/internal_adapters_http_handlers.loginRequest"
                         }
                     }
                 ],
@@ -43,31 +43,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Access and refresh tokens",
                         "schema": {
-                            "$ref": "#/definitions/http.response-http_loginResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized / credentials error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     }
                 }
@@ -98,7 +98,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.refreshTokenRequest"
+                            "$ref": "#/definitions/internal_adapters_http_handlers.refreshTokenRequest"
                         }
                     }
                 ],
@@ -106,25 +106,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Success",
                         "schema": {
-                            "$ref": "#/definitions/http.emptyResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     }
                 }
@@ -155,7 +155,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.refreshTokenRequest"
+                            "$ref": "#/definitions/internal_adapters_http_handlers.refreshTokenRequest"
                         }
                     }
                 ],
@@ -163,25 +163,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Refresh token response",
                         "schema": {
-                            "$ref": "#/definitions/http.response-http_refreshTokenResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     }
                 }
@@ -207,7 +207,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.registerRequest"
+                            "$ref": "#/definitions/internal_adapters_http_handlers.registerRequest"
                         }
                     }
                 ],
@@ -215,31 +215,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Created user",
                         "schema": {
-                            "$ref": "#/definitions/http.response-http_loginResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Duplication error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     }
                 }
@@ -262,13 +262,13 @@ const docTemplate = `{
                     "200": {
                         "description": "DB information",
                         "schema": {
-                            "$ref": "#/definitions/http.healthResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.HealthResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     }
                 }
@@ -293,19 +293,19 @@ const docTemplate = `{
                     "200": {
                         "description": "User displayed",
                         "schema": {
-                            "$ref": "#/definitions/http.response-http_userResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_UserResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     }
                 }
@@ -336,7 +336,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/http.updatePasswordRequest"
+                            "$ref": "#/definitions/internal_adapters_http_handlers.updatePasswordRequest"
                         }
                     }
                 ],
@@ -344,25 +344,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Success",
                         "schema": {
-                            "$ref": "#/definitions/http.emptyResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "422": {
                         "description": "Validation error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     }
                 }
@@ -400,25 +400,25 @@ const docTemplate = `{
                     "200": {
                         "description": "User displayed",
                         "schema": {
-                            "$ref": "#/definitions/http.response-http_getUserByIDResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_GetUserByIDResponse"
                         }
                     },
                     "400": {
                         "description": "Incorrect User ID",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Data not found error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/http.errorResponse"
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     }
                 }
@@ -426,7 +426,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "http.authTokensResponse": {
+        "go-starter_internal_adapters_http_responses.AuthTokensResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -447,7 +447,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.emptyResponse": {
+        "go-starter_internal_adapters_http_responses.EmptyResponse": {
             "type": "object",
             "properties": {
                 "success": {
@@ -456,7 +456,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.errorResponse": {
+        "go-starter_internal_adapters_http_responses.ErrorResponse": {
             "type": "object",
             "properties": {
                 "messages": {
@@ -475,7 +475,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.getUserByIDResponse": {
+        "go-starter_internal_adapters_http_responses.GetUserByIDResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -492,7 +492,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.healthResponse": {
+        "go-starter_internal_adapters_http_responses.HealthResponse": {
             "type": "object",
             "properties": {
                 "idle": {
@@ -533,7 +533,99 @@ const docTemplate = `{
                 }
             }
         },
-        "http.loginRequest": {
+        "go-starter_internal_adapters_http_responses.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.AuthTokensResponse"
+                },
+                "user": {
+                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.UserResponse"
+                }
+            }
+        },
+        "go-starter_internal_adapters_http_responses.RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.AuthTokensResponse"
+                }
+            }
+        },
+        "go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_GetUserByIDResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.GetUserByIDResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.LoginResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.RefreshTokenResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_UserResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.UserResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "go-starter_internal_adapters_http_responses.UserResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-08-15T16:23:33.455225Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "6b947a32-8919-4974-9ef3-048a556b0b75"
+                },
+                "is_email_verified": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-01-15T14:29:33.455225Z"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john"
+                }
+            }
+        },
+        "internal_adapters_http_handlers.loginRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -550,18 +642,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.loginResponse": {
-            "type": "object",
-            "properties": {
-                "tokens": {
-                    "$ref": "#/definitions/http.authTokensResponse"
-                },
-                "user": {
-                    "$ref": "#/definitions/http.userResponse"
-                }
-            }
-        },
-        "http.refreshTokenRequest": {
+        "internal_adapters_http_handlers.refreshTokenRequest": {
             "type": "object",
             "required": [
                 "refresh_token"
@@ -573,15 +654,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.refreshTokenResponse": {
-            "type": "object",
-            "properties": {
-                "tokens": {
-                    "$ref": "#/definitions/http.authTokensResponse"
-                }
-            }
-        },
-        "http.registerRequest": {
+        "internal_adapters_http_handlers.registerRequest": {
             "type": "object",
             "required": [
                 "name",
@@ -608,51 +681,7 @@ const docTemplate = `{
                 }
             }
         },
-        "http.response-http_getUserByIDResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/http.getUserByIDResponse"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "http.response-http_loginResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/http.loginResponse"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "http.response-http_refreshTokenResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/http.refreshTokenResponse"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "http.response-http_userResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/http.userResponse"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "http.updatePasswordRequest": {
+        "internal_adapters_http_handlers.updatePasswordRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -667,35 +696,6 @@ const docTemplate = `{
                 "password_confirmation": {
                     "type": "string",
                     "example": "secret123"
-                }
-            }
-        },
-        "http.userResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string",
-                    "example": "2024-08-15T16:23:33.455225Z"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "6b947a32-8919-4974-9ef3-048a556b0b75"
-                },
-                "is_email_verified": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "name": {
-                    "type": "string",
-                    "example": "John Doe"
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2025-01-15T14:29:33.455225Z"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "john"
                 }
             }
         }

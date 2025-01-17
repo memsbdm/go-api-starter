@@ -6,6 +6,8 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go-starter/config"
 	_ "go-starter/docs"
+	"go-starter/internal/adapters/http/handlers"
+	"go-starter/internal/adapters/http/middleware"
 	"go-starter/internal/domain/ports"
 	"log/slog"
 	"net/http"
@@ -18,12 +20,12 @@ type Server struct {
 }
 
 // New creates and initializes a new HTTP server.
-func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandler, userHandler UserHandler, tokenService ports.TokenService) *Server {
-	auth := func() Middleware {
-		return authMiddleware(&tokenService)
+func New(config *config.HTTP, healthHandler handlers.HealthHandler, authHandler handlers.AuthHandler, userHandler handlers.UserHandler, tokenService ports.TokenService) *Server {
+	auth := func() middleware.Middleware {
+		return middleware.AuthMiddleware(&tokenService)
 	}
-	guest := func() Middleware {
-		return guestMiddleware(&tokenService)
+	guest := func() middleware.Middleware {
+		return middleware.GuestMiddleware(&tokenService)
 	}
 
 	mux := http.NewServeMux()
@@ -31,17 +33,17 @@ func New(config *config.HTTP, healthHandler HealthHandler, authHandler AuthHandl
 	mux.HandleFunc("GET /v1/health", healthHandler.Health)
 
 	// Auth
-	mux.HandleFunc("POST /v1/auth/login", Chain(authHandler.Login, guest()))
-	mux.HandleFunc("POST /v1/auth/register", Chain(authHandler.Register, guest()))
+	mux.HandleFunc("POST /v1/auth/login", middleware.Chain(authHandler.Login, guest()))
+	mux.HandleFunc("POST /v1/auth/register", middleware.Chain(authHandler.Register, guest()))
 	mux.HandleFunc("POST /v1/auth/refresh", authHandler.Refresh)
-	mux.HandleFunc("DELETE /v1/auth/logout", Chain(authHandler.Logout, auth()))
+	mux.HandleFunc("DELETE /v1/auth/logout", middleware.Chain(authHandler.Logout, auth()))
 
 	// Users
-	mux.HandleFunc("GET /v1/users/me", Chain(userHandler.Me, auth()))
+	mux.HandleFunc("GET /v1/users/me", middleware.Chain(userHandler.Me, auth()))
 	mux.HandleFunc("GET /v1/users/{uuid}", userHandler.GetByID)
-	mux.HandleFunc("PATCH /v1/users/password", Chain(userHandler.UpdatePassword, auth()))
+	mux.HandleFunc("PATCH /v1/users/password", middleware.Chain(userHandler.UpdatePassword, auth()))
 
-	handler := loggingMiddleware(corsMiddleware(mux))
+	handler := middleware.LoggingMiddleware(middleware.CorsMiddleware(mux))
 	return &Server{
 		Server: &http.Server{
 			Addr:         fmt.Sprintf(":%d", config.Port),

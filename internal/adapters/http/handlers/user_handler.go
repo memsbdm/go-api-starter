@@ -1,7 +1,9 @@
-package http
+package handlers
 
 import (
 	"github.com/google/uuid"
+	"go-starter/internal/adapters/http/helpers"
+	"go-starter/internal/adapters/http/responses"
 	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
@@ -27,28 +29,28 @@ func NewUserHandler(svc ports.UserService) *UserHandler {
 //	@Description	Get information of logged-in user
 //	@Tags			Users
 //	@Produce		json
-//	@Success		200	{object}	response[userResponse]	"User displayed"
-//	@Failure		401	{object}	errorResponse	"Unauthorized error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Success		200	{object}	responses.Response[responses.UserResponse]	"User displayed"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/users/me [get]
 //	@Security		BearerAuth
 func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	claims, err := extractAccessTokenClaims(ctx)
+	claims, err := helpers.ExtractAccessTokenClaims(ctx)
 	if err != nil {
-		handleError(w, domain.ErrInternal)
+		responses.HandleError(w, domain.ErrInternal)
 		return
 	}
 
 	user, err := uh.svc.GetByID(ctx, claims.Subject)
 	if err != nil {
-		handleError(w, err)
+		responses.HandleError(w, err)
 		return
 	}
 
-	response := newUserResponse(user)
-	handleSuccess(w, http.StatusOK, response)
+	response := responses.NewUserResponse(user)
+	responses.HandleSuccess(w, http.StatusOK, response)
 }
 
 // GetByID godoc
@@ -59,10 +61,10 @@ func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			uuid	path		string		true	"User ID" format(uuid)
-//	@Success		200	{object}	response[getUserByIDResponse]	"User displayed"
-//	@Failure		400	{object}	errorResponse	"Incorrect User ID"
-//	@Failure		404	{object}	errorResponse	"Data not found error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Success		200	{object}	responses.Response[responses.GetUserByIDResponse]	"User displayed"
+//	@Failure		400	{object}	responses.ErrorResponse	"Incorrect User ID"
+//	@Failure		404	{object}	responses.ErrorResponse	"Data not found error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/users/{uuid} [get]
 //	@Security		BearerAuth
 func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
@@ -71,18 +73,18 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	userUUID, err := uuid.Parse(id)
 	if err != nil {
-		handleError(w, domain.ErrInvalidUserId)
+		responses.HandleError(w, domain.ErrInvalidUserId)
 		return
 	}
 
 	user, err := uh.svc.GetByID(ctx, entities.UserID(userUUID))
 	if err != nil {
-		handleError(w, err)
+		responses.HandleError(w, err)
 		return
 	}
 
-	response := newGetUserByIDResponse(user)
-	handleSuccess(w, http.StatusOK, response)
+	response := responses.NewGetUserByIDResponse(user)
+	responses.HandleSuccess(w, http.StatusOK, response)
 }
 
 // updatePasswordRequest represents the structure of the request body used for updating a user password.
@@ -99,10 +101,10 @@ type updatePasswordRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			updatePasswordRequest	body updatePasswordRequest true "Update user password request"
-//	@Success		200	{object}	emptyResponse	"Success"
-//	@Failure		401	{object}	errorResponse	"Unauthorized error"
-//	@Failure		422	{object}	errorResponse	"Validation error"
-//	@Failure		500	{object}	errorResponse	"Internal server error"
+//	@Success		200	{object}	responses.EmptyResponse	"Success"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
+//	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/users/password [patch]
 //	@Security		BearerAuth
 func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
@@ -110,7 +112,7 @@ func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 
 	var payload updatePasswordRequest
 	if err := validator.ValidateRequest(w, r, &payload); err != nil {
-		handleValidationError(w, err)
+		responses.HandleValidationError(w, err)
 		return
 	}
 
@@ -119,17 +121,17 @@ func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		PasswordConfirmation: &payload.PasswordConfirmation,
 	}
 
-	claims, err := extractAccessTokenClaims(ctx)
+	claims, err := helpers.ExtractAccessTokenClaims(ctx)
 	if err != nil {
-		handleError(w, domain.ErrInternal)
+		responses.HandleError(w, domain.ErrInternal)
 		return
 	}
 
 	err = uh.svc.UpdatePassword(ctx, claims.Subject, updateUserParams)
 	if err != nil {
-		handleError(w, err)
+		responses.HandleError(w, err)
 		return
 	}
 
-	handleSuccess(w, http.StatusOK, nil)
+	responses.HandleSuccess(w, http.StatusOK, nil)
 }

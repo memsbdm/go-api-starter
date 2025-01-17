@@ -41,7 +41,7 @@ seed:
 	@go run cmd/seed/main.go
 
 swag:
-	@swag init -g cmd/http/main.go -o ./docs
+	@swag init -g cmd/http/main.go -o ./docs --parseDependency
 
 # Live reload
 watch:
