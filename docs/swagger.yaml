@@ -2,9 +2,17 @@ definitions:
   http.authTokensResponse:
     properties:
       access_token:
+        example: eyJhbGciOi...
         type: string
+      access_token_expired_in_ms:
+        example: 50000
+        type: integer
       refresh_token:
+        example: eyJhbGciOi...
         type: string
+      refresh_token_expired_in_ms:
+        example: 890000
+        type: integer
     type: object
   http.emptyResponse:
     properties:
@@ -88,11 +96,11 @@ definitions:
     type: object
   http.refreshTokenRequest:
     properties:
-      refreshToken:
+      refresh_token:
         example: eyJhbGci...
         type: string
     required:
-    - refreshToken
+    - refresh_token
     type: object
   http.refreshTokenResponse:
     properties:

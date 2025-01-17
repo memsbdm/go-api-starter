@@ -430,10 +430,20 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "access_token": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "eyJhbGciOi..."
+                },
+                "access_token_expired_in_ms": {
+                    "type": "integer",
+                    "example": 50000
                 },
                 "refresh_token": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "eyJhbGciOi..."
+                },
+                "refresh_token_expired_in_ms": {
+                    "type": "integer",
+                    "example": 890000
                 }
             }
         },
@@ -554,10 +564,10 @@ const docTemplate = `{
         "http.refreshTokenRequest": {
             "type": "object",
             "required": [
-                "refreshToken"
+                "refresh_token"
             ],
             "properties": {
-                "refreshToken": {
+                "refresh_token": {
                     "type": "string",
                     "example": "eyJhbGci..."
                 }

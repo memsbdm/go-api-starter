@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain/entities"
+	"go-starter/pkg/env"
 	"net/http"
 	"time"
 )
@@ -152,17 +153,24 @@ type loginResponse struct {
 	User   userResponse       `json:"user"`
 }
 
-// authTokensResponse represents the structure of a response body with an access and a refresh token.
+// authTokensResponse represents the structure of a response body with an access token, a refresh token
+// and their expiration time in ms.
 type authTokensResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken             string `json:"access_token" example:"eyJhbGciOi..."`
+	RefreshToken            string `json:"refresh_token" example:"eyJhbGciOi..."`
+	AccessTokenExpiredInMs  int64  `json:"access_token_expired_in_ms" example:"50000"`
+	RefreshTokenExpiredInMs int64  `json:"refresh_token_expired_in_ms" example:"890000"`
 }
 
 // newAuthTokensResponse is a helper function that creates a authTokensResponse from an auth tokens entity.
 func newAuthTokensResponse(tokens *entities.AuthTokens) authTokensResponse {
+	accessTokenDuration := env.GetDuration("ACCESS_TOKEN_DURATION")
+	refreshTokenDuration := env.GetDuration("REFRESH_TOKEN_DURATION")
 	return authTokensResponse{
-		AccessToken:  string(tokens.AccessToken),
-		RefreshToken: string(tokens.RefreshToken),
+		AccessToken:             string(tokens.AccessToken),
+		RefreshToken:            string(tokens.RefreshToken),
+		AccessTokenExpiredInMs:  accessTokenDuration.Milliseconds(),
+		RefreshTokenExpiredInMs: refreshTokenDuration.Milliseconds(),
 	}
 }
 
