@@ -53,7 +53,7 @@ func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
 			builder.TimeGenerator.Advance(tt.advance)
 
 			// Act & Assert
-			claims, err := builder.TokenService.ValidateAndParseAccessToken(accessToken)
+			claims, err := builder.TokenService.ValidateAndParseAccessToken(string(accessToken))
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
@@ -100,7 +100,7 @@ func TestTokenService_ValidateAndParseRefreshToken(t *testing.T) {
 			builder.TimeGenerator.Advance(tt.advance)
 
 			// Act & Assert
-			claims, err := builder.TokenService.ValidateAndParseRefreshToken(ctx, refreshToken)
+			claims, err := builder.TokenService.ValidateAndParseRefreshToken(ctx, string(refreshToken))
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
@@ -146,7 +146,7 @@ func TestTokenService_RevokeRefreshToken(t *testing.T) {
 			}
 			builder.TimeGenerator.Advance(tt.advance)
 
-			err = builder.TokenService.RevokeRefreshToken(ctx, refreshToken)
+			err = builder.TokenService.RevokeRefreshToken(ctx, string(refreshToken))
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}

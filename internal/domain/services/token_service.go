@@ -29,8 +29,8 @@ func NewTokenService(cfg *config.Token, repo ports.TokenRepository, cacheSvc por
 const RefreshTokenCachePrefix = "refresh_token"
 
 // GenerateAccessToken generates a new access token for the given user.
-// Returns the generated access token as a string or an error if the generation fails.
-func (ts *TokenService) GenerateAccessToken(user *entities.User) (string, error) {
+// Returns the generated access token or an error if the generation fails.
+func (ts *TokenService) GenerateAccessToken(user *entities.User) (entities.AccessToken, error) {
 	token, err := ts.repo.GenerateAccessToken(user, ts.cfg.AccessTokenDuration, ts.cfg.AccessTokenSignature)
 	if err != nil {
 		return "", domain.ErrInternal
@@ -49,8 +49,8 @@ func (ts *TokenService) ValidateAndParseAccessToken(token string) (*entities.Acc
 }
 
 // GenerateRefreshToken creates a new refresh token for the given user ID.
-// Returns the generated refresh token as a string or an error if the operation fails.
-func (ts *TokenService) GenerateRefreshToken(ctx context.Context, userID entities.UserID) (string, error) {
+// Returns the generated refresh token or an error if the operation fails.
+func (ts *TokenService) GenerateRefreshToken(ctx context.Context, userID entities.UserID) (entities.RefreshToken, error) {
 	tokenID, token, err := ts.repo.GenerateRefreshToken(userID, ts.cfg.AccessTokenDuration, ts.cfg.RefreshTokenSignature)
 	if err != nil {
 		return "", domain.ErrInternal
@@ -92,7 +92,7 @@ func (ts *TokenService) RevokeRefreshToken(ctx context.Context, refreshToken str
 
 // storeRefreshTokenInCache stores the refresh token in the cache associated with the given user ID and refresh token ID.
 // It constructs a unique cache key and sets the refresh token with an expiration duration.
-func (ts *TokenService) storeRefreshTokenInCache(ctx context.Context, userID entities.UserID, refreshTokenID entities.RefreshTokenID, refreshToken string) error {
+func (ts *TokenService) storeRefreshTokenInCache(ctx context.Context, userID entities.UserID, refreshTokenID entities.RefreshTokenID, refreshToken entities.RefreshToken) error {
 	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, userID.String(), refreshTokenID.String())
 	return ts.cacheSvc.Set(ctx, key, []byte(refreshToken), ts.cfg.RefreshTokenDuration)
 }

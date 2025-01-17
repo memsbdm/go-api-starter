@@ -161,9 +161,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Access and refresh tokens",
+                        "description": "Refresh token response",
                         "schema": {
-                            "$ref": "#/definitions/http.response-http_loginResponse"
+                            "$ref": "#/definitions/http.response-http_refreshTokenResponse"
                         }
                     },
                     "401": {
@@ -215,7 +215,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Created user",
                         "schema": {
-                            "$ref": "#/definitions/http.response-http_userResponse"
+                            "$ref": "#/definitions/http.response-http_loginResponse"
                         }
                     },
                     "403": {
@@ -426,6 +426,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "http.authTokensResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "http.emptyResponse": {
             "type": "object",
             "properties": {
@@ -460,6 +471,10 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "6b947a32-8919-4974-9ef3-048a556b0b75"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
                 },
                 "username": {
                     "type": "string",
@@ -528,11 +543,11 @@ const docTemplate = `{
         "http.loginResponse": {
             "type": "object",
             "properties": {
-                "access_token": {
-                    "type": "string"
+                "tokens": {
+                    "$ref": "#/definitions/http.authTokensResponse"
                 },
-                "refresh_token": {
-                    "type": "string"
+                "user": {
+                    "$ref": "#/definitions/http.userResponse"
                 }
             }
         },
@@ -548,13 +563,28 @@ const docTemplate = `{
                 }
             }
         },
+        "http.refreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "tokens": {
+                    "$ref": "#/definitions/http.authTokensResponse"
+                }
+            }
+        },
         "http.registerRequest": {
             "type": "object",
             "required": [
+                "name",
                 "password",
                 "username"
             ],
             "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1,
+                    "example": "John Doe"
+                },
                 "password": {
                     "type": "string",
                     "minLength": 8,
@@ -584,6 +614,17 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/http.loginResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.response-http_refreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/http.refreshTokenResponse"
                 },
                 "success": {
                     "type": "boolean"
@@ -633,6 +674,10 @@ const docTemplate = `{
                 "is_email_verified": {
                     "type": "boolean",
                     "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
                 },
                 "updated_at": {
                     "type": "string",

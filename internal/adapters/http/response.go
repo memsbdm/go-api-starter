@@ -113,6 +113,7 @@ type userResponse struct {
 	ID              string    `json:"id" example:"6b947a32-8919-4974-9ef3-048a556b0b75"`
 	CreatedAt       time.Time `json:"created_at" example:"2024-08-15T16:23:33.455225Z"`
 	UpdatedAt       time.Time `json:"updated_at" example:"2025-01-15T14:29:33.455225Z"`
+	Name            string    `json:"name" example:"John Doe"`
 	Username        string    `json:"username" example:"john"`
 	IsEmailVerified bool      `json:"is_email_verified" example:"true"`
 }
@@ -123,6 +124,7 @@ func newUserResponse(user *entities.User) userResponse {
 		ID:              user.ID.String(),
 		CreatedAt:       user.CreatedAt,
 		UpdatedAt:       user.UpdatedAt,
+		Name:            user.Name,
 		Username:        user.Username,
 		IsEmailVerified: user.IsEmailVerified,
 	}
@@ -131,6 +133,7 @@ func newUserResponse(user *entities.User) userResponse {
 // getUserByIDResponse represents the structure of a response body containing user information.
 type getUserByIDResponse struct {
 	ID       string `json:"id" example:"6b947a32-8919-4974-9ef3-048a556b0b75"`
+	Name     string `json:"name" example:"John Doe"`
 	Username string `json:"username" example:"john"`
 }
 
@@ -138,20 +141,47 @@ type getUserByIDResponse struct {
 func newGetUserByIDResponse(user *entities.User) getUserByIDResponse {
 	return getUserByIDResponse{
 		ID:       user.ID.String(),
+		Name:     user.Name,
 		Username: user.Username,
 	}
 }
 
 // loginResponse represents the structure of a response body for successful authentication.
 type loginResponse struct {
+	Tokens authTokensResponse `json:"tokens"`
+	User   userResponse       `json:"user"`
+}
+
+// authTokensResponse represents the structure of a response body with an access and a refresh token.
+type authTokensResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
 
-// newLoginResponse is a helper function that creates a loginResponse with the provided tokens.
-func newLoginResponse(accessToken, refreshToken string) loginResponse {
+// newAuthTokensResponse is a helper function that creates a authTokensResponse from an auth tokens entity.
+func newAuthTokensResponse(tokens *entities.AuthTokens) authTokensResponse {
+	return authTokensResponse{
+		AccessToken:  string(tokens.AccessToken),
+		RefreshToken: string(tokens.RefreshToken),
+	}
+}
+
+// newLoginResponse is a helper function that creates a loginResponse with the provided auth tokens and user.
+func newLoginResponse(tokens *entities.AuthTokens, user *entities.User) loginResponse {
 	return loginResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		Tokens: newAuthTokensResponse(tokens),
+		User:   newUserResponse(user),
+	}
+}
+
+// refreshTokenResponse represents the structure of a response body for successful token refresh.
+type refreshTokenResponse struct {
+	Tokens authTokensResponse `json:"tokens"`
+}
+
+// newRefreshTokenResponse is a helper function that creates a refreshTokenResponse with the provided auth tokens.
+func newRefreshTokenResponse(tokens *entities.AuthTokens) refreshTokenResponse {
+	return refreshTokenResponse{
+		Tokens: newAuthTokensResponse(tokens),
 	}
 }

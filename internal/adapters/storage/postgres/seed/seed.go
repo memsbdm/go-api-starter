@@ -34,6 +34,7 @@ func generateUsers(num int) []*entities.User {
 	for i := 0; i < num; i++ {
 		users[i] = &entities.User{
 			Username: usernames[i%len(usernames)] + fmt.Sprintf("%d", i),
+			Name:     usernames[i%len(usernames)],
 			Password: "secret123",
 		}
 	}

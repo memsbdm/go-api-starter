@@ -24,13 +24,12 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 // GetByID selects a user by their unique identifier from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
 func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
-	query := `SELECT id, username FROM users WHERE id = $1`
+	query := `SELECT id, created_at, updated_at, name, username, is_email_verified FROM users WHERE id = $1`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 	user := &entities.User{}
 	var uuidStr string
-	err := ur.db.QueryRowContext(ctx, query, id.String()).Scan(&uuidStr, &user.Username)
-
+	err := ur.db.QueryRowContext(ctx, query, id.String()).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.IsEmailVerified)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -52,12 +51,12 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 // GetByUsername selects a user by their username from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
 func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
-	query := `SELECT id, username, password FROM users WHERE username = $1`
+	query := `SELECT id, created_at, updated_at, name, username, password FROM users WHERE username = $1`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 	user := &entities.User{}
 	var uuidStr string
-	err := ur.db.QueryRowContext(ctx, query, username).Scan(&uuidStr, &user.Username, &user.Password)
+	err := ur.db.QueryRowContext(ctx, query, username).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Password)
 
 	if err != nil {
 		switch {
@@ -80,12 +79,12 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 // Create inserts a new user into the database.
 // Returns the created user or an error if the operation fails (e.g., due to a database constraint violation).
 func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
-	query := `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username, created_at, updated_at`
+	query := `INSERT INTO users (name, username, password) VALUES ($1, $2, $3) RETURNING id, name, username, created_at, updated_at`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
 	var uuidStr string
-	err := ur.db.QueryRowContext(ctx, query, user.Username, user.Password).Scan(&uuidStr, &user.Username, &user.CreatedAt, &user.UpdatedAt)
+	err := ur.db.QueryRowContext(ctx, query, user.Name, user.Username, user.Password).Scan(&uuidStr, &user.Name, &user.Username, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_username_key"`:

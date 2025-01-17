@@ -9,16 +9,16 @@ import (
 // TokenService is an interface for interacting with token-related business logic.
 type TokenService interface {
 	// GenerateAccessToken generates a new access token for the given user.
-	// Returns the generated access token as a string or an error if the generation fails.
-	GenerateAccessToken(user *entities.User) (string, error)
+	// Returns the generated access token or an error if the generation fails.
+	GenerateAccessToken(user *entities.User) (entities.AccessToken, error)
 
 	// ValidateAndParseAccessToken validates the given access token and extracts its claims.
 	// Returns a structured representation of the token claims or an error if validation fails.
 	ValidateAndParseAccessToken(token string) (*entities.AccessTokenClaims, error)
 
 	// GenerateRefreshToken creates a new refresh token for the given user ID.
-	// Returns the generated refresh token as a string or an error if the operation fails.
-	GenerateRefreshToken(ctx context.Context, userID entities.UserID) (string, error)
+	// Returns the generated refresh token or an error if the operation fails.
+	GenerateRefreshToken(ctx context.Context, userID entities.UserID) (entities.RefreshToken, error)
 
 	// ValidateAndParseRefreshToken validates the given refresh token and extracts its claims.
 	// Returns a structured representation of the token claims or an error if validation fails.
@@ -32,16 +32,16 @@ type TokenService interface {
 // TokenRepository is an interface for interacting with token-related data and cryptographic operations.
 type TokenRepository interface {
 	// GenerateAccessToken generates a new JWT access token for the given user.
-	// Returns the generated access token as a string or an error if the generation fails.
-	GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (string, error)
+	// Returns the generated access token or an error if the generation fails.
+	GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (entities.AccessToken, error)
 
 	// ValidateAndParseAccessToken validates the given JWT access token and extracts its claims.
 	// Returns a structured representation of the token claims or an error if validation fails.
 	ValidateAndParseAccessToken(token string, signature []byte) (*entities.AccessTokenClaims, error)
 
 	// GenerateRefreshToken creates a new JWT refresh token for the given user ID.
-	// Returns a unique refresh token ID, the token string, or an error if the operation fails.
-	GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (entities.RefreshTokenID, string, error)
+	// Returns a unique refresh token ID, the refresh token, or an error if the operation fails.
+	GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (entities.RefreshTokenID, entities.RefreshToken, error)
 
 	// ValidateAndParseRefreshToken validates the given JWT refresh token and extracts its claims.
 	// Returns a structured representation of the token claims or an error if validation fails.

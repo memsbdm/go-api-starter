@@ -1,4 +1,11 @@
 definitions:
+  http.authTokensResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
   http.emptyResponse:
     properties:
       success:
@@ -22,6 +29,9 @@ definitions:
     properties:
       id:
         example: 6b947a32-8919-4974-9ef3-048a556b0b75
+        type: string
+      name:
+        example: John Doe
         type: string
       username:
         example: john
@@ -71,10 +81,10 @@ definitions:
     type: object
   http.loginResponse:
     properties:
-      access_token:
-        type: string
-      refresh_token:
-        type: string
+      tokens:
+        $ref: '#/definitions/http.authTokensResponse'
+      user:
+        $ref: '#/definitions/http.userResponse'
     type: object
   http.refreshTokenRequest:
     properties:
@@ -84,8 +94,18 @@ definitions:
     required:
     - refreshToken
     type: object
+  http.refreshTokenResponse:
+    properties:
+      tokens:
+        $ref: '#/definitions/http.authTokensResponse'
+    type: object
   http.registerRequest:
     properties:
+      name:
+        example: John Doe
+        maxLength: 50
+        minLength: 1
+        type: string
       password:
         example: secret123
         minLength: 8
@@ -96,6 +116,7 @@ definitions:
         minLength: 4
         type: string
     required:
+    - name
     - password
     - username
     type: object
@@ -110,6 +131,13 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/http.loginResponse'
+      success:
+        type: boolean
+    type: object
+  http.response-http_refreshTokenResponse:
+    properties:
+      data:
+        $ref: '#/definitions/http.refreshTokenResponse'
       success:
         type: boolean
     type: object
@@ -144,6 +172,9 @@ definitions:
       is_email_verified:
         example: true
         type: boolean
+      name:
+        example: John Doe
+        type: string
       updated_at:
         example: "2025-01-15T14:29:33.455225Z"
         type: string
@@ -248,9 +279,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: Access and refresh tokens
+          description: Refresh token response
           schema:
-            $ref: '#/definitions/http.response-http_loginResponse'
+            $ref: '#/definitions/http.response-http_refreshTokenResponse'
         "401":
           description: Unauthorized error
           schema:
@@ -286,7 +317,7 @@ paths:
         "200":
           description: Created user
           schema:
-            $ref: '#/definitions/http.response-http_userResponse'
+            $ref: '#/definitions/http.response-http_loginResponse'
         "403":
           description: Forbidden error
           schema:

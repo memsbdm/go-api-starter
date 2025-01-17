@@ -7,7 +7,6 @@ import (
 	"errors"
 	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/domain"
-	"go-starter/internal/domain/entities"
 	"testing"
 	"time"
 )
@@ -19,12 +18,9 @@ func TestAuthService_Login(t *testing.T) {
 	ctx := context.Background()
 	builder := NewTestBuilder().Build()
 
-	userToCreate := &entities.User{
-		Username: "example",
-		Password: "secret123",
-	}
+	userToCreate := newValidUserToCreate()
 
-	_, err := builder.UserService.Register(ctx, userToCreate)
+	_, err := builder.AuthService.Register(ctx, userToCreate)
 	if err != nil {
 		t.Fatalf("failed to register user: %v", err)
 	}
@@ -92,17 +88,14 @@ func TestAuthService_Refresh(t *testing.T) {
 			timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 
-			userToCreate := &entities.User{
-				Username: "example",
-				Password: "secret123",
-			}
+			userToCreate := newValidUserToCreate()
 
 			_, err := builder.AuthService.Register(ctx, userToCreate)
 			if err != nil {
 				t.Fatalf("failed to register user: %v", err)
 			}
 
-			_, refreshToken, err := builder.AuthService.Login(ctx, userToCreate.Username, userToCreate.Password)
+			_, authTokens, err := builder.AuthService.Login(ctx, userToCreate.Username, userToCreate.Password)
 			if err != nil {
 				t.Fatalf("failed to login: %v", err)
 			}
@@ -110,7 +103,7 @@ func TestAuthService_Refresh(t *testing.T) {
 			builder.TimeGenerator.Advance(tt.advance)
 
 			// Act & Assert
-			_, _, err = builder.AuthService.Refresh(ctx, refreshToken)
+			_, err = builder.AuthService.Refresh(ctx, string(authTokens.RefreshToken))
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}

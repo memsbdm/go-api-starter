@@ -10,8 +10,17 @@ import (
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/services"
 	"go-starter/internal/domain/utils"
+	"strings"
 	"testing"
 )
+
+func newValidUserToCreate() *entities.User {
+	return &entities.User{
+		Name:     "John Doe",
+		Username: "example",
+		Password: "secret123",
+	}
+}
 
 func TestUserService_Register(t *testing.T) {
 	t.Parallel()
@@ -20,10 +29,7 @@ func TestUserService_Register(t *testing.T) {
 	ctx := context.Background()
 	builder := NewTestBuilder().Build()
 
-	userToCreate := &entities.User{
-		Username: "example",
-		Password: "secret123",
-	}
+	userToCreate := newValidUserToCreate()
 
 	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
@@ -36,13 +42,15 @@ func TestUserService_Register(t *testing.T) {
 	}{
 		"register valid user": {
 			input: &entities.User{
+				Name:     userToCreate.Name,
 				Username: "success",
-				Password: "secret123",
+				Password: userToCreate.Password,
 			},
 			expectedErr: nil,
 		},
 		"register user with conflicting username": {
 			input: &entities.User{
+				Name:     userToCreate.Name,
 				Username: createdUser.Username,
 				Password: userToCreate.Password,
 			},
@@ -50,18 +58,21 @@ func TestUserService_Register(t *testing.T) {
 		},
 		"register user without username": {
 			input: &entities.User{
+				Name:     userToCreate.Name,
 				Password: userToCreate.Password,
 			},
 			expectedErr: domain.ErrUsernameRequired,
 		},
 		"register user without password": {
 			input: &entities.User{
+				Name:     userToCreate.Name,
 				Username: createdUser.Username,
 			},
 			expectedErr: domain.ErrPasswordRequired,
 		},
 		"register user with short password": {
 			input: &entities.User{
+				Name:     userToCreate.Name,
 				Username: createdUser.Username,
 				Password: "short",
 			},
@@ -69,24 +80,50 @@ func TestUserService_Register(t *testing.T) {
 		},
 		"register user with short username": {
 			input: &entities.User{
-				Username: "abc",
+				Name:     userToCreate.Name,
+				Username: strings.Repeat("x", domain.UsernameMinLength-1),
 				Password: userToCreate.Password,
 			},
 			expectedErr: domain.ErrUsernameTooShort,
 		},
 		"register user with long username": {
 			input: &entities.User{
-				Username: "this_is_a_really_long_username",
+				Name:     userToCreate.Name,
+				Username: strings.Repeat("x", domain.UsernameMaxLength+1),
 				Password: userToCreate.Password,
 			},
 			expectedErr: domain.ErrUsernameTooLong,
 		},
 		"register user with invalid username": {
 			input: &entities.User{
+				Name:     userToCreate.Name,
 				Username: " invalid ",
 				Password: userToCreate.Password,
 			},
 			expectedErr: domain.ErrUsernameInvalid,
+		},
+		"register user without name": {
+			input: &entities.User{
+				Username: userToCreate.Username,
+				Password: userToCreate.Password,
+			},
+			expectedErr: domain.ErrNameRequired,
+		},
+		"register user with long name": {
+			input: &entities.User{
+				Name:     strings.Repeat("x", domain.NameMaxLength+1),
+				Username: userToCreate.Username,
+				Password: userToCreate.Password,
+			},
+			expectedErr: domain.ErrNameTooLong,
+		},
+		"register user with long name containing emojis": {
+			input: &entities.User{
+				Name:     strings.Repeat("🥵", domain.NameMaxLength/4+1),
+				Username: userToCreate.Username,
+				Password: userToCreate.Password,
+			},
+			expectedErr: domain.ErrNameTooLong,
 		},
 	}
 
@@ -112,10 +149,7 @@ func TestUserService_GetByID(t *testing.T) {
 	ctx := context.Background()
 	builder := NewTestBuilder().Build()
 
-	userToCreate := &entities.User{
-		Username: "example",
-		Password: "secret123",
-	}
+	userToCreate := newValidUserToCreate()
 
 	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
@@ -155,10 +189,7 @@ func TestUserService_GetByID_Cache(t *testing.T) {
 	ctx := context.Background()
 	builder := NewTestBuilder().Build()
 
-	userToCreate := &entities.User{
-		Username: "example",
-		Password: "secret123",
-	}
+	userToCreate := newValidUserToCreate()
 	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
 		t.Fatalf("error while registering user: %v", err)
@@ -193,10 +224,7 @@ func TestUserService_GetByUsername(t *testing.T) {
 	ctx := context.Background()
 	builder := NewTestBuilder().Build()
 
-	userToCreate := &entities.User{
-		Username: "example",
-		Password: "secret123",
-	}
+	userToCreate := newValidUserToCreate()
 
 	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
@@ -238,10 +266,7 @@ func TestUserService_UpdatePassword(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
 	builder := NewTestBuilder().Build()
-	userToCreate := &entities.User{
-		Username: "example",
-		Password: "secret123",
-	}
+	userToCreate := newValidUserToCreate()
 	user, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
 		t.Fatalf("error while registering user: %v", err)

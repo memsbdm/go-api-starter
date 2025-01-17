@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -43,6 +45,7 @@ func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entiti
 	}
 
 	user, err = us.repo.GetByID(ctx, id)
+	fmt.Println(user)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return nil, err
@@ -91,6 +94,7 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 	}
 
 	userToCreate := &entities.User{
+		Name:     user.Name,
 		Username: user.Username,
 		Password: hashedPassword,
 	}
@@ -166,9 +170,25 @@ func validatePassword(password string) error {
 	return nil
 }
 
+// validateName checks if the provided name meets the required criteria.
+// Returns an error if any validation fails.
+func validateName(name string) error {
+	trimmedName := strings.TrimSpace(name)
+	if trimmedName == "" {
+		return domain.ErrNameRequired
+	}
+	if len(trimmedName) > domain.NameMaxLength {
+		return domain.ErrNameTooLong
+	}
+	return nil
+}
+
 // validateRegisterRequest validates the registration details of a user.
 // Returns an error if any validation fails.
 func validateRegisterRequest(user *entities.User) error {
+	if err := validateName(user.Name); err != nil {
+		return err
+	}
 	if err := validateUsername(user.Username); err != nil {
 		return err
 	}

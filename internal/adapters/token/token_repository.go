@@ -23,8 +23,8 @@ func NewTokenRepository(timeGenerator ports.TimeGenerator) *TokenRepository {
 }
 
 // GenerateAccessToken generates a new JWT access token for the given user.
-// Returns the generated access token as a string or an error if the generation fails.
-func (tr *TokenRepository) GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (string, error) {
+// Returns the generated access token or an error if the generation fails.
+func (tr *TokenRepository) GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (entities.AccessToken, error) {
 	claims := jwt.MapClaims{
 		"id":  uuid.New().String(),
 		"sub": user.ID.String(),
@@ -34,7 +34,7 @@ func (tr *TokenRepository) GenerateAccessToken(user *entities.User, duration tim
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString(signature)
-	return signedToken, err
+	return entities.AccessToken(signedToken), err
 }
 
 // ValidateAndParseAccessToken validates the given JWT access token and extracts its claims.
@@ -76,8 +76,8 @@ func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature [
 }
 
 // GenerateRefreshToken creates a new JWT refresh token for the given user ID.
-// Returns a unique refresh token ID, the token string, or an error if the operation fails.
-func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (entities.RefreshTokenID, string, error) {
+// Returns a unique refresh token ID, the refresh token, or an error if the operation fails.
+func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (entities.RefreshTokenID, entities.RefreshToken, error) {
 	id := entities.RefreshTokenID(uuid.New())
 	claims := jwt.MapClaims{
 		"id":  id.String(),
@@ -88,7 +88,7 @@ func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString(signature)
-	return id, signedToken, err
+	return id, entities.RefreshToken(signedToken), err
 }
 
 // ValidateAndParseRefreshToken validates the given JWT refresh token and extracts its claims.

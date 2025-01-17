@@ -49,18 +49,19 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		handleValidationError(w, err)
 		return
 	}
-	accessToken, refreshToken, err := ah.svc.Login(ctx, payload.Username, payload.Password)
+	user, authTokens, err := ah.svc.Login(ctx, payload.Username, payload.Password)
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
-	response := newLoginResponse(accessToken, refreshToken)
+	response := newLoginResponse(authTokens, user)
 	handleSuccess(w, http.StatusOK, response)
 }
 
 // registerRequest represents the structure of the request body used for registering a new user.
 type registerRequest struct {
+	Name     string `json:"name" validate:"required,min=1,max=50,notblank" example:"John Doe"`
 	Username string `json:"username" validate:"required,min=4,max=15" example:"john"`
 	Password string `json:"password" validate:"required,min=8" example:"secret123"`
 }
@@ -73,7 +74,7 @@ type registerRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			registerRequest	body registerRequest true "Register request"
-//	@Success		200	{object}	response[userResponse]	"Created user"
+//	@Success		200	{object}	response[loginResponse]	"Created user"
 //	@Failure		403	{object}	errorResponse	"Forbidden error"
 //	@Failure		409	{object}	errorResponse	"Duplication error"
 //	@Failure		422	{object}	errorResponse	"Validation error"
@@ -88,24 +89,31 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := entities.User{
+	user := &entities.User{
+		Name:     payload.Name,
 		Username: payload.Username,
 		Password: payload.Password,
 	}
 
-	created, err := ah.svc.Register(ctx, &user)
+	created, err := ah.svc.Register(ctx, user)
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
-	response := newUserResponse(created)
+	_, authTokens, err := ah.svc.Login(ctx, created.Username, payload.Password)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	response := newLoginResponse(authTokens, user)
 	handleSuccess(w, http.StatusCreated, response)
 }
 
 // refreshTokenRequest represents the structure of the request body used for refreshing token or revoke existing one.
 type refreshTokenRequest struct {
-	RefreshToken string `validate:"required,jwt" example:"eyJhbGci..."`
+	RefreshToken string `json:"refresh_token" validate:"required,jwt" example:"eyJhbGci..."`
 }
 
 // Refresh godoc
@@ -116,7 +124,7 @@ type refreshTokenRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
-//	@Success		200	{object}	response[loginResponse]	"Access and refresh tokens"
+//	@Success		200	{object}	response[refreshTokenResponse]	"Refresh token response"
 //	@Failure		401	{object}	errorResponse	"Unauthorized error"
 //	@Failure		422	{object}	errorResponse	"Validation error"
 //	@Failure		500	{object}	errorResponse	"Internal server error"
@@ -131,13 +139,13 @@ func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, refreshToken, err := ah.svc.Refresh(ctx, payload.RefreshToken)
+	authTokens, err := ah.svc.Refresh(ctx, payload.RefreshToken)
 	if err != nil {
 		handleError(w, err)
 		return
 	}
 
-	response := newLoginResponse(accessToken, refreshToken)
+	response := newRefreshTokenResponse(authTokens)
 	handleSuccess(w, http.StatusOK, response)
 }
 
