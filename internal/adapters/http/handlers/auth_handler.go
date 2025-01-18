@@ -6,6 +6,7 @@ import (
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
+	"strings"
 )
 
 // AuthHandler is responsible for handling HTTP requests related to authentication operations.
@@ -37,6 +38,7 @@ type loginRequest struct {
 //	@Produce		json
 //	@Param			loginRequest	body loginRequest true "Login request"
 //	@Success		200	{object}	responses.Response[responses.LoginResponse]	"Access and refresh tokens"
+//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized / credentials error"
 //	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
 //	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
@@ -49,6 +51,8 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		responses.HandleValidationError(w, err)
 		return
 	}
+
+	payload.Username = strings.TrimSpace(payload.Username)
 	user, authTokens, err := ah.svc.Login(ctx, payload.Username, payload.Password)
 	if err != nil {
 		responses.HandleError(w, err)
@@ -61,7 +65,7 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 // registerRequest represents the structure of the request body used for registering a new user.
 type registerRequest struct {
-	Name     string `json:"name" validate:"required,min=1,max=50,notblank" example:"John Doe"`
+	Name     string `json:"name" validate:"required,min=1,max=50" example:"John Doe"`
 	Username string `json:"username" validate:"required,min=4,max=15" example:"john"`
 	Password string `json:"password" validate:"required,min=8" example:"secret123"`
 }
@@ -75,6 +79,7 @@ type registerRequest struct {
 //	@Produce		json
 //	@Param			registerRequest	body registerRequest true "Register request"
 //	@Success		200	{object}	responses.Response[responses.LoginResponse]	"Created user"
+//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
 //	@Failure		409	{object}	responses.ErrorResponse	"Duplication error"
 //	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
@@ -94,6 +99,8 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Username: payload.Username,
 		Password: payload.Password,
 	}
+	user.Name = strings.TrimSpace(user.Name)
+	user.Username = strings.TrimSpace(user.Username)
 
 	created, err := ah.svc.Register(ctx, user)
 	if err != nil {
@@ -125,6 +132,7 @@ type refreshTokenRequest struct {
 //	@Produce		json
 //	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
 //	@Success		200	{object}	responses.Response[responses.RefreshTokenResponse]	"Refresh token response"
+//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
 //	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
@@ -158,6 +166,7 @@ func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
 //	@Success		200	{object}	responses.EmptyResponse	"Success"
+//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
 //	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"

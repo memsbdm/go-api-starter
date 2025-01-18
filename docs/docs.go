@@ -46,6 +46,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse"
                         }
                     },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized / credentials error",
                         "schema": {
@@ -109,6 +115,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
                         }
                     },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized error",
                         "schema": {
@@ -166,6 +178,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse"
                         }
                     },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized error",
                         "schema": {
@@ -216,6 +234,12 @@ const docTemplate = `{
                         "description": "Created user",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "403": {
@@ -345,6 +369,12 @@ const docTemplate = `{
                         "description": "Success",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
                     "401": {

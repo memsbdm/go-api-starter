@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
@@ -45,7 +44,6 @@ func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entiti
 	}
 
 	user, err = us.repo.GetByID(ctx, id)
-	fmt.Println(user)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return nil, err

@@ -7,6 +7,7 @@ import (
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
+	"strings"
 )
 
 // AuthService implements ports.AuthService interface.
@@ -27,6 +28,9 @@ func NewAuthService(userSvc ports.UserService, tokenSvc ports.TokenService) *Aut
 // Returns auth tokens upon successful authentication,
 // or an error if the login fails (e.g., due to incorrect credentials).
 func (as *AuthService) Login(ctx context.Context, username, password string) (*entities.User, *entities.AuthTokens, error) {
+	if strings.TrimSpace(username) == "" {
+		return nil, nil, domain.ErrUsernameRequired
+	}
 	user, err := as.userSvc.GetByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {

@@ -8,19 +8,43 @@ import (
 	"go-starter/config"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 )
 
 var (
 	dbInstance *sql.DB
+	mu         sync.RWMutex
 )
 
 // New creates a postgres database instance.
-func New(c context.Context, config *config.DB) (*sql.DB, error) {
+func New(ctx context.Context, config *config.DB) (*sql.DB, error) {
+	mu.RLock()
+	if dbInstance != nil {
+		defer mu.RUnlock()
+		return dbInstance, nil
+	}
+	mu.RUnlock()
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	// Double verification
 	if dbInstance != nil {
 		return dbInstance, nil
 	}
 
+	db, err := createConnection(ctx, config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create database connection: %w", err)
+	}
+
+	dbInstance = db
+	return dbInstance, nil
+}
+
+// createConnection establishes a new database connection with the given configuration.
+func createConnection(c context.Context, config *config.DB) (*sql.DB, error) {
 	db, err := sql.Open("postgres", config.Addr)
 	if err != nil {
 		return nil, err
@@ -37,19 +61,28 @@ func New(c context.Context, config *config.DB) (*sql.DB, error) {
 	ctx, cancel := context.WithTimeout(c, 5*time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
-
-	dbInstance = db
-	return dbInstance, nil
+	return db, nil
 }
 
 // Health checks the health status of the database.
 func Health() map[string]string {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
+	mu.RLock()
+	db := dbInstance
+	mu.RUnlock()
 
 	stats := make(map[string]string)
+
+	if db == nil {
+		stats["status"] = "down"
+		stats["error"] = "database instance is nil"
+		log.Fatal("database instance is nil")
+		return stats
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 
 	// Ping the database
 	err := dbInstance.PingContext(ctx)
@@ -65,7 +98,10 @@ func Health() map[string]string {
 	stats["message"] = "It's healthy"
 
 	// Get database stats (like open connections, in use, idle, etc.)
+	mu.RLock()
 	dbStats := dbInstance.Stats()
+	mu.RUnlock()
+
 	stats["open_connections"] = strconv.Itoa(dbStats.OpenConnections)
 	stats["in_use"] = strconv.Itoa(dbStats.InUse)
 	stats["idle"] = strconv.Itoa(dbStats.Idle)

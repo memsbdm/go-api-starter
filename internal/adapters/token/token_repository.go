@@ -13,12 +13,14 @@ import (
 // JWT-related functionalities for token management.
 type TokenRepository struct {
 	timeGenerator ports.TimeGenerator
+	signingMethod jwt.SigningMethod
 }
 
 // NewTokenRepository creates a new instance of TokenRepository.
 func NewTokenRepository(timeGenerator ports.TimeGenerator) *TokenRepository {
 	return &TokenRepository{
 		timeGenerator: timeGenerator,
+		signingMethod: jwt.SigningMethodHS256,
 	}
 }
 
@@ -28,11 +30,11 @@ func (tr *TokenRepository) GenerateAccessToken(user *entities.User, duration tim
 	claims := jwt.MapClaims{
 		"id":  uuid.New().String(),
 		"sub": user.ID.String(),
-		"iat": tr.timeGenerator.Now(),
+		"iat": tr.timeGenerator.Now().Unix(),
 		"exp": tr.timeGenerator.Now().Add(duration).Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(tr.signingMethod, claims)
 	signedToken, err := token.SignedString(signature)
 	return entities.AccessToken(signedToken), err
 }
@@ -54,22 +56,22 @@ func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature [
 		return nil, domain.ErrInvalidToken
 	}
 
-	tokenID := claimsList["id"].(string)
-	subjectID := claimsList["sub"].(string)
+	tokenIDstr := claimsList["id"].(string)
+	userIDstr := claimsList["sub"].(string)
 
-	tokenUUID, err := uuid.Parse(tokenID)
+	tokenUUID, err := entities.ParseAccessTokenID(tokenIDstr)
 	if err != nil {
 		return nil, err
 	}
 
-	subjectUUID, err := uuid.Parse(subjectID)
+	userID, err := entities.ParseUserID(userIDstr)
 	if err != nil {
 		return nil, err
 	}
 
 	tokenClaims := &entities.AccessTokenClaims{
 		ID:      entities.AccessTokenID(tokenUUID),
-		Subject: entities.UserID(subjectUUID),
+		Subject: userID,
 	}
 
 	return tokenClaims, nil
@@ -82,11 +84,11 @@ func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration
 	claims := jwt.MapClaims{
 		"id":  id.String(),
 		"sub": userID.String(),
-		"iat": tr.timeGenerator.Now(),
+		"iat": tr.timeGenerator.Now().Unix(),
 		"exp": tr.timeGenerator.Now().Add(duration).Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(tr.signingMethod, claims)
 	signedToken, err := token.SignedString(signature)
 	return id, entities.RefreshToken(signedToken), err
 }
@@ -108,23 +110,21 @@ func (tr *TokenRepository) ValidateAndParseRefreshToken(token string, signature 
 		return nil, err
 	}
 
-	userID := claimsList["sub"].(string)
-	tokenID := claimsList["id"].(string)
+	userIDstr := claimsList["sub"].(string)
+	tokenIDstr := claimsList["id"].(string)
 
-	tokenUUID, err := uuid.Parse(tokenID)
+	tokenUUID, err := uuid.Parse(tokenIDstr)
 	if err != nil {
 		return nil, err
 	}
 
-	userUUID, err := uuid.Parse(userID)
+	userID, err := entities.ParseUserID(userIDstr)
 	if err != nil {
 		return nil, err
 	}
 
-	claims := &entities.RefreshTokenClaims{
+	return &entities.RefreshTokenClaims{
 		ID:      entities.RefreshTokenID(tokenUUID),
-		Subject: entities.UserID(userUUID),
-	}
-
-	return claims, nil
+		Subject: userID,
+	}, nil
 }

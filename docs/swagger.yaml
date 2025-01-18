@@ -216,6 +216,10 @@ paths:
           description: Access and refresh tokens
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "401":
           description: Unauthorized / credentials error
           schema:
@@ -254,6 +258,10 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "401":
           description: Unauthorized error
           schema:
@@ -290,6 +298,10 @@ paths:
           description: Refresh token response
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "401":
           description: Unauthorized error
           schema:
@@ -326,6 +338,10 @@ paths:
           description: Created user
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "403":
           description: Forbidden error
           schema:
@@ -442,6 +458,10 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "401":
           description: Unauthorized error
           schema:

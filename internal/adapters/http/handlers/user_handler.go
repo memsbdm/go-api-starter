@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/google/uuid"
 	"go-starter/internal/adapters/http/helpers"
 	"go-starter/internal/adapters/http/responses"
 	"go-starter/internal/adapters/validator"
@@ -71,13 +70,13 @@ func (uh *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("uuid")
 
-	userUUID, err := uuid.Parse(id)
+	userID, err := entities.ParseUserID(id)
 	if err != nil {
-		responses.HandleError(w, domain.ErrInvalidUserId)
+		responses.HandleError(w, err)
 		return
 	}
 
-	user, err := uh.svc.GetByID(ctx, entities.UserID(userUUID))
+	user, err := uh.svc.GetByID(ctx, userID)
 	if err != nil {
 		responses.HandleError(w, err)
 		return
@@ -102,6 +101,7 @@ type updatePasswordRequest struct {
 //	@Produce		json
 //	@Param			updatePasswordRequest	body updatePasswordRequest true "Update user password request"
 //	@Success		200	{object}	responses.EmptyResponse	"Success"
+//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
 //	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"

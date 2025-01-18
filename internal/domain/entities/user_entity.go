@@ -2,6 +2,7 @@ package entities
 
 import (
 	"github.com/google/uuid"
+	"go-starter/internal/domain"
 	"time"
 )
 
@@ -27,6 +28,15 @@ func (id UserID) UUID() uuid.UUID {
 // String returns the string representation of the UserID.
 func (id UserID) String() string {
 	return id.UUID().String()
+}
+
+// ParseUserID creates a UserID from a string
+func ParseUserID(s string) (UserID, error) {
+	id, err := uuid.Parse(s)
+	if err != nil {
+		return UserID{}, domain.ErrInvalidUserId
+	}
+	return UserID(id), nil
 }
 
 // UpdateUserParams holds the parameters required for updating a user's information.

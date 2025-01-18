@@ -1,6 +1,8 @@
 package entities
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 // RefreshTokenID is a type that represents a unique identifier for a refresh token, based on UUID.
 type RefreshTokenID uuid.UUID
@@ -31,3 +33,12 @@ func (id AccessTokenID) UUID() uuid.UUID { return uuid.UUID(id) }
 
 // String returns the string representation of the AccessTokenID.
 func (id AccessTokenID) String() string { return uuid.UUID(id).String() }
+
+// ParseAccessTokenID creates a AccessTokenID from a string
+func ParseAccessTokenID(s string) (AccessTokenID, error) {
+	id, err := uuid.Parse(s)
+	if err != nil {
+		return AccessTokenID{}, err
+	}
+	return AccessTokenID(id), nil
+}

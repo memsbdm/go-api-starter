@@ -8,13 +8,24 @@ import (
 	"go-starter/internal/domain"
 	"log/slog"
 	"net/http"
+	"sync"
 )
 
-var Validate *validator.Validate
+const (
+	// MaxRequestSize defines the maximum allowed size for request bodies (1MB)
+	MaxRequestSize = 1 << 20
+)
+
+var (
+	Validate *validator.Validate
+	once     sync.Once
+)
 
 // init initializes the validator with required struct validation enabled.
 func init() {
-	Validate = validator.New(validator.WithRequiredStructEnabled())
+	once.Do(func() {
+		Validate = validator.New(validator.WithRequiredStructEnabled())
+	})
 }
 
 // ErrInvalidJSON is returned when the JSON payload is invalid.
@@ -29,7 +40,6 @@ var validationMessages = map[string]error{
 	"refreshTokenRequest.RefreshToken.jwt":      domain.ErrInvalidToken,
 	"registerRequest.Name.required":             domain.ErrNameRequired,
 	"registerRequest.Name.min":                  domain.ErrNameRequired,
-	"registerRequest.Name.notBlank":             domain.ErrNameRequired,
 	"registerRequest.Name.max":                  domain.ErrNameTooLong,
 	"registerRequest.Username.required":         domain.ErrUsernameRequired,
 	"registerRequest.Username.min":              domain.ErrUsernameTooShort,
@@ -46,8 +56,7 @@ var validationMessages = map[string]error{
 
 // ValidateRequest takes a payload from an HTTP request and verifies it.
 func ValidateRequest(w http.ResponseWriter, r *http.Request, payload interface{}) []error {
-	maxBytes := 1_048_576 // 1mb
-	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
+	r.Body = http.MaxBytesReader(w, r.Body, MaxRequestSize)
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {

@@ -67,14 +67,27 @@ func TestAuthService_Refresh(t *testing.T) {
 
 	tests := map[string]struct {
 		advance     time.Duration
+		modifyToken func() string
 		expectedErr error
 	}{
 		"refresh with a valid refresh token": {
 			advance:     0,
+			modifyToken: nil,
 			expectedErr: nil,
 		},
 		"refresh with an expired refresh token": {
 			advance:     refreshTokenExpirationDuration,
+			modifyToken: nil,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"refresh without a refresh token": {
+			advance:     0,
+			modifyToken: func() string { return "" },
+			expectedErr: domain.ErrRefreshTokenRequired,
+		},
+		"refresh with an invalid refresh token": {
+			advance:     0,
+			modifyToken: func() string { return "invalid" },
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
@@ -102,8 +115,13 @@ func TestAuthService_Refresh(t *testing.T) {
 
 			builder.TimeGenerator.Advance(tt.advance)
 
+			refreshToken := string(authTokens.RefreshToken)
+			if tt.modifyToken != nil {
+				refreshToken = tt.modifyToken()
+			}
+
 			// Act & Assert
-			_, err = builder.AuthService.Refresh(ctx, string(authTokens.RefreshToken))
+			_, err = builder.AuthService.Refresh(ctx, refreshToken)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}

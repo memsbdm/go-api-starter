@@ -11,6 +11,14 @@ type LoginResponse struct {
 	User   UserResponse       `json:"user"`
 }
 
+// NewLoginResponse is a helper function that creates a LoginResponse with the provided auth tokens and user.
+func NewLoginResponse(tokens *entities.AuthTokens, user *entities.User) LoginResponse {
+	return LoginResponse{
+		Tokens: NewAuthTokensResponse(tokens),
+		User:   NewUserResponse(user),
+	}
+}
+
 // AuthTokensResponse represents the structure of a response body with an access token, a refresh token
 // and their expiration time in ms.
 type AuthTokensResponse struct {
@@ -29,14 +37,6 @@ func NewAuthTokensResponse(tokens *entities.AuthTokens) AuthTokensResponse {
 		RefreshToken:            string(tokens.RefreshToken),
 		AccessTokenExpiredInMs:  accessTokenDuration.Milliseconds(),
 		RefreshTokenExpiredInMs: refreshTokenDuration.Milliseconds(),
-	}
-}
-
-// NewLoginResponse is a helper function that creates a LoginResponse with the provided auth tokens and user.
-func NewLoginResponse(tokens *entities.AuthTokens, user *entities.User) LoginResponse {
-	return LoginResponse{
-		Tokens: NewAuthTokensResponse(tokens),
-		User:   NewUserResponse(user),
 	}
 }
 

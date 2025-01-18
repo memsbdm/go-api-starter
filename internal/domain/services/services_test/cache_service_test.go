@@ -161,28 +161,55 @@ func TestCacheService_DeleteByPrefix(t *testing.T) {
 func TestCacheService_CacheExpiration(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	ctx := context.Background()
-	timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
-	builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
-	cacheDuration := time.Hour
-	key := "example"
-
-	err := builder.CacheService.Set(ctx, key, []byte("value"), cacheDuration)
-	if err != nil {
-		t.Fatalf("failed to set cache: %v", err)
+	tests := map[string]struct {
+		duration    time.Duration
+		advance     time.Duration
+		expectedErr error
+	}{
+		"cache not expired": {
+			duration:    time.Hour,
+			advance:     time.Minute,
+			expectedErr: nil,
+		},
+		"cache expired": {
+			duration:    time.Hour,
+			advance:     time.Hour + time.Second,
+			expectedErr: domain.ErrCacheNotFound,
+		},
+		"cache near expiration": {
+			duration:    time.Hour,
+			advance:     time.Hour - time.Second,
+			expectedErr: nil,
+		},
 	}
 
-	_, err = builder.CacheService.Get(ctx, key)
-	if err != nil {
-		t.Fatalf("failed to get cache: %v", err)
-	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	timeGenerator.Advance(cacheDuration)
+			// Arrange
+			ctx := context.Background()
+			key := "example"
+			timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
+			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 
-	// Act & Assert
-	_, err = builder.CacheService.Get(ctx, key)
-	if err == nil {
-		t.Errorf("expected error %v, nil", domain.ErrCacheNotFound)
+			err := builder.CacheService.Set(ctx, key, []byte("value"), tt.duration)
+			if err != nil {
+				t.Fatalf("failed to set cache: %v", err)
+			}
+
+			_, err = builder.CacheService.Get(ctx, key)
+			if err != nil {
+				t.Fatalf("failed to get cache: %v", err)
+			}
+
+			timeGenerator.Advance(tt.advance)
+
+			// Act & Assert
+			_, err = builder.CacheService.Get(ctx, key)
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+		})
 	}
 }
