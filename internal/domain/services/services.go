@@ -6,6 +6,7 @@ import (
 	"go-starter/internal/domain/ports"
 )
 
+// Services holds all service implementations for the application.
 type Services struct {
 	CacheService ports.CacheService
 	UserService  ports.UserService
@@ -13,6 +14,7 @@ type Services struct {
 	TokenService ports.TokenService
 }
 
+// New creates and initializes a new Services instance with the provided dependencies.
 func New(cfg *config.Container, adapters *adapters.Adapters) *Services {
 	cacheSvc := NewCacheService(adapters.CacheRepository)
 	userSvc := NewUserService(adapters.UserRepository, cacheSvc)
