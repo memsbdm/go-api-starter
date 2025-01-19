@@ -6,14 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"go-starter/config"
+	"go-starter/internal/adapters"
 	"go-starter/internal/adapters/http"
 	"go-starter/internal/adapters/http/handlers"
 	"go-starter/internal/adapters/logger"
 	"go-starter/internal/adapters/storage/postgres"
-	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/adapters/storage/redis"
 	"go-starter/internal/adapters/timegen"
-	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/services"
 	"log/slog"
@@ -60,32 +59,12 @@ func run() error {
 
 	timeGenerator := timegen.NewRealTimeGenerator()
 
-	// Health
-	healthHandler := handlers.NewHealthHandler()
+	apiAdapters := adapters.New(extServices.db, timeGenerator, extServices.cache)
+	apiServices := services.New(cfg, apiAdapters)
+	apiHandlers := handlers.New(apiServices)
 
-	// Cache
-	cacheService := services.NewCacheService(extServices.cache)
-
-	// Token
-	tokenRepo := token.NewTokenRepository(timeGenerator)
-	tokenService := services.NewTokenService(cfg.Token, tokenRepo, cacheService)
-
-	// User
-	userRepo := repositories.NewUserRepository(extServices.db)
-	userService := services.NewUserService(userRepo, cacheService)
-	userHandler := handlers.NewUserHandler(userService)
-
-	// Auth
-	authService := services.NewAuthService(userService, tokenService)
-	authHandler := handlers.NewAuthHandler(authService)
-
-	apiHandlers := &http.Handlers{
-		AuthHandler:   authHandler,
-		UserHandler:   userHandler,
-		HealthHandler: healthHandler,
-	}
 	// Init and start server
-	srv := http.New(cfg.HTTP, apiHandlers, tokenService)
+	srv := http.New(cfg.HTTP, apiHandlers, apiServices.TokenService)
 
 	done := make(chan bool, 1)
 	go gracefulShutdown(srv, done)
@@ -103,7 +82,7 @@ func run() error {
 // It encapsulates all external dependencies required by the application.
 type externalServices struct {
 	db    *sql.DB
-	cache ports.CacheService
+	cache ports.CacheRepository
 }
 
 // initializeExternalServices sets up connections to all external services .

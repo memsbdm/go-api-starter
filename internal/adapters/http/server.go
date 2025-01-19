@@ -5,7 +5,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go-starter/config"
 	_ "go-starter/docs"
-	h "go-starter/internal/adapters/http/handlers"
+	"go-starter/internal/adapters/http/handlers"
 	m "go-starter/internal/adapters/http/middleware"
 	"go-starter/internal/domain/ports"
 	"log/slog"
@@ -18,16 +18,10 @@ type Server struct {
 	*http.Server
 }
 
-type Handlers struct {
-	HealthHandler *h.HealthHandler
-	AuthHandler   *h.AuthHandler
-	UserHandler   *h.UserHandler
-}
-
 // New creates and initializes a new HTTP server.
 func New(
 	config *config.HTTP,
-	handlers *Handlers,
+	handlers *handlers.Handlers,
 	tokenService ports.TokenService,
 ) *Server {
 	auth := func() m.Middleware {
