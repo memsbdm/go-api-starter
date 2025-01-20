@@ -2,10 +2,16 @@ package seed
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"go-starter/config"
+	"go-starter/internal/adapters/storage/postgres/repositories"
+	"go-starter/internal/adapters/storage/postgres/repositories/mocks"
+	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/services"
+	"log/slog"
 	"sync"
 )
 
@@ -17,15 +23,15 @@ const (
 // UserGenerator handles the creation of test user data.
 // It maintains a list of predefined usernames and provides methods
 // to generate test users in batches efficiently and in parallel.
-type UserGenerator struct {
+type userGenerator struct {
 	usernames []string
 	password  string
 	service   *services.UserService
 }
 
-// NewUserGenerator returns a new instance of UserGenerator
-func NewUserGenerator(svc *services.UserService) *UserGenerator {
-	return &UserGenerator{
+// newUserGenerator returns a new instance of userGenerator
+func newUserGenerator(svc *services.UserService) *userGenerator {
+	return &userGenerator{
 		usernames: []string{
 			"alice", "bob", "charlie", "dave", "eve", "frank", "grace", "heidi",
 			"ivan", "judy", "karl", "laura", "mallory", "nina", "oscar", "peggy",
@@ -40,16 +46,41 @@ func NewUserGenerator(svc *services.UserService) *UserGenerator {
 	}
 }
 
-// GenerateUsersOptions helps to provide options for generation
-type GenerateUsersOptions struct {
+// SeedUsers populates the database with sample user data for testing or development purposes.
+func SeedUsers(ctx context.Context, cfg *config.Container, db *sql.DB) error {
+	// Initialize dependencies
+	errTracker := mocks.NewErrorTrackerMock(cfg.ErrTracker)
+	userRepo := repositories.NewUserRepository(db, errTracker)
+	timeGenerator := timegen.NewRealTimeGenerator()
+	cacheService := mocks.NewCacheMock(timeGenerator)
+	userService := services.NewUserService(userRepo, cacheService, errTracker)
+
+	// Configure and run user generator
+	slog.Info("Starting user seeding process")
+	userGenerator := newUserGenerator(userService)
+
+	opts := generateUsersOptions{
+		Count:     100,
+		BatchSize: 30,
+	}
+
+	if err := userGenerator.generateUsers(ctx, opts); err != nil {
+		return fmt.Errorf("generating users: %w", err)
+	}
+
+	return nil
+}
+
+// generateUsersOptions helps to provide options for generation
+type generateUsersOptions struct {
 	Count     int
 	BatchSize int
 }
 
-// GenerateUsers creates and registers a specified number of test users in the system.
+// generateUsers creates and registers a specified number of test users in the system.
 // It uses parallel batch processing to optimize performance.
 // Returns an error if generation fails or if parameters are invalid.
-func (g *UserGenerator) GenerateUsers(ctx context.Context, opts GenerateUsersOptions) error {
+func (g *userGenerator) generateUsers(ctx context.Context, opts generateUsersOptions) error {
 	if opts.Count <= 0 {
 		return fmt.Errorf("count must be positive, got %d", opts.Count)
 	}
@@ -95,7 +126,7 @@ func (g *UserGenerator) GenerateUsers(ctx context.Context, opts GenerateUsersOpt
 
 // generateBatch creates and registers a specific batch of users.
 // This function is intended to be run in a separate goroutine.
-func (g *UserGenerator) generateBatch(ctx context.Context, start, size int, password string) error {
+func (g *userGenerator) generateBatch(ctx context.Context, start, size int, password string) error {
 	users := make([]*entities.User, size)
 	for i := 0; i < size; i++ {
 		idx := start + i

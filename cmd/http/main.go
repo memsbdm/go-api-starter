@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"go-starter/config"
 	"go-starter/internal/adapters"
+	"go-starter/internal/adapters/errortracker"
 	"go-starter/internal/adapters/http"
 	"go-starter/internal/adapters/http/handlers"
 	"go-starter/internal/adapters/logger"
 	"go-starter/internal/adapters/storage/postgres"
+	"go-starter/internal/adapters/storage/postgres/repositories/mocks"
 	"go-starter/internal/adapters/storage/redis"
 	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/domain/ports"
@@ -59,20 +61,23 @@ func run() error {
 
 	timeGenerator := timegen.NewRealTimeGenerator()
 
-	apiAdapters := adapters.New(extServices.db, timeGenerator, extServices.cache)
+	apiAdapters := adapters.New(extServices.db, timeGenerator, extServices.cache, extServices.errTracker)
 	apiServices := services.New(cfg, apiAdapters)
 	apiHandlers := handlers.New(apiServices)
 
 	// Init and start server
-	srv := http.New(cfg.HTTP, apiHandlers, apiServices.TokenService)
+	srv := http.New(cfg.HTTP, apiHandlers, apiServices.TokenService, extServices.errTracker)
 
 	done := make(chan bool, 1)
-	go gracefulShutdown(srv, done)
+	go gracefulShutdown(srv, done, extServices.errTracker)
 
 	err = srv.Serve()
 	if err != nil && !errors.Is(err, httpx.ErrServerClosed) {
-		return fmt.Errorf("http server error: %s", err)
+		err = fmt.Errorf("http server error: %s", err)
+		extServices.errTracker.CaptureException(err)
+		return err
 	}
+	extServices.errTracker.Flush(2 * time.Second)
 	<-done
 	slog.Info("Graceful shutdown complete.")
 	return err
@@ -81,8 +86,9 @@ func run() error {
 // externalServices holds connections to external services like database and cache.
 // It encapsulates all external dependencies required by the application.
 type externalServices struct {
-	db    *sql.DB
-	cache ports.CacheRepository
+	db         *sql.DB
+	cache      ports.CacheRepository
+	errTracker ports.ErrorTracker
 }
 
 // initializeExternalServices sets up connections to all external services .
@@ -90,16 +96,26 @@ type externalServices struct {
 // The cleanup function should be deferred by the caller.
 // If any service fails to initialize, it ensures proper cleanup of already initialized services.
 func initializeExternalServices(ctx context.Context, cfg *config.Container) (*externalServices, func(), error) {
+	// Init error tracker
+	var errTracker ports.ErrorTracker
+	errTracker = mocks.NewErrorTrackerMock(cfg.ErrTracker)
+	if cfg.Application.Env == "production" {
+		errTracker = errortracker.NewSentryErrorTracker(cfg.ErrTracker)
+	}
+
 	// Init database
 	db, err := postgres.New(ctx, cfg.DB)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to connect to database: %w", err)
+		err = fmt.Errorf("failed to connect to database: %w", err)
+		errTracker.CaptureException(err)
+		return nil, nil, err
 	}
 	slog.Info("Successfully connected to the database")
 
 	// Init cache service
 	cache, err := redis.New(ctx, cfg.Redis)
 	if err != nil {
+		errTracker.CaptureException(err)
 		err := db.Close() // Clean up database connection if cache fails
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to close redis connection: %w", err)
@@ -110,21 +126,26 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 
 	cleanup := func() {
 		if err := db.Close(); err != nil {
-			slog.Error("failed to close database connection: " + err.Error())
+			err = fmt.Errorf("failed to close database connection: %w", err)
+			errTracker.CaptureException(err)
+			slog.Error(err.Error())
 		}
 		if err := cache.Close(); err != nil {
-			slog.Error("failed to close cache connection: " + err.Error())
+			err = fmt.Errorf("failed to close cache connection: %w", err)
+			errTracker.CaptureException(err)
+			slog.Error(err.Error())
 		}
 	}
 
 	return &externalServices{
-		db:    db,
-		cache: cache,
+		db:         db,
+		cache:      cache,
+		errTracker: errTracker,
 	}, cleanup, nil
 }
 
 // gracefulShutdown manages the graceful shutdown process of the HTTP server.
-func gracefulShutdown(server *http.Server, done chan bool) {
+func gracefulShutdown(server *http.Server, done chan bool, errTracker ports.ErrorTracker) {
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -139,7 +160,9 @@ func gracefulShutdown(server *http.Server, done chan bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		slog.Info(fmt.Sprintf("Server forced to shutdown with error: %v", err))
+		err = fmt.Errorf("server forced to shutdown with error: %v", err)
+		errTracker.CaptureException(err)
+		slog.Info(err.Error())
 	}
 
 	slog.Info("Server exiting")

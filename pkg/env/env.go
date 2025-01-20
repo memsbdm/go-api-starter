@@ -39,3 +39,14 @@ func GetDuration(key string) time.Duration {
 	}
 	return d
 }
+
+// GetFloat64 retrieves the value associated with the specified key from the .env file,
+// converting it to a float64. If the key is not set or the value cannot be parsed to a float64, it panics.
+func GetFloat64(key string) float64 {
+	val := GetString(key)
+	f, err := strconv.ParseFloat(val, 64)
+	if err != nil {
+		panic(fmt.Sprintf("environment variable %s is not a float64", key))
+	}
+	return f
+}

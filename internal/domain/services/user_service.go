@@ -14,15 +14,17 @@ import (
 
 // UserService implements ports.UserService interface and provides access to the user repository.
 type UserService struct {
-	repo  ports.UserRepository
-	cache ports.CacheService
+	repo       ports.UserRepository
+	cache      ports.CacheService
+	errTracker ports.ErrorTracker
 }
 
 // NewUserService creates a new instance of UserService.
-func NewUserService(repo ports.UserRepository, cache ports.CacheService) *UserService {
+func NewUserService(repo ports.UserRepository, cache ports.CacheService, errTracker ports.ErrorTracker) *UserService {
 	return &UserService{
-		repo:  repo,
-		cache: cache,
+		repo:       repo,
+		cache:      cache,
+		errTracker: errTracker,
 	}
 }
 

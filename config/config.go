@@ -13,14 +13,15 @@ type (
 		HTTP        *HTTP
 		Redis       *Redis
 		Token       *Token
+		ErrTracker  *ErrTracker
 	}
 
-	// App contains all the environment variables for the application
+	// App contains all the environment variables for the application.
 	App struct {
 		Env string
 	}
 
-	// DB contains all the environment variables for the database
+	// DB contains all the environment variables for the database.
 	DB struct {
 		Addr         string
 		MaxOpenConns int
@@ -28,23 +29,29 @@ type (
 		MaxIdleTime  string
 	}
 
-	// HTTP contains all the environment variables for the http server
+	// HTTP contains all the environment variables for the http server.
 	HTTP struct {
 		Port int
 	}
 
-	// Redis contains all the environment variables for the cache service
+	// Redis contains all the environment variables for the cache service.
 	Redis struct {
 		Addr     string
 		Password string
 	}
 
-	// Token contains all the environment variables for the token service
+	// Token contains all the environment variables for the token service.
 	Token struct {
 		AccessTokenSignature  []byte
 		RefreshTokenSignature []byte
 		AccessTokenDuration   time.Duration
 		RefreshTokenDuration  time.Duration
+	}
+
+	// ErrTracker contains all the environment variables for the error tracking.
+	ErrTracker struct {
+		DSN              string
+		TracesSampleRate float64
 	}
 )
 
@@ -77,11 +84,17 @@ func New() *Container {
 		RefreshTokenDuration:  env.GetDuration("REFRESH_TOKEN_DURATION"),
 	}
 
+	errTracker := &ErrTracker{
+		DSN:              env.GetString("SENTRY_DSN"),
+		TracesSampleRate: env.GetFloat64("SENTRY_TRACES_SAMPLE_RATE"),
+	}
+
 	return &Container{
 		Application: app,
 		DB:          db,
 		HTTP:        http,
 		Redis:       redis,
 		Token:       token,
+		ErrTracker:  errTracker,
 	}
 }

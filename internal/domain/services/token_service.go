@@ -11,17 +11,19 @@ import (
 
 // TokenService implements ports.TokenService interface.
 type TokenService struct {
-	repo     ports.TokenRepository
-	cacheSvc ports.CacheService
-	cfg      *config.Token
+	repo       ports.TokenRepository
+	cacheSvc   ports.CacheService
+	cfg        *config.Token
+	errTracker ports.ErrorTracker
 }
 
 // NewTokenService creates a new instance of TokenService.
-func NewTokenService(cfg *config.Token, repo ports.TokenRepository, cacheSvc ports.CacheService) *TokenService {
+func NewTokenService(cfg *config.Token, repo ports.TokenRepository, cacheSvc ports.CacheService, errTracker ports.ErrorTracker) *TokenService {
 	return &TokenService{
-		repo:     repo,
-		cacheSvc: cacheSvc,
-		cfg:      cfg,
+		repo:       repo,
+		cacheSvc:   cacheSvc,
+		cfg:        cfg,
+		errTracker: errTracker,
 	}
 }
 

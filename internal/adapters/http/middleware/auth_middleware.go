@@ -18,7 +18,7 @@ const (
 )
 
 // AuthMiddleware is a middleware function that validates the authorization token from the incoming HTTP request.
-func AuthMiddleware(tokenService *ports.TokenService) Middleware {
+func AuthMiddleware(tokenService ports.TokenService, errTracker ports.ErrorTracker) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			authorizationHeader := r.Header.Get(authorizationHeaderKey)
@@ -39,12 +39,13 @@ func AuthMiddleware(tokenService *ports.TokenService) Middleware {
 			}
 
 			accessToken := fields[1]
-			tokenPayload, err := (*tokenService).ValidateAndParseAccessToken(accessToken)
+			tokenPayload, err := tokenService.ValidateAndParseAccessToken(accessToken)
 			if err != nil {
 				responses.HandleError(w, domain.ErrUnauthorized)
 				return
 			}
 
+			errTracker.SetUser(tokenPayload.Subject.String(), r.RemoteAddr)
 			ctx := context.WithValue(r.Context(), helpers.AuthorizationPayloadKey, tokenPayload)
 			r = r.WithContext(ctx)
 
@@ -56,7 +57,7 @@ func AuthMiddleware(tokenService *ports.TokenService) Middleware {
 // GuestMiddleware is a middleware function that allows access to HTTP requests from guests (unauthenticated users).
 // It checks for the presence of an authorization token in the request header. If a valid token is found,
 // it responds with a forbidden error, preventing authenticated users from accessing guest-only routes.
-func GuestMiddleware(tokenService *ports.TokenService) Middleware {
+func GuestMiddleware(tokenService ports.TokenService) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			authorizationHeader := r.Header.Get(authorizationHeaderKey)
@@ -72,7 +73,7 @@ func GuestMiddleware(tokenService *ports.TokenService) Middleware {
 			}
 
 			accessToken := fields[1]
-			_, err := (*tokenService).ValidateAndParseAccessToken(accessToken)
+			_, err := tokenService.ValidateAndParseAccessToken(accessToken)
 			if err == nil {
 				responses.HandleError(w, domain.ErrForbidden)
 				return

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/services"
 )
 
@@ -9,13 +10,15 @@ type Handlers struct {
 	HealthHandler *HealthHandler
 	AuthHandler   *AuthHandler
 	UserHandler   *UserHandler
+	ErrTracker    ports.ErrorTracker
 }
 
 // New creates and initializes a new Handlers instance with the provided dependencies.
 func New(s *services.Services) *Handlers {
 	return &Handlers{
-		HealthHandler: NewHealthHandler(),
-		AuthHandler:   NewAuthHandler(s.AuthService),
-		UserHandler:   NewUserHandler(s.UserService),
+		HealthHandler: NewHealthHandler(s.ErrTracker),
+		AuthHandler:   NewAuthHandler(s.AuthService, s.ErrTracker),
+		UserHandler:   NewUserHandler(s.UserService, s.ErrTracker),
+		ErrTracker:    s.ErrTracker,
 	}
 }

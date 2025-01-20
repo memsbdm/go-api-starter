@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"go-starter/internal/domain"
@@ -12,15 +13,17 @@ import (
 // TokenRepository implements the ports.TokenRepository interface, providing access to
 // JWT-related functionalities for token management.
 type TokenRepository struct {
+	errTracker    ports.ErrorTracker
 	timeGenerator ports.TimeGenerator
 	signingMethod jwt.SigningMethod
 }
 
 // NewTokenRepository creates a new instance of TokenRepository.
-func NewTokenRepository(timeGenerator ports.TimeGenerator) *TokenRepository {
+func NewTokenRepository(timeGenerator ports.TimeGenerator, errTracker ports.ErrorTracker) *TokenRepository {
 	return &TokenRepository{
 		timeGenerator: timeGenerator,
 		signingMethod: jwt.SigningMethodHS256,
+		errTracker:    errTracker,
 	}
 }
 
@@ -36,6 +39,9 @@ func (tr *TokenRepository) GenerateAccessToken(user *entities.User, duration tim
 
 	token := jwt.NewWithClaims(tr.signingMethod, claims)
 	signedToken, err := token.SignedString(signature)
+	if err != nil {
+		tr.errTracker.CaptureException(err)
+	}
 	return entities.AccessToken(signedToken), err
 }
 
@@ -48,6 +54,7 @@ func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature [
 		return signature, nil
 	})
 	if err != nil {
+		tr.errTracker.CaptureException(err)
 		return nil, err
 	}
 
@@ -61,16 +68,20 @@ func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature [
 
 	tokenUUID, err := entities.ParseAccessTokenID(tokenIDstr)
 	if err != nil {
+		err = fmt.Errorf("could not parse access token %s: %w", tokenIDstr, err)
+		tr.errTracker.CaptureException(err)
 		return nil, err
 	}
 
 	userID, err := entities.ParseUserID(userIDstr)
 	if err != nil {
+		err = fmt.Errorf("could not parse user id %s: %w", userIDstr, err)
+		tr.errTracker.CaptureException(err)
 		return nil, err
 	}
 
 	tokenClaims := &entities.AccessTokenClaims{
-		ID:      entities.AccessTokenID(tokenUUID),
+		ID:      tokenUUID,
 		Subject: userID,
 	}
 
@@ -90,6 +101,9 @@ func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration
 
 	token := jwt.NewWithClaims(tr.signingMethod, claims)
 	signedToken, err := token.SignedString(signature)
+	if err != nil {
+		tr.errTracker.CaptureException(err)
+	}
 	return id, entities.RefreshToken(signedToken), err
 }
 
@@ -102,6 +116,8 @@ func (tr *TokenRepository) ValidateAndParseRefreshToken(token string, signature 
 		return signature, nil
 	})
 	if err != nil {
+		err = fmt.Errorf("could not parse refresh token %s: %w", token, err)
+		tr.errTracker.CaptureException(err)
 		return nil, err
 	}
 
@@ -115,11 +131,15 @@ func (tr *TokenRepository) ValidateAndParseRefreshToken(token string, signature 
 
 	tokenUUID, err := uuid.Parse(tokenIDstr)
 	if err != nil {
+		err = fmt.Errorf("could not parse refresh token %s: %w", tokenIDstr, err)
+		tr.errTracker.CaptureException(err)
 		return nil, err
 	}
 
 	userID, err := entities.ParseUserID(userIDstr)
 	if err != nil {
+		err = fmt.Errorf("could not parse user id %s: %w", userIDstr, err)
+		tr.errTracker.CaptureException(err)
 		return nil, err
 	}
 

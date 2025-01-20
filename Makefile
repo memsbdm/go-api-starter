@@ -4,7 +4,7 @@ all: build test
 
 build:
 	@echo "Building..."
-	@go build -o main cmd/http/main.go
+	@go build -o bin/main cmd/http/main.go
 
 clean:
 	@echo "Cleaning..."

@@ -23,12 +23,13 @@ func New(
 	config *config.HTTP,
 	handlers *handlers.Handlers,
 	tokenService ports.TokenService,
+	errTracker ports.ErrorTracker,
 ) *Server {
 	auth := func() m.Middleware {
-		return m.AuthMiddleware(&tokenService)
+		return m.AuthMiddleware(tokenService, errTracker)
 	}
 	guest := func() m.Middleware {
-		return m.GuestMiddleware(&tokenService)
+		return m.GuestMiddleware(tokenService)
 	}
 
 	mux := http.NewServeMux()
@@ -46,11 +47,20 @@ func New(
 	mux.HandleFunc("GET /v1/users/{uuid}", handlers.UserHandler.GetByID)
 	mux.HandleFunc("PATCH /v1/users/password", m.Chain(handlers.UserHandler.UpdatePassword, auth()))
 
-	router := m.LoggingMiddleware(m.SecurityHeadersMiddleware(m.CorsMiddleware(mux)))
+	routerMiddleware := []m.HandlerMiddleware{
+		m.ErrTrackingMiddleware(errTracker),
+		m.LoggingMiddleware(),
+		m.SecurityHeadersMiddleware(),
+		m.CorsMiddleware(),
+	}
+
+	router := m.ChainHandlerFunc(mux, routerMiddleware...)
+	handler := errTracker.Handle(router)
+
 	return &Server{
 		Server: &http.Server{
 			Addr:         fmt.Sprintf(":%d", config.Port),
-			Handler:      router,
+			Handler:      handler,
 			IdleTimeout:  time.Minute,
 			ReadTimeout:  10 * time.Second,
 			WriteTimeout: 30 * time.Second,

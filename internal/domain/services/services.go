@@ -12,18 +12,20 @@ type Services struct {
 	UserService  ports.UserService
 	AuthService  ports.AuthService
 	TokenService ports.TokenService
+	ErrTracker   ports.ErrorTracker
 }
 
 // New creates and initializes a new Services instance with the provided dependencies.
-func New(cfg *config.Container, adapters *adapters.Adapters) *Services {
-	cacheSvc := NewCacheService(adapters.CacheRepository)
-	userSvc := NewUserService(adapters.UserRepository, cacheSvc)
-	tokenSvc := NewTokenService(cfg.Token, adapters.TokenRepository, cacheSvc)
-	authSvc := NewAuthService(userSvc, tokenSvc)
+func New(cfg *config.Container, a *adapters.Adapters) *Services {
+	cacheSvc := NewCacheService(a.CacheRepository, a.ErrTracker)
+	userSvc := NewUserService(a.UserRepository, cacheSvc, a.ErrTracker)
+	tokenSvc := NewTokenService(cfg.Token, a.TokenRepository, cacheSvc, a.ErrTracker)
+	authSvc := NewAuthService(userSvc, tokenSvc, a.ErrTracker)
 	return &Services{
 		CacheService: cacheSvc,
 		UserService:  userSvc,
 		AuthService:  authSvc,
 		TokenService: tokenSvc,
+		ErrTracker:   a.ErrTracker,
 	}
 }

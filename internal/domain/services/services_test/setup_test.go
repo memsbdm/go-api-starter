@@ -5,7 +5,6 @@ package services_test
 import (
 	"go-starter/config"
 	"go-starter/internal/adapters/storage/postgres/repositories/mocks"
-	"go-starter/internal/adapters/storage/redis"
 	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/ports"
@@ -22,12 +21,14 @@ type TestBuilder struct {
 	TokenService  ports.TokenService
 	AuthService   ports.AuthService
 	TokenConfig   *config.Token
+	ErrTracker    ports.ErrorTracker
 }
 
 func NewTestBuilder() *TestBuilder {
+	errTracker := mocks.NewErrorTrackerMock(&config.ErrTracker{})
 	timeGenerator := timegen.NewRealTimeGenerator()
-	cacheRepo := redis.NewCacheMock(timeGenerator)
-	tokenRepo := token.NewTokenRepository(timeGenerator)
+	cacheRepo := mocks.NewCacheMock(timeGenerator)
+	tokenRepo := token.NewTokenRepository(timeGenerator, errTracker)
 	userRepo := mocks.NewUserRepositoryMock()
 	tokenConfig := &config.Token{
 		AccessTokenDuration:   accessTokenExpirationDuration,
@@ -41,20 +42,21 @@ func NewTestBuilder() *TestBuilder {
 		UserRepo:      userRepo,
 		TokenRepo:     tokenRepo,
 		TokenConfig:   tokenConfig,
+		ErrTracker:    errTracker,
 	}
 }
 
 func (tb *TestBuilder) WithTimeGenerator(tg ports.TimeGenerator) *TestBuilder {
 	tb.TimeGenerator = tg
-	tb.CacheRepo = redis.NewCacheMock(tg)
-	tb.TokenRepo = token.NewTokenRepository(tg)
+	tb.CacheRepo = mocks.NewCacheMock(tg)
+	tb.TokenRepo = token.NewTokenRepository(tg, tb.ErrTracker)
 	return tb
 }
 
 func (tb *TestBuilder) Build() *TestBuilder {
-	tb.CacheService = services.NewCacheService(tb.CacheRepo)
-	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService)
-	tb.TokenService = services.NewTokenService(tb.TokenConfig, tb.TokenRepo, tb.CacheService)
-	tb.AuthService = services.NewAuthService(tb.UserService, tb.TokenService)
+	tb.CacheService = services.NewCacheService(tb.CacheRepo, tb.ErrTracker)
+	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService, tb.ErrTracker)
+	tb.TokenService = services.NewTokenService(tb.TokenConfig, tb.TokenRepo, tb.CacheService, tb.ErrTracker)
+	tb.AuthService = services.NewAuthService(tb.UserService, tb.TokenService, tb.ErrTracker)
 	return tb
 }

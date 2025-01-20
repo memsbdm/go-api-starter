@@ -6,11 +6,7 @@ import (
 	"fmt"
 	"go-starter/config"
 	"go-starter/internal/adapters/storage/postgres"
-	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/adapters/storage/postgres/seed"
-	"go-starter/internal/adapters/storage/redis"
-	"go-starter/internal/adapters/timegen"
-	"go-starter/internal/domain/services"
 	"log/slog"
 	"os"
 )
@@ -35,7 +31,7 @@ func run() error {
 	defer closeDB(db)
 
 	// Seeders
-	if err := seedUsers(ctx, db); err != nil {
+	if err := seed.SeedUsers(ctx, cfg, db); err != nil {
 		return fmt.Errorf("seeding users: %w", err)
 	}
 
@@ -58,27 +54,4 @@ func closeDB(db *sql.DB) {
 		return
 	}
 	slog.Info("Successfully closed database connection")
-}
-
-func seedUsers(ctx context.Context, db *sql.DB) error {
-	// Initialize dependencies
-	userRepo := repositories.NewUserRepository(db)
-	timeGenerator := timegen.NewRealTimeGenerator()
-	cacheService := redis.NewCacheMock(timeGenerator)
-	userService := services.NewUserService(userRepo, cacheService)
-
-	// Configure and run user generator
-	slog.Info("Starting user seeding process")
-	userGenerator := seed.NewUserGenerator(userService)
-
-	opts := seed.GenerateUsersOptions{
-		Count:     100,
-		BatchSize: 30,
-	}
-
-	if err := userGenerator.GenerateUsers(ctx, opts); err != nil {
-		return fmt.Errorf("generating users: %w", err)
-	}
-
-	return nil
 }

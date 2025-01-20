@@ -5,17 +5,21 @@ import (
 	"fmt"
 	_ "go-starter/internal/adapters/http/responses"
 	"go-starter/internal/adapters/storage/postgres"
+	"go-starter/internal/domain/ports"
 	"log/slog"
 	"net/http"
 )
 
 // HealthHandler is responsible for handling HTTP requests related to the health status of the database.
 type HealthHandler struct {
+	errTracker ports.ErrorTracker
 }
 
 // NewHealthHandler initializes and returns a new instance of HealthHandler.
-func NewHealthHandler() *HealthHandler {
-	return &HealthHandler{}
+func NewHealthHandler(errTracker ports.ErrorTracker) *HealthHandler {
+	return &HealthHandler{
+		errTracker: errTracker,
+	}
 }
 
 // Health godoc
@@ -31,11 +35,13 @@ func NewHealthHandler() *HealthHandler {
 func (hh *HealthHandler) Health(w http.ResponseWriter, _ *http.Request) {
 	resp, err := json.Marshal(postgres.Health())
 	if err != nil {
+		hh.errTracker.CaptureException(err)
 		http.Error(w, "failed to marshal health check response", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(resp); err != nil {
+		hh.errTracker.CaptureException(err)
 		errMsg := fmt.Sprintf("failed to write health check response: %s", err)
 		slog.Error(errMsg)
 		http.Error(w, errMsg, http.StatusInternalServerError)
