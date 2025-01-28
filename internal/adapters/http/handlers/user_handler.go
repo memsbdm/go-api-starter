@@ -98,7 +98,7 @@ type updatePasswordRequest struct {
 //
 //	@Summary		Update user password
 //	@Description	Update user password
-//	@Tags			Auth
+//	@Tags			Users
 //	@Accept			json
 //	@Produce		json
 //	@Param			updatePasswordRequest	body updatePasswordRequest true "Update user password request"

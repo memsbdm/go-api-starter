@@ -18,8 +18,8 @@ func NewErrorTrackerMock(_ *config.ErrTracker) *ErrorTrackerMock {
 
 // Handle wraps the provided http.Handler with a middleware for automatic
 // error tracking and request monitoring.
-func (set *ErrorTrackerMock) Handle(_ http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+func (set *ErrorTrackerMock) Handle(handler http.Handler) http.Handler {
+	return handler
 }
 
 // SetUser associates the current scope with user information identified by

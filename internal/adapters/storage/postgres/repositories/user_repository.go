@@ -93,7 +93,7 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 // Create inserts a new user into the database.
 // Returns the created user or an error if the operation fails (e.g., due to a database constraint violation).
 func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
-	const query = `INSERT INTO users (name, username, password) VALUES ($1, $2, $3) RETURNING id, name, username, created_at, updated_at`
+	const query = `INSERT INTO users (name, username, password) VALUES ($1, $2, $3) RETURNING id, created_at, updated_at, name, username`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
@@ -110,10 +110,10 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 		user.Password,
 	).Scan(
 		&uuidStr,
-		&createdUser.Name,
-		&createdUser.Username,
 		&createdUser.CreatedAt,
 		&createdUser.UpdatedAt,
+		&createdUser.Name,
+		&createdUser.Username,
 	)
 
 	if err != nil {
@@ -122,7 +122,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 			switch pqErr.Code {
 			case "23505": // Code unique_violation
 				if pqErr.Constraint == "users_username_key" {
-					return nil, fmt.Errorf("%w: username=%s", domain.ErrUsernameAlreadyTaken, user.Username)
+					return nil, domain.ErrUsernameAlreadyTaken
 				}
 			}
 		}

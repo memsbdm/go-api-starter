@@ -110,13 +110,13 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, authTokens, err := ah.svc.Login(ctx, created.Username, payload.Password)
+	authenticatedUser, authTokens, err := ah.svc.Login(ctx, created.Username, payload.Password)
 	if err != nil {
 		responses.HandleError(w, err)
 		return
 	}
 
-	response := responses.NewLoginResponse(authTokens, user)
+	response := responses.NewLoginResponse(authTokens, authenticatedUser)
 	responses.HandleSuccess(w, http.StatusCreated, response)
 }
 

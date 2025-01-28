@@ -23,7 +23,7 @@ var (
 	// ErrUserNotFound represents an error when a user is not found.
 	ErrUserNotFound = errors.New("user not found")
 	// ErrUsernameAlreadyTaken represents a conflict error when trying to create a user with an existing username.
-	ErrUsernameAlreadyTaken = errors.New("username already exists")
+	ErrUsernameAlreadyTaken = errors.New("username already taken")
 )
 
 // Errors not returned in responses.

@@ -27,7 +27,7 @@ import (
 
 // @title					Go Starter API
 // @version					1.0
-// @description				This is a simple starter API written in Go using net/http, PostgresSQL database, and Redis cache.
+// @description				This is a simple starter API written in Go using net/http, Postgres database, and Redis cache.
 //
 // @securityDefinitions.apikey	BearerAuth
 // @in							header

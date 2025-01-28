@@ -192,7 +192,7 @@ definitions:
     type: object
 info:
   contact: {}
-  description: This is a simple starter API written in Go using net/http, PostgresSQL
+  description: This is a simple starter API written in Go using net/http, Postgres
     database, and Redis cache.
   title: Go Starter API
   version: "1.0"
@@ -478,7 +478,7 @@ paths:
       - BearerAuth: []
       summary: Update user password
       tags:
-      - Auth
+      - Users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and the access token.
