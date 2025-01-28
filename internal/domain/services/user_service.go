@@ -7,6 +7,8 @@ import (
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"regexp"
 	"strings"
 	"time"
@@ -170,23 +172,32 @@ func validatePassword(password string) error {
 	return nil
 }
 
-// validateName checks if the provided name meets the required criteria.
+// validateAndFormatName checks if the provided name meets the required criteria and formats it.
 // Returns an error if any validation fails.
-func validateName(name string) error {
-	trimmedName := strings.TrimSpace(name)
-	if trimmedName == "" {
+func validateAndFormatName(user *entities.User) error {
+	user.Name = strings.TrimSpace(user.Name)
+	if user.Name == "" {
 		return domain.ErrNameRequired
 	}
-	if len(trimmedName) > domain.NameMaxLength {
+	if len(user.Name) > domain.NameMaxLength {
 		return domain.ErrNameTooLong
 	}
+
+	fields := strings.Fields(user.Name)
+	for i := range fields {
+		titleCaser := cases.Title(language.English)
+		fields[i] = titleCaser.String(strings.ToLower(fields[i]))
+	}
+
+	user.Name = strings.Join(fields, " ")
+
 	return nil
 }
 
 // validateRegisterRequest validates the registration details of a user.
 // Returns an error if any validation fails.
 func validateRegisterRequest(user *entities.User) error {
-	if err := validateName(user.Name); err != nil {
+	if err := validateAndFormatName(user); err != nil {
 		return err
 	}
 	if err := validateUsername(user.Username); err != nil {
