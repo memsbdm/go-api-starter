@@ -1,5 +1,4 @@
 .env
-.env.*
 
 # Binaries for programs and plugins
 bin/
@@ -28,3 +27,6 @@ tmp/
 
 # MacOS specific
 .DS_Store
+
+# Test entrypoint
+cmd/test/
