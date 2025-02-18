@@ -9,18 +9,20 @@ import (
 
 // Adapters holds all repository implementations for the application.
 type Adapters struct {
-	UserRepository  ports.UserRepository
-	TokenRepository ports.TokenRepository
-	CacheRepository ports.CacheRepository
-	ErrTracker      ports.ErrorTracker
+	UserRepository   ports.UserRepository
+	TokenRepository  ports.TokenRepository
+	CacheRepository  ports.CacheRepository
+	ErrTracker       ports.ErrorTracker
+	MailerRepository ports.MailerRepository
 }
 
 // New creates and initializes a new Adapters instance with the provided dependencies.
-func New(db *sql.DB, timeGenerator ports.TimeGenerator, cache ports.CacheRepository, errTracker ports.ErrorTracker) *Adapters {
+func New(db *sql.DB, timeGenerator ports.TimeGenerator, cache ports.CacheRepository, errTracker ports.ErrorTracker, mailer ports.MailerRepository) *Adapters {
 	return &Adapters{
-		UserRepository:  repositories.NewUserRepository(db, errTracker),
-		TokenRepository: token.NewTokenRepository(timeGenerator, errTracker),
-		CacheRepository: cache,
-		ErrTracker:      errTracker,
+		UserRepository:   repositories.NewUserRepository(db, errTracker),
+		TokenRepository:  token.NewTokenRepository(timeGenerator, errTracker),
+		CacheRepository:  cache,
+		ErrTracker:       errTracker,
+		MailerRepository: mailer,
 	}
 }

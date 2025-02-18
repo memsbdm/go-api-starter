@@ -290,6 +290,32 @@
                 }
             }
         },
+        "/v1/mailer": {
+            "get": {
+                "description": "Send an example email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "Send an example email",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/users/me": {
             "get": {
                 "security": [

@@ -13,6 +13,9 @@ var (
 	// ErrBadRequest represents a bad request error.
 	ErrBadRequest = errors.New("bad request")
 
+	// ErrMailer represents a mailer error.
+	ErrMailer = errors.New("mailer error")
+
 	// ErrInvalidToken represents an error for an invalid token.
 	ErrInvalidToken = errors.New("invalid token")
 	// ErrInvalidCredentials represents an error for invalid login credentials.

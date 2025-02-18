@@ -10,6 +10,7 @@ type Handlers struct {
 	HealthHandler *HealthHandler
 	AuthHandler   *AuthHandler
 	UserHandler   *UserHandler
+	MailerHandler *MailerHandler
 	ErrTracker    ports.ErrorTracker
 }
 
@@ -19,6 +20,7 @@ func New(s *services.Services) *Handlers {
 		HealthHandler: NewHealthHandler(s.ErrTracker),
 		AuthHandler:   NewAuthHandler(s.AuthService, s.ErrTracker),
 		UserHandler:   NewUserHandler(s.UserService, s.ErrTracker),
+		MailerHandler: NewMailerHandler(s.ErrTracker, s.MailerService),
 		ErrTracker:    s.ErrTracker,
 	}
 }

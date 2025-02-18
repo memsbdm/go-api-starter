@@ -380,6 +380,23 @@ paths:
       summary: Get database health information
       tags:
       - Health
+  /v1/mailer:
+    get:
+      consumes:
+      - application/json
+      description: Send an example email
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      summary: Send an example email
+      tags:
+      - Mail
   /v1/users/{uuid}:
     get:
       consumes:

@@ -6,7 +6,7 @@ import (
 )
 
 type (
-	// Container contains environment variables for the application, database and http server
+	// Container contains environment variables for the application, database, http server, ...
 	Container struct {
 		Application *App
 		DB          *DB
@@ -14,6 +14,7 @@ type (
 		Redis       *Redis
 		Token       *Token
 		ErrTracker  *ErrTracker
+		Mailer      *Mailer
 	}
 
 	// App contains all the environment variables for the application.
@@ -53,9 +54,21 @@ type (
 		DSN              string
 		TracesSampleRate float64
 	}
+
+	// Mailer contains all the environment variables for the mailer.
+	Mailer struct {
+		Host                string
+		Port                int
+		Username            string
+		Password            string
+		From                string
+		DebugTo             string
+		MaxRetries          int
+		RetryDelayInSeconds int
+	}
 )
 
-// New creates a new container instance
+// New creates a new container instance.
 func New() *Container {
 	app := &App{
 		Env: env.GetString("ENVIRONMENT"),
@@ -89,6 +102,17 @@ func New() *Container {
 		TracesSampleRate: env.GetFloat64("SENTRY_TRACES_SAMPLE_RATE"),
 	}
 
+	mailer := &Mailer{
+		Host:                env.GetString("MAILER_HOST"),
+		Port:                env.GetInt("MAILER_PORT"),
+		Username:            env.GetString("MAILER_USERNAME"),
+		Password:            env.GetString("MAILER_PASSWORD"),
+		From:                env.GetString("MAILER_FROM"),
+		DebugTo:             env.GetString("MAILER_DEBUG_TO"),
+		MaxRetries:          env.GetInt("MAILER_MAX_RETRIES"),
+		RetryDelayInSeconds: env.GetInt("MAILER_RETRIES_DELAY_IN_SECONDS"),
+	}
+
 	return &Container{
 		Application: app,
 		DB:          db,
@@ -96,5 +120,6 @@ func New() *Container {
 		Redis:       redis,
 		Token:       token,
 		ErrTracker:  errTracker,
+		Mailer:      mailer,
 	}
 }

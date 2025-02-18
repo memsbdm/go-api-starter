@@ -36,6 +36,9 @@ func New(
 	mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
 	mux.HandleFunc("GET /v1/health", handlers.HealthHandler.Health)
 
+	// Mailer
+	mux.HandleFunc("GET /v1/mailer", handlers.MailerHandler.SendEmail)
+
 	// Auth
 	mux.HandleFunc("POST /v1/auth/login", m.Chain(handlers.AuthHandler.Login, guest()))
 	mux.HandleFunc("POST /v1/auth/register", m.Chain(handlers.AuthHandler.Register, guest()))

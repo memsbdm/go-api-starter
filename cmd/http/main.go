@@ -11,8 +11,9 @@ import (
 	"go-starter/internal/adapters/http"
 	"go-starter/internal/adapters/http/handlers"
 	"go-starter/internal/adapters/logger"
+	"go-starter/internal/adapters/mailer"
+	"go-starter/internal/adapters/mocks"
 	"go-starter/internal/adapters/storage/postgres"
-	"go-starter/internal/adapters/storage/postgres/repositories/mocks"
 	"go-starter/internal/adapters/storage/redis"
 	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/domain/ports"
@@ -61,7 +62,7 @@ func run() error {
 
 	timeGenerator := timegen.NewRealTimeGenerator()
 
-	apiAdapters := adapters.New(extServices.db, timeGenerator, extServices.cache, extServices.errTracker)
+	apiAdapters := adapters.New(extServices.db, timeGenerator, extServices.cache, extServices.errTracker, extServices.mailer)
 	apiServices := services.New(cfg, apiAdapters)
 	apiHandlers := handlers.New(apiServices)
 
@@ -89,6 +90,7 @@ type externalServices struct {
 	db         *sql.DB
 	cache      ports.CacheRepository
 	errTracker ports.ErrorTracker
+	mailer     ports.MailerRepository
 }
 
 // initializeExternalServices sets up connections to all external services .
@@ -116,13 +118,16 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 	cache, err := redis.New(ctx, cfg.Redis)
 	if err != nil {
 		errTracker.CaptureException(err)
-		err := db.Close() // Clean up database connection if cache fails
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to close redis connection: %w", err)
-		}
 		return nil, nil, fmt.Errorf("failed to connect to cache service: %w", err)
 	}
 	slog.Info("Successfully connected to the cache service")
+
+	// Init mailer
+	smtp, err := mailer.New(cfg.Mailer)
+	if err != nil {
+		errTracker.CaptureException(err)
+		return nil, nil, fmt.Errorf("failed to initialize mailer: %w", err)
+	}
 
 	cleanup := func() {
 		if err := db.Close(); err != nil {
@@ -135,12 +140,18 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 			errTracker.CaptureException(err)
 			slog.Error(err.Error())
 		}
+		if err := smtp.Close(); err != nil {
+			err = fmt.Errorf("failed to close mailer connection: %w", err)
+			errTracker.CaptureException(err)
+			slog.Error(err.Error())
+		}
 	}
 
 	return &externalServices{
 		db:         db,
 		cache:      cache,
 		errTracker: errTracker,
+		mailer:     smtp,
 	}, cleanup, nil
 }
 
