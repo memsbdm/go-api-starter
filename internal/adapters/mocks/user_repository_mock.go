@@ -11,7 +11,7 @@ import (
 
 type db struct {
 	data map[entities.UserID]*entities.User
-	mu   sync.Mutex
+	mu   sync.RWMutex
 }
 
 // UserRepository implements the ports.UserRepository interface and provides access to the database.
@@ -24,7 +24,7 @@ func NewUserRepositoryMock() *UserRepository {
 	return &UserRepository{
 		db: db{
 			data: map[entities.UserID]*entities.User{},
-			mu:   sync.Mutex{},
+			mu:   sync.RWMutex{},
 		},
 	}
 }

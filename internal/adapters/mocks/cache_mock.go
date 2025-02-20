@@ -14,7 +14,7 @@ import (
 type CacheMock struct {
 	data          map[string][]byte
 	timer         map[string]time.Time
-	mu            sync.Mutex
+	mu            sync.RWMutex
 	timeGenerator ports.TimeGenerator
 }
 
@@ -23,7 +23,7 @@ func NewCacheMock(timeGenerator ports.TimeGenerator) ports.CacheRepository {
 	return &CacheMock{
 		data:          make(map[string][]byte),
 		timer:         make(map[string]time.Time),
-		mu:            sync.Mutex{},
+		mu:            sync.RWMutex{},
 		timeGenerator: timeGenerator,
 	}
 }
