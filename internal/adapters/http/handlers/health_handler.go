@@ -12,13 +12,13 @@ import (
 
 // HealthHandler is responsible for handling HTTP requests related to the health status of the database.
 type HealthHandler struct {
-	errTracker ports.ErrorTracker
+	errTrackerAdapter ports.ErrTrackerAdapter
 }
 
 // NewHealthHandler initializes and returns a new instance of HealthHandler.
-func NewHealthHandler(errTracker ports.ErrorTracker) *HealthHandler {
+func NewHealthHandler(errTrackerAdapter ports.ErrTrackerAdapter) *HealthHandler {
 	return &HealthHandler{
-		errTracker: errTracker,
+		errTrackerAdapter: errTrackerAdapter,
 	}
 }
 
@@ -35,13 +35,13 @@ func NewHealthHandler(errTracker ports.ErrorTracker) *HealthHandler {
 func (hh *HealthHandler) Health(w http.ResponseWriter, _ *http.Request) {
 	resp, err := json.Marshal(postgres.Health())
 	if err != nil {
-		hh.errTracker.CaptureException(err)
+		hh.errTrackerAdapter.CaptureException(err)
 		http.Error(w, "failed to marshal health check response", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(resp); err != nil {
-		hh.errTracker.CaptureException(err)
+		hh.errTrackerAdapter.CaptureException(err)
 		errMsg := fmt.Sprintf("failed to write health check response: %s", err)
 		slog.Error(errMsg)
 		http.Error(w, errMsg, http.StatusInternalServerError)

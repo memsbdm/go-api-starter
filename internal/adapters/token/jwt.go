@@ -10,51 +10,51 @@ import (
 	"time"
 )
 
-// TokenRepository implements the ports.TokenRepository interface, providing access to
+// JWTProvider implements the ports.TokenProvider interface, providing access to
 // JWT-related functionalities for token management.
-type TokenRepository struct {
-	errTracker    ports.ErrorTracker
-	timeGenerator ports.TimeGenerator
-	signingMethod jwt.SigningMethod
+type JWTProvider struct {
+	errTrackerAdapter ports.ErrTrackerAdapter
+	timeGenerator     ports.TimeGenerator
+	signingMethod     jwt.SigningMethod
 }
 
-// NewTokenRepository creates a new instance of TokenRepository.
-func NewTokenRepository(timeGenerator ports.TimeGenerator, errTracker ports.ErrorTracker) *TokenRepository {
-	return &TokenRepository{
-		timeGenerator: timeGenerator,
-		signingMethod: jwt.SigningMethodHS256,
-		errTracker:    errTracker,
+// NewJWTProvider creates a new instance of JWTProvider.
+func NewJWTProvider(timeGenerator ports.TimeGenerator, errTrackerAdapter ports.ErrTrackerAdapter) *JWTProvider {
+	return &JWTProvider{
+		timeGenerator:     timeGenerator,
+		signingMethod:     jwt.SigningMethodHS256,
+		errTrackerAdapter: errTrackerAdapter,
 	}
 }
 
 // GenerateAccessToken generates a new JWT access token for the given user.
 // Returns the generated access token or an error if the generation fails.
-func (tr *TokenRepository) GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (entities.AccessToken, error) {
+func (jp *JWTProvider) GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (entities.AccessToken, error) {
 	claims := jwt.MapClaims{
 		"id":  uuid.New().String(),
 		"sub": user.ID.String(),
-		"iat": tr.timeGenerator.Now().Unix(),
-		"exp": tr.timeGenerator.Now().Add(duration).Unix(),
+		"iat": jp.timeGenerator.Now().Unix(),
+		"exp": jp.timeGenerator.Now().Add(duration).Unix(),
 	}
 
-	token := jwt.NewWithClaims(tr.signingMethod, claims)
+	token := jwt.NewWithClaims(jp.signingMethod, claims)
 	signedToken, err := token.SignedString(signature)
 	if err != nil {
-		tr.errTracker.CaptureException(err)
+		jp.errTrackerAdapter.CaptureException(err)
 	}
 	return entities.AccessToken(signedToken), err
 }
 
 // ValidateAndParseAccessToken validates the given JWT access token and extracts its claims.
 // Returns a structured representation of the token claims or an error if validation fails.
-func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature []byte) (*entities.AccessTokenClaims, error) {
-	parser := jwt.NewParser(jwt.WithTimeFunc(tr.timeGenerator.Now))
+func (jp *JWTProvider) ValidateAndParseAccessToken(token string, signature []byte) (*entities.AccessTokenClaims, error) {
+	parser := jwt.NewParser(jwt.WithTimeFunc(jp.timeGenerator.Now))
 
 	parsedToken, err := parser.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		return signature, nil
 	})
 	if err != nil {
-		tr.errTracker.CaptureException(err)
+		jp.errTrackerAdapter.CaptureException(err)
 		return nil, err
 	}
 
@@ -69,14 +69,14 @@ func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature [
 	tokenUUID, err := entities.ParseAccessTokenID(tokenIDstr)
 	if err != nil {
 		err = fmt.Errorf("could not parse access token %s: %w", tokenIDstr, err)
-		tr.errTracker.CaptureException(err)
+		jp.errTrackerAdapter.CaptureException(err)
 		return nil, err
 	}
 
 	userID, err := entities.ParseUserID(userIDstr)
 	if err != nil {
 		err = fmt.Errorf("could not parse user id %s: %w", userIDstr, err)
-		tr.errTracker.CaptureException(err)
+		jp.errTrackerAdapter.CaptureException(err)
 		return nil, err
 	}
 
@@ -90,34 +90,34 @@ func (tr *TokenRepository) ValidateAndParseAccessToken(token string, signature [
 
 // GenerateRefreshToken creates a new JWT refresh token for the given user ID.
 // Returns a unique refresh token ID, the refresh token, or an error if the operation fails.
-func (tr *TokenRepository) GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (entities.RefreshTokenID, entities.RefreshToken, error) {
+func (jp *JWTProvider) GenerateRefreshToken(userID entities.UserID, duration time.Duration, signature []byte) (entities.RefreshTokenID, entities.RefreshToken, error) {
 	id := entities.RefreshTokenID(uuid.New())
 	claims := jwt.MapClaims{
 		"id":  id.String(),
 		"sub": userID.String(),
-		"iat": tr.timeGenerator.Now().Unix(),
-		"exp": tr.timeGenerator.Now().Add(duration).Unix(),
+		"iat": jp.timeGenerator.Now().Unix(),
+		"exp": jp.timeGenerator.Now().Add(duration).Unix(),
 	}
 
-	token := jwt.NewWithClaims(tr.signingMethod, claims)
+	token := jwt.NewWithClaims(jp.signingMethod, claims)
 	signedToken, err := token.SignedString(signature)
 	if err != nil {
-		tr.errTracker.CaptureException(err)
+		jp.errTrackerAdapter.CaptureException(err)
 	}
 	return id, entities.RefreshToken(signedToken), err
 }
 
 // ValidateAndParseRefreshToken validates the given JWT refresh token and extracts its claims.
 // Returns a structured representation of the token claims or an error if validation fails.
-func (tr *TokenRepository) ValidateAndParseRefreshToken(token string, signature []byte) (*entities.RefreshTokenClaims, error) {
-	parser := jwt.NewParser(jwt.WithTimeFunc(tr.timeGenerator.Now))
+func (jp *JWTProvider) ValidateAndParseRefreshToken(token string, signature []byte) (*entities.RefreshTokenClaims, error) {
+	parser := jwt.NewParser(jwt.WithTimeFunc(jp.timeGenerator.Now))
 
 	parsedToken, err := parser.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		return signature, nil
 	})
 	if err != nil {
 		err = fmt.Errorf("could not parse refresh token %s: %w", token, err)
-		tr.errTracker.CaptureException(err)
+		jp.errTrackerAdapter.CaptureException(err)
 		return nil, err
 	}
 
@@ -132,14 +132,14 @@ func (tr *TokenRepository) ValidateAndParseRefreshToken(token string, signature 
 	tokenUUID, err := uuid.Parse(tokenIDstr)
 	if err != nil {
 		err = fmt.Errorf("could not parse refresh token %s: %w", tokenIDstr, err)
-		tr.errTracker.CaptureException(err)
+		jp.errTrackerAdapter.CaptureException(err)
 		return nil, err
 	}
 
 	userID, err := entities.ParseUserID(userIDstr)
 	if err != nil {
 		err = fmt.Errorf("could not parse user id %s: %w", userIDstr, err)
-		tr.errTracker.CaptureException(err)
+		jp.errTrackerAdapter.CaptureException(err)
 		return nil, err
 	}
 

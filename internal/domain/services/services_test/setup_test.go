@@ -16,54 +16,54 @@ import (
 const debugEmail = "debug@example.com"
 
 type TestBuilder struct {
-	TimeGenerator ports.TimeGenerator
-	CacheRepo     ports.CacheRepository
-	UserRepo      ports.UserRepository
-	TokenRepo     ports.TokenRepository
-	CacheService  ports.CacheService
-	UserService   ports.UserService
-	TokenService  ports.TokenService
-	AuthService   ports.AuthService
-	Config        *config.Container
-	ErrTracker    ports.ErrorTracker
-	MailerService ports.MailerService
-	MailerRepo    ports.MailerRepository
+	TimeGenerator     ports.TimeGenerator
+	CacheRepo         ports.CacheRepository
+	UserRepo          ports.UserRepository
+	TokenProvider     ports.TokenProvider
+	CacheService      ports.CacheService
+	UserService       ports.UserService
+	TokenService      ports.TokenService
+	AuthService       ports.AuthService
+	Config            *config.Container
+	ErrTrackerAdapter ports.ErrTrackerAdapter
+	MailerService     ports.MailerService
+	MailerAdapter     ports.MailerAdapter
 }
 
 func NewTestBuilder() *TestBuilder {
-	mailerRepo := mocks.NewMailerRepositoryMock()
-	errTracker := mocks.NewErrorTrackerMock(&config.ErrTracker{})
+	mailerAdapter := mocks.NewMailerAdapterMock()
+	errTrackerAdapter := mocks.NewErrTrackerAdapterMock()
 	timeGenerator := timegen.NewRealTimeGenerator()
-	cacheRepo := mocks.NewCacheMock(timeGenerator)
-	tokenRepo := token.NewTokenRepository(timeGenerator, errTracker)
+	cacheRepo := mocks.NewCacheRepositoryMock(timeGenerator)
+	tokenProvider := token.NewJWTProvider(timeGenerator, errTrackerAdapter)
 	userRepo := mocks.NewUserRepositoryMock()
 
 	cfg := setConfig()
 
 	return &TestBuilder{
-		TimeGenerator: timeGenerator,
-		CacheRepo:     cacheRepo,
-		UserRepo:      userRepo,
-		TokenRepo:     tokenRepo,
-		Config:        cfg,
-		ErrTracker:    errTracker,
-		MailerRepo:    mailerRepo,
+		TimeGenerator:     timeGenerator,
+		CacheRepo:         cacheRepo,
+		UserRepo:          userRepo,
+		TokenProvider:     tokenProvider,
+		Config:            cfg,
+		ErrTrackerAdapter: errTrackerAdapter,
+		MailerAdapter:     mailerAdapter,
 	}
 }
 
 func (tb *TestBuilder) WithTimeGenerator(tg ports.TimeGenerator) *TestBuilder {
 	tb.TimeGenerator = tg
-	tb.CacheRepo = mocks.NewCacheMock(tg)
-	tb.TokenRepo = token.NewTokenRepository(tg, tb.ErrTracker)
+	tb.CacheRepo = mocks.NewCacheRepositoryMock(tg)
+	tb.TokenProvider = token.NewJWTProvider(tg, tb.ErrTrackerAdapter)
 	return tb
 }
 
 func (tb *TestBuilder) Build() *TestBuilder {
-	tb.MailerService = services.NewMailerService(tb.Config, tb.MailerRepo, tb.ErrTracker)
-	tb.CacheService = services.NewCacheService(tb.CacheRepo, tb.ErrTracker)
-	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService, tb.ErrTracker)
-	tb.TokenService = services.NewTokenService(tb.Config.Token, tb.TokenRepo, tb.CacheService, tb.ErrTracker)
-	tb.AuthService = services.NewAuthService(tb.UserService, tb.TokenService, tb.ErrTracker)
+	tb.MailerService = services.NewMailerService(tb.Config, tb.MailerAdapter, tb.ErrTrackerAdapter)
+	tb.CacheService = services.NewCacheService(tb.CacheRepo, tb.ErrTrackerAdapter)
+	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService, tb.ErrTrackerAdapter)
+	tb.TokenService = services.NewTokenService(tb.Config.Token, tb.TokenProvider, tb.CacheService, tb.ErrTrackerAdapter)
+	tb.AuthService = services.NewAuthService(tb.UserService, tb.TokenService, tb.ErrTrackerAdapter)
 	return tb
 }
 

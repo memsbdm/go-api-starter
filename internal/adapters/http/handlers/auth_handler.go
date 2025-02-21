@@ -12,16 +12,16 @@ import (
 // AuthHandler is responsible for handling HTTP requests related to authentication operations.
 // It acts as a bridge between the HTTP layer and the authentication service.
 type AuthHandler struct {
-	svc        ports.AuthService
-	errTracker ports.ErrorTracker
+	svc               ports.AuthService
+	errTrackerAdapter ports.ErrTrackerAdapter
 }
 
 // NewAuthHandler initializes and returns a new AuthHandler instance.
 // It accepts an implementation of the AuthService interface to handle authentication logic.
-func NewAuthHandler(svc ports.AuthService, errTracker ports.ErrorTracker) *AuthHandler {
+func NewAuthHandler(svc ports.AuthService, errTrackerAdapter ports.ErrTrackerAdapter) *AuthHandler {
 	return &AuthHandler{
-		svc:        svc,
-		errTracker: errTracker,
+		svc:               svc,
+		errTrackerAdapter: errTrackerAdapter,
 	}
 }
 

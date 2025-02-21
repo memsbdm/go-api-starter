@@ -8,9 +8,9 @@ type MailerService interface {
 	Send(msg *EmailMessage) error
 }
 
-// MailerRepository defines the interface for email repository operations.
+// MailerAdapter defines the interface for email adapter operations.
 // It provides low-level email sending functionality and connection management.
-type MailerRepository interface {
+type MailerAdapter interface {
 	// Send sends an email message.
 	// It takes an EmailMessage by value and returns an error if the sending fails.
 	Send(msg EmailMessage) error

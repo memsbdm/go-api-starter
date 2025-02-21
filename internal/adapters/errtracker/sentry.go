@@ -1,4 +1,4 @@
-package errortracker
+package errtracker
 
 import (
 	"fmt"
@@ -11,12 +11,12 @@ import (
 	"time"
 )
 
-// SentryErrorTracker implements ports.ErrorTracker interface and provides integration
+// SentryAdapter implements ports.ErrTrackerAdapter interface and provides integration
 // with Sentry error monitoring service.
-type SentryErrorTracker struct{}
+type SentryAdapter struct{}
 
-// NewSentryErrorTracker creates a new instance of SentryErrorTracker.
-func NewSentryErrorTracker(errTrackerCfg *config.ErrTracker) *SentryErrorTracker {
+// NewSentryAdapter creates a new instance of SentryAdapter.
+func NewSentryAdapter(errTrackerCfg *config.ErrTracker) *SentryAdapter {
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:              errTrackerCfg.DSN,
 		TracesSampleRate: errTrackerCfg.TracesSampleRate,
@@ -24,19 +24,19 @@ func NewSentryErrorTracker(errTrackerCfg *config.ErrTracker) *SentryErrorTracker
 		slog.Error(fmt.Sprintf("Sentry initialization failed: %v\n", err))
 	}
 
-	return &SentryErrorTracker{}
+	return &SentryAdapter{}
 }
 
 // Handle wraps the provided http.Handler with Sentry middleware for automatic
 // error tracking and request monitoring.
-func (set *SentryErrorTracker) Handle(handler http.Handler) http.Handler {
+func (sa *SentryAdapter) Handle(handler http.Handler) http.Handler {
 	sentryHandler := sentryhttp.New(sentryhttp.Options{})
 	return sentryHandler.Handle(handler)
 }
 
 // SetUser associates the current scope with user information identified by
 // the provided ID and IP address.
-func (set *SentryErrorTracker) SetUser(id, ipAddr string) {
+func (sa *SentryAdapter) SetUser(id, ipAddr string) {
 	sentry.ConfigureScope(func(scope *sentry.Scope) {
 		scope.SetUser(sentry.User{
 			ID:        id,
@@ -46,14 +46,14 @@ func (set *SentryErrorTracker) SetUser(id, ipAddr string) {
 }
 
 // CaptureException sends an error to Sentry and returns the event ID as a string.
-func (set *SentryErrorTracker) CaptureException(err error) string {
+func (sa *SentryAdapter) CaptureException(err error) string {
 	eventID := sentry.CaptureException(err)
 	return string(*eventID)
 }
 
 // AddBreadcrumb adds a new breadcrumb to the current scope with the specified
 // message and options. Breadcrumbs track the series of events leading up to an error.
-func (set *SentryErrorTracker) AddBreadcrumb(message string, options ports.BreadCrumbOptions) {
+func (sa *SentryAdapter) AddBreadcrumb(message string, options ports.BreadCrumbOptions) {
 	level := sentry.LevelError
 	if options.Level != "" {
 		level = mapDomainSentryLevel(options.Level)
@@ -70,7 +70,7 @@ func (set *SentryErrorTracker) AddBreadcrumb(message string, options ports.Bread
 
 // SetRequest attaches the provided HTTP request to the current scope for
 // additional context in error reports.
-func (set *SentryErrorTracker) SetRequest(r *http.Request) {
+func (sa *SentryAdapter) SetRequest(r *http.Request) {
 	sentry.ConfigureScope(func(scope *sentry.Scope) {
 		scope.SetRequest(r)
 	})
@@ -78,7 +78,7 @@ func (set *SentryErrorTracker) SetRequest(r *http.Request) {
 
 // SetBody attaches the provided request body to the current scope for
 // additional context in error reports.
-func (set *SentryErrorTracker) SetBody(body []byte) {
+func (sa *SentryAdapter) SetBody(body []byte) {
 	sentry.ConfigureScope(func(scope *sentry.Scope) {
 		scope.SetRequestBody(body)
 	})
@@ -86,13 +86,13 @@ func (set *SentryErrorTracker) SetBody(body []byte) {
 
 // Flush waits for queued events to be sent to Sentry for the specified duration.
 // It should be called before program termination to ensure all events are sent.
-func (set *SentryErrorTracker) Flush(duration time.Duration) {
+func (sa *SentryAdapter) Flush(duration time.Duration) {
 	sentry.Flush(duration)
 }
 
 // mapDomainSentryLevel converts internal error tracking levels to corresponding
 // Sentry levels. It defaults to LevelError if the level is not recognized.
-func mapDomainSentryLevel(level ports.ErrorTrackerLevel) sentry.Level {
+func mapDomainSentryLevel(level ports.ErrTrackerLevel) sentry.Level {
 	switch level {
 	case ports.LevelError:
 		return sentry.LevelError

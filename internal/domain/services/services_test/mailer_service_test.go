@@ -10,12 +10,12 @@ import (
 	"testing"
 )
 
-func getSentEmailsCount(t *testing.T, repo ports.MailerRepository) int {
+func getSentEmailsCount(t *testing.T, repo ports.MailerAdapter) int {
 	t.Helper()
 	if v, ok := repo.(interface{ SentEmailsCount() int }); ok {
 		return v.SentEmailsCount()
 	}
-	t.Fatal("the mailer repo does not implement SentEmailsCount()")
+	t.Fatal("the mailer adapter does not implement SentEmailsCount()")
 	return 0
 }
 
@@ -80,7 +80,7 @@ func TestMailerService_Send_Debug(t *testing.T) {
 
 			builder := NewTestBuilder().Build()
 			err := builder.MailerService.Send(tt.input)
-			sentCount := getSentEmailsCount(t, builder.MailerRepo)
+			sentCount := getSentEmailsCount(t, builder.MailerAdapter)
 
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
@@ -155,7 +155,7 @@ func TestMailerService_Send_Production(t *testing.T) {
 			t.Parallel()
 			builder := NewTestBuilder().SetEnvToProduction().Build()
 			err := builder.MailerService.Send(tt.input)
-			sentCount := getSentEmailsCount(t, builder.MailerRepo)
+			sentCount := getSentEmailsCount(t, builder.MailerAdapter)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}

@@ -10,15 +10,15 @@ import (
 
 // MailerHandler is responsible for sending a test email.
 type MailerHandler struct {
-	errTracker ports.ErrorTracker
-	mailerSvc  ports.MailerService
+	errTrackerAdapter ports.ErrTrackerAdapter
+	mailerSvc         ports.MailerService
 }
 
 // NewMailerHandler initializes and returns a new instance of MailerHandler.
-func NewMailerHandler(errTracker ports.ErrorTracker, mailerSvc ports.MailerService) *MailerHandler {
+func NewMailerHandler(errTrackerAdapter ports.ErrTrackerAdapter, mailerSvc ports.MailerService) *MailerHandler {
 	return &MailerHandler{
-		errTracker: errTracker,
-		mailerSvc:  mailerSvc,
+		errTrackerAdapter: errTrackerAdapter,
+		mailerSvc:         mailerSvc,
 	}
 }
 
@@ -39,7 +39,7 @@ func (mh *MailerHandler) SendEmail(w http.ResponseWriter, _ *http.Request) {
 		Body:    mailtemplates.Hello("John Doe"),
 	})
 	if err != nil {
-		mh.errTracker.CaptureException(err)
+		mh.errTrackerAdapter.CaptureException(err)
 		responses.HandleError(w, err)
 		return
 	}

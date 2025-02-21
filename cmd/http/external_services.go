@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-starter/config"
-	"go-starter/internal/adapters/errortracker"
+	"go-starter/internal/adapters/errtracker"
 	"go-starter/internal/adapters/mailer"
 	"go-starter/internal/adapters/mocks"
 	"go-starter/internal/adapters/storage/postgres"
@@ -19,8 +19,8 @@ import (
 type externalServices struct {
 	db         *sql.DB
 	cache      ports.CacheRepository
-	errTracker ports.ErrorTracker
-	mailer     ports.MailerRepository
+	errTracker ports.ErrTrackerAdapter
+	mailer     ports.MailerAdapter
 }
 
 // initializeExternalServices sets up connections to all external services .
@@ -29,10 +29,10 @@ type externalServices struct {
 // If any service fails to initialize, it ensures proper cleanup of already initialized services.
 func initializeExternalServices(ctx context.Context, cfg *config.Container) (*externalServices, func(), error) {
 	// Init error tracker
-	var errTracker ports.ErrorTracker
-	errTracker = mocks.NewErrorTrackerMock(cfg.ErrTracker)
+	var errTracker ports.ErrTrackerAdapter
+	errTracker = mocks.NewErrTrackerAdapterMock()
 	if cfg.Application.Env == config.EnvProduction {
-		errTracker = errortracker.NewSentryErrorTracker(cfg.ErrTracker)
+		errTracker = errtracker.NewSentryAdapter(cfg.ErrTracker)
 	}
 
 	// Init database
@@ -53,7 +53,7 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 	slog.Info("Successfully connected to the cache service")
 
 	// Init mailer
-	smtp, err := mailer.New(cfg.Mailer)
+	smtp, err := mailer.NewSMTPAdapter(cfg.Mailer)
 	if err != nil {
 		errTracker.CaptureException(err)
 		return nil, nil, fmt.Errorf("failed to initialize mailer: %w", err)

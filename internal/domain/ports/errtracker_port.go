@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// ErrorTracker is an interface for interacting with error monitoring business logic.
-type ErrorTracker interface {
+// ErrTrackerAdapter is an interface for interacting with error monitoring business logic.
+type ErrTrackerAdapter interface {
 	// SetUser associates the current scope with user information identified by
 	// the provided ID and IP address.
 	SetUser(id, ipAddr string)
@@ -29,15 +29,15 @@ type ErrorTracker interface {
 	Flush(duration time.Duration)
 }
 
-// ErrorTrackerLevel represents the severity level of an error or event
+// ErrTrackerLevel represents the severity level of an error or event
 // in the error tracking system.
-type ErrorTrackerLevel string
+type ErrTrackerLevel string
 
 const (
-	LevelFatal   ErrorTrackerLevel = "fatal"
-	LevelError   ErrorTrackerLevel = "error"
-	LevelWarning ErrorTrackerLevel = "warning"
-	LevelInfo    ErrorTrackerLevel = "info"
+	LevelFatal   ErrTrackerLevel = "fatal"
+	LevelError   ErrTrackerLevel = "error"
+	LevelWarning ErrTrackerLevel = "warning"
+	LevelInfo    ErrTrackerLevel = "info"
 )
 
 // BreadCrumbOptions contains configuration options for creating a breadcrumb
@@ -45,6 +45,6 @@ const (
 type BreadCrumbOptions struct {
 	Type     string
 	Category string
-	Level    ErrorTrackerLevel
+	Level    ErrTrackerLevel
 	Data     map[string]interface{}
 }

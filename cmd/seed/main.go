@@ -32,7 +32,7 @@ func run() error {
 	defer closeDB(db)
 
 	// Seeders
-	if err := seed.SeedUsers(ctx, cfg, db); err != nil {
+	if err := seed.SeedUsers(ctx, db); err != nil {
 		return fmt.Errorf("seeding users: %w", err)
 	}
 

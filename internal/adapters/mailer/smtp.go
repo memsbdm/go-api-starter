@@ -14,21 +14,21 @@ import (
 	"time"
 )
 
-// MailerRepository implements the ports.MailerRepository interface.
+// SMTPAdapter implements the ports.MailerAdapter interface.
 // It provides SMTP functionality with connection pooling.
-type MailerRepository struct {
+type SMTPAdapter struct {
 	mailerCfg *config.Mailer
 	pool      *sync.Pool
 }
 
-// New creates a new instance of MailerRepository with a pre-initialized pool of SMTP clients.
+// NewSMTPAdapter creates a new instance of SMTPAdapter with a pre-initialized pool of SMTP clients.
 // It returns an error if the initialization of the SMTP client pool fails.
-func New(mailerCfg *config.Mailer) (*MailerRepository, error) {
-	repo := &MailerRepository{
+func NewSMTPAdapter(mailerCfg *config.Mailer) (*SMTPAdapter, error) {
+	adapter := &SMTPAdapter{
 		mailerCfg: mailerCfg,
 	}
 
-	repo.pool = &sync.Pool{
+	adapter.pool = &sync.Pool{
 		New: func() interface{} {
 			client, err := createNewSMTPClient(mailerCfg)
 			if err != nil {
@@ -44,10 +44,10 @@ func New(mailerCfg *config.Mailer) (*MailerRepository, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error initializing pool: %w", err)
 		}
-		repo.pool.Put(client)
+		adapter.pool.Put(client)
 	}
 
-	return repo, nil
+	return adapter, nil
 }
 
 // createNewSMTPClient creates a new SMTP client with TLS configuration.
@@ -102,14 +102,14 @@ func createNewSMTPClient(mailerCfg *config.Mailer) (*smtp.Client, error) {
 
 // Send attempts to send an email with retry mechanism.
 // It will retry sending the email based on the configuration's MaxRetries and RetryDelayInSeconds.
-func (m *MailerRepository) Send(msg ports.EmailMessage) error {
+func (sa *SMTPAdapter) Send(msg ports.EmailMessage) error {
 	var lastErr error
-	maxRetries := m.mailerCfg.MaxRetries
+	maxRetries := sa.mailerCfg.MaxRetries
 	if maxRetries <= 0 {
 		maxRetries = 3
 	}
 
-	retryDelayInSeconds := m.mailerCfg.RetryDelayInSeconds
+	retryDelayInSeconds := sa.mailerCfg.RetryDelayInSeconds
 	var retryDelay time.Duration
 	if retryDelayInSeconds <= 0 {
 		retryDelay = 2 * time.Second
@@ -123,7 +123,7 @@ func (m *MailerRepository) Send(msg ports.EmailMessage) error {
 			time.Sleep(retryDelay)
 		}
 
-		err := m.sendWithRetry(msg)
+		err := sa.sendWithRetry(msg)
 		if err == nil {
 			return nil
 		}
@@ -139,11 +139,11 @@ func (m *MailerRepository) Send(msg ports.EmailMessage) error {
 }
 
 // sendWithRetry handles the actual email sending process using a client from the pool.
-func (m *MailerRepository) sendWithRetry(msg ports.EmailMessage) error {
-	client := m.pool.Get().(*smtp.Client)
+func (sa *SMTPAdapter) sendWithRetry(msg ports.EmailMessage) error {
+	client := sa.pool.Get().(*smtp.Client)
 	if client == nil {
 		var err error
-		client, err = createNewSMTPClient(m.mailerCfg)
+		client, err = createNewSMTPClient(sa.mailerCfg)
 		if err != nil {
 			return fmt.Errorf("unable to create new client: %w", err)
 		}
@@ -156,11 +156,11 @@ func (m *MailerRepository) sendWithRetry(msg ports.EmailMessage) error {
 			}
 			return
 		}
-		m.pool.Put(client)
+		sa.pool.Put(client)
 	}()
 
 	headers := make(map[string]string)
-	headers["From"] = m.mailerCfg.From
+	headers["From"] = sa.mailerCfg.From
 	headers["To"] = strings.Join(msg.To, ", ")
 	headers["Subject"] = msg.Subject
 	headers["MIME-Version"] = "1.0"
@@ -176,7 +176,7 @@ func (m *MailerRepository) sendWithRetry(msg ports.EmailMessage) error {
 		return fmt.Errorf("session reset error: %w", err)
 	}
 
-	if err := client.Mail(m.mailerCfg.From); err != nil {
+	if err := client.Mail(sa.mailerCfg.From); err != nil {
 		return fmt.Errorf("MAIL FROM error: %w", err)
 	}
 
@@ -235,11 +235,11 @@ func isRetryableError(err error) bool {
 
 // Close properly closes all SMTP clients in the pool.
 // It returns the last error encountered while closing the clients, if any.
-func (m *MailerRepository) Close() error {
+func (sa *SMTPAdapter) Close() error {
 	var clients []*smtp.Client
 
 	for {
-		client := m.pool.Get()
+		client := sa.pool.Get()
 		if client == nil {
 			break
 		}

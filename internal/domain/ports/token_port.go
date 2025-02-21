@@ -29,8 +29,8 @@ type TokenService interface {
 	RevokeRefreshToken(ctx context.Context, refreshToken string) error
 }
 
-// TokenRepository is an interface for interacting with token-related data and cryptographic operations.
-type TokenRepository interface {
+// TokenProvider is an interface for interacting with token-related data and cryptographic operations.
+type TokenProvider interface {
 	// GenerateAccessToken generates a new JWT access token for the given user.
 	// Returns the generated access token or an error if the generation fails.
 	GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (entities.AccessToken, error)

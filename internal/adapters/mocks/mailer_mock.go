@@ -6,16 +6,16 @@ import (
 	"sync"
 )
 
-// MailerRepositoryMock implements the ports.MailerRepository interface for testing purposes.
+// MailerAdapterMock implements the ports.MailerAdapter interface for testing purposes.
 // It stores sent emails in memory instead of actually sending them.
-type MailerRepositoryMock struct {
+type MailerAdapterMock struct {
 	data map[string]ports.EmailMessage
 	mu   sync.RWMutex
 }
 
-// NewMailerRepositoryMock creates a new instance of MailerRepositoryMock.
-func NewMailerRepositoryMock() *MailerRepositoryMock {
-	m := &MailerRepositoryMock{
+// NewMailerAdapterMock creates a new instance of MailerAdapterMock.
+func NewMailerAdapterMock() *MailerAdapterMock {
+	m := &MailerAdapterMock{
 		data: map[string]ports.EmailMessage{},
 		mu:   sync.RWMutex{},
 	}
@@ -25,7 +25,7 @@ func NewMailerRepositoryMock() *MailerRepositoryMock {
 
 // Send stores the email message in memory instead of sending it.
 // The message is indexed by each recipient's email address.
-func (m *MailerRepositoryMock) Send(msg ports.EmailMessage) error {
+func (m *MailerAdapterMock) Send(msg ports.EmailMessage) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -36,14 +36,14 @@ func (m *MailerRepositoryMock) Send(msg ports.EmailMessage) error {
 	return nil
 }
 
-// Close implements the Close method of the MailerRepository interface.
+// Close implements the Close method of the ports.MailerAdapter interface.
 // For the mock, it's a no-op operation.
-func (m *MailerRepositoryMock) Close() error {
+func (m *MailerAdapterMock) Close() error {
 	return nil
 }
 
 // SentEmailsCount returns the total number of emails stored in the mock repository.
-func (m *MailerRepositoryMock) SentEmailsCount() int {
+func (m *MailerAdapterMock) SentEmailsCount() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return len(m.data)
@@ -51,7 +51,7 @@ func (m *MailerRepositoryMock) SentEmailsCount() int {
 
 // GetLastSentTo retrieves the last email sent to a specific email address.
 // Returns an error if no email was sent to the specified address.
-func (m *MailerRepositoryMock) GetLastSentTo(email string) (ports.EmailMessage, error) {
+func (m *MailerAdapterMock) GetLastSentTo(email string) (ports.EmailMessage, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	emailMessage, ok := m.data[email]

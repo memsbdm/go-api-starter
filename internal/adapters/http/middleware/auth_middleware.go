@@ -18,7 +18,7 @@ const (
 )
 
 // AuthMiddleware is a middleware function that validates the authorization token from the incoming HTTP request.
-func AuthMiddleware(tokenService ports.TokenService, errTracker ports.ErrorTracker) Middleware {
+func AuthMiddleware(tokenService ports.TokenService, errTrackerAdapter ports.ErrTrackerAdapter) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			authorizationHeader := r.Header.Get(authorizationHeaderKey)
@@ -45,7 +45,7 @@ func AuthMiddleware(tokenService ports.TokenService, errTracker ports.ErrorTrack
 				return
 			}
 
-			errTracker.SetUser(tokenPayload.Subject.String(), r.RemoteAddr)
+			errTrackerAdapter.SetUser(tokenPayload.Subject.String(), r.RemoteAddr)
 			ctx := context.WithValue(r.Context(), helpers.AuthorizationPayloadKey, tokenPayload)
 			r = r.WithContext(ctx)
 

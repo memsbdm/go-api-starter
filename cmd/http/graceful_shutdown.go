@@ -12,7 +12,7 @@ import (
 )
 
 // gracefulShutdown manages the graceful shutdown process of the HTTP server.
-func gracefulShutdown(server *http.Server, done chan bool, errTracker ports.ErrorTracker) {
+func gracefulShutdown(server *http.Server, done chan bool, errTrackerAdapter ports.ErrTrackerAdapter) {
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -28,7 +28,7 @@ func gracefulShutdown(server *http.Server, done chan bool, errTracker ports.Erro
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
 		err = fmt.Errorf("server forced to shutdown with error: %v", err)
-		errTracker.CaptureException(err)
+		errTrackerAdapter.CaptureException(err)
 		slog.Error(err.Error())
 	}
 

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"go-starter/config"
 	"go-starter/internal/adapters/mocks"
 	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/adapters/timegen"
@@ -46,13 +45,13 @@ func newUserGenerator(svc *services.UserService) *userGenerator {
 }
 
 // SeedUsers populates the database with sample user data for testing or development purposes.
-func SeedUsers(ctx context.Context, cfg *config.Container, db *sql.DB) error {
+func SeedUsers(ctx context.Context, db *sql.DB) error {
 	// Initialize dependencies
-	errTracker := mocks.NewErrorTrackerMock(cfg.ErrTracker)
-	userRepo := repositories.NewUserRepository(db, errTracker)
+	errTrackerAdapter := mocks.NewErrTrackerAdapterMock()
+	userRepo := repositories.NewUserRepository(db, errTrackerAdapter)
 	timeGenerator := timegen.NewRealTimeGenerator()
-	cacheService := mocks.NewCacheMock(timeGenerator)
-	userService := services.NewUserService(userRepo, cacheService, errTracker)
+	cacheService := mocks.NewCacheRepositoryMock(timeGenerator)
+	userService := services.NewUserService(userRepo, cacheService, errTrackerAdapter)
 
 	// Configure and run user generator
 	slog.Info("Starting user seeding process")
