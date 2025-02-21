@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+const (
+	EnvDevelopment = "development"
+	EnvProduction  = "production"
+)
+
 type (
 	// Container contains environment variables for the application, database, http server, ...
 	Container struct {
@@ -27,7 +32,7 @@ type (
 		Addr         string
 		MaxOpenConns int
 		MaxIdleConns int
-		MaxIdleTime  string
+		MaxIdleTime  time.Duration
 	}
 
 	// HTTP contains all the environment variables for the http server.
@@ -78,7 +83,7 @@ func New() *Container {
 		Addr:         env.GetString("DB_ADDR"),
 		MaxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS"),
 		MaxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS"),
-		MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME"),
+		MaxIdleTime:  env.GetDuration("DB_MAX_IDLE_TIME"),
 	}
 
 	http := &HTTP{

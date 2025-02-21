@@ -4,7 +4,7 @@ all: build test
 
 build:
 	@echo "Building..."
-	@go build -o bin/main cmd/http/main.go
+	@go build -o bin/main cmd/http/*.go
 
 clean:
 	@echo "Cleaning..."
@@ -35,7 +35,7 @@ test:
 	@go test ./... -race -v -shuffle on
 
 run:
-	@go run cmd/http/main.go
+	@go run cmd/http/*.go
 
 seed:
 	@go run cmd/seed/main.go

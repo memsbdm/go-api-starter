@@ -20,7 +20,7 @@ type Server struct {
 
 // New creates and initializes a new HTTP server.
 func New(
-	config *config.HTTP,
+	httpConfig *config.HTTP,
 	handlers *handlers.Handlers,
 	tokenService ports.TokenService,
 	errTracker ports.ErrorTracker,
@@ -62,7 +62,7 @@ func New(
 
 	return &Server{
 		Server: &http.Server{
-			Addr:         fmt.Sprintf(":%d", config.Port),
+			Addr:         fmt.Sprintf(":%d", httpConfig.Port),
 			Handler:      handler,
 			IdleTimeout:  time.Minute,
 			ReadTimeout:  10 * time.Second,

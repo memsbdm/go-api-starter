@@ -13,16 +13,16 @@ import (
 type TokenService struct {
 	repo       ports.TokenRepository
 	cacheSvc   ports.CacheService
-	cfg        *config.Token
+	tokenCfg   *config.Token
 	errTracker ports.ErrorTracker
 }
 
 // NewTokenService creates a new instance of TokenService.
-func NewTokenService(cfg *config.Token, repo ports.TokenRepository, cacheSvc ports.CacheService, errTracker ports.ErrorTracker) *TokenService {
+func NewTokenService(tokenCfg *config.Token, repo ports.TokenRepository, cacheSvc ports.CacheService, errTracker ports.ErrorTracker) *TokenService {
 	return &TokenService{
 		repo:       repo,
 		cacheSvc:   cacheSvc,
-		cfg:        cfg,
+		tokenCfg:   tokenCfg,
 		errTracker: errTracker,
 	}
 }
@@ -33,7 +33,7 @@ const RefreshTokenCachePrefix = "refresh_token"
 // GenerateAccessToken generates a new access token for the given user.
 // Returns the generated access token or an error if the generation fails.
 func (ts *TokenService) GenerateAccessToken(user *entities.User) (entities.AccessToken, error) {
-	token, err := ts.repo.GenerateAccessToken(user, ts.cfg.AccessTokenDuration, ts.cfg.AccessTokenSignature)
+	token, err := ts.repo.GenerateAccessToken(user, ts.tokenCfg.AccessTokenDuration, ts.tokenCfg.AccessTokenSignature)
 	if err != nil {
 		return "", domain.ErrInternal
 	}
@@ -43,7 +43,7 @@ func (ts *TokenService) GenerateAccessToken(user *entities.User) (entities.Acces
 // ValidateAndParseAccessToken validates the given access token and extracts its claims.
 // Returns a structured representation of the token claims or an error if validation fails.
 func (ts *TokenService) ValidateAndParseAccessToken(token string) (*entities.AccessTokenClaims, error) {
-	tokenPayload, err := ts.repo.ValidateAndParseAccessToken(token, ts.cfg.AccessTokenSignature)
+	tokenPayload, err := ts.repo.ValidateAndParseAccessToken(token, ts.tokenCfg.AccessTokenSignature)
 	if err != nil {
 		return nil, domain.ErrInvalidToken
 	}
@@ -53,7 +53,7 @@ func (ts *TokenService) ValidateAndParseAccessToken(token string) (*entities.Acc
 // GenerateRefreshToken creates a new refresh token for the given user ID.
 // Returns the generated refresh token or an error if the operation fails.
 func (ts *TokenService) GenerateRefreshToken(ctx context.Context, userID entities.UserID) (entities.RefreshToken, error) {
-	tokenID, token, err := ts.repo.GenerateRefreshToken(userID, ts.cfg.AccessTokenDuration, ts.cfg.RefreshTokenSignature)
+	tokenID, token, err := ts.repo.GenerateRefreshToken(userID, ts.tokenCfg.AccessTokenDuration, ts.tokenCfg.RefreshTokenSignature)
 	if err != nil {
 		return "", domain.ErrInternal
 	}
@@ -69,7 +69,7 @@ func (ts *TokenService) GenerateRefreshToken(ctx context.Context, userID entitie
 // ValidateAndParseRefreshToken validates the given refresh token and extracts its claims.
 // Returns a structured representation of the token claims or an error if validation fails.
 func (ts *TokenService) ValidateAndParseRefreshToken(ctx context.Context, token string) (*entities.RefreshTokenClaims, error) {
-	claims, err := ts.repo.ValidateAndParseRefreshToken(token, ts.cfg.RefreshTokenSignature)
+	claims, err := ts.repo.ValidateAndParseRefreshToken(token, ts.tokenCfg.RefreshTokenSignature)
 	if err != nil {
 		return nil, domain.ErrInvalidToken
 	}
@@ -96,7 +96,7 @@ func (ts *TokenService) RevokeRefreshToken(ctx context.Context, refreshToken str
 // It constructs a unique cache key and sets the refresh token with an expiration duration.
 func (ts *TokenService) storeRefreshTokenInCache(ctx context.Context, userID entities.UserID, refreshTokenID entities.RefreshTokenID, refreshToken entities.RefreshToken) error {
 	key := utils.GenerateCacheKey(RefreshTokenCachePrefix, userID.String(), refreshTokenID.String())
-	return ts.cacheSvc.Set(ctx, key, []byte(refreshToken), ts.cfg.RefreshTokenDuration)
+	return ts.cacheSvc.Set(ctx, key, []byte(refreshToken), ts.tokenCfg.RefreshTokenDuration)
 }
 
 // isRefreshTokenInCache checks if the refresh token is present in the cache for the given user ID and refresh token ID.

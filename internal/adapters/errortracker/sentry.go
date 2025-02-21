@@ -16,10 +16,10 @@ import (
 type SentryErrorTracker struct{}
 
 // NewSentryErrorTracker creates a new instance of SentryErrorTracker.
-func NewSentryErrorTracker(cfg *config.ErrTracker) *SentryErrorTracker {
+func NewSentryErrorTracker(errTrackerCfg *config.ErrTracker) *SentryErrorTracker {
 	if err := sentry.Init(sentry.ClientOptions{
-		Dsn:              cfg.DSN,
-		TracesSampleRate: cfg.TracesSampleRate,
+		Dsn:              errTrackerCfg.DSN,
+		TracesSampleRate: errTrackerCfg.TracesSampleRate,
 	}); err != nil {
 		slog.Error(fmt.Sprintf("Sentry initialization failed: %v\n", err))
 	}

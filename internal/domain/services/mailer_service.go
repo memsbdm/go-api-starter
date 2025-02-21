@@ -35,7 +35,7 @@ func (m *MailerService) Send(msg *ports.EmailMessage) error {
 		return domain.ErrMailer
 	}
 
-	if m.cfg.Application.Env != "production" {
+	if m.cfg.Application.Env != config.EnvProduction {
 		m.updateForDebug(msg)
 	}
 

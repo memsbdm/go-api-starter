@@ -9,10 +9,10 @@ import (
 // New defines the logger specifications based on the application environment.
 // It initializes a new logger and sets it as the default logger for the application.
 // In production, it uses a JSON format for logging; otherwise, it uses a plain text format.
-func New(config *config.App) {
+func New(appCfg *config.App) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	if config.Env == "production" {
+	if appCfg.Env == config.EnvProduction {
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	}
 

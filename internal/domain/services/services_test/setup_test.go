@@ -31,7 +31,7 @@ type TestBuilder struct {
 }
 
 func NewTestBuilder() *TestBuilder {
-	mailerRepo := mocks.NewMailerRepositoryMock(&config.Mailer{})
+	mailerRepo := mocks.NewMailerRepositoryMock()
 	errTracker := mocks.NewErrorTrackerMock(&config.ErrTracker{})
 	timeGenerator := timegen.NewRealTimeGenerator()
 	cacheRepo := mocks.NewCacheMock(timeGenerator)
@@ -68,13 +68,13 @@ func (tb *TestBuilder) Build() *TestBuilder {
 }
 
 func (tb *TestBuilder) SetEnvToProduction() *TestBuilder {
-	tb.Config.Application.Env = "production"
+	tb.Config.Application.Env = config.EnvProduction
 	return tb
 }
 
 func setConfig() *config.Container {
 	appConfig := &config.App{
-		Env: "development",
+		Env: config.EnvDevelopment,
 	}
 
 	tokenConfig := &config.Token{

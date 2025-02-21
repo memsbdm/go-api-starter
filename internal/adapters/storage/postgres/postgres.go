@@ -51,12 +51,7 @@ func createConnection(c context.Context, config *config.DB) (*sql.DB, error) {
 	}
 	db.SetMaxOpenConns(config.MaxOpenConns)
 	db.SetMaxIdleConns(config.MaxIdleConns)
-
-	duration, err := time.ParseDuration(config.MaxIdleTime)
-	if err != nil {
-		return nil, err
-	}
-	db.SetConnMaxIdleTime(duration)
+	db.SetConnMaxIdleTime(config.MaxIdleTime)
 
 	ctx, cancel := context.WithTimeout(c, 5*time.Second)
 	defer cancel()

@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"errors"
-	"go-starter/config"
 	"go-starter/internal/domain/ports"
 	"sync"
 )
@@ -10,15 +9,13 @@ import (
 // MailerRepositoryMock implements the ports.MailerRepository interface for testing purposes.
 // It stores sent emails in memory instead of actually sending them.
 type MailerRepositoryMock struct {
-	cfg  *config.Mailer
 	data map[string]ports.EmailMessage
 	mu   sync.RWMutex
 }
 
 // NewMailerRepositoryMock creates a new instance of MailerRepositoryMock.
-func NewMailerRepositoryMock(cfg *config.Mailer) *MailerRepositoryMock {
+func NewMailerRepositoryMock() *MailerRepositoryMock {
 	m := &MailerRepositoryMock{
-		cfg:  cfg,
 		data: map[string]ports.EmailMessage{},
 		mu:   sync.RWMutex{},
 	}

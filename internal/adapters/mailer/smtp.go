@@ -17,20 +17,20 @@ import (
 // MailerRepository implements the ports.MailerRepository interface.
 // It provides SMTP functionality with connection pooling.
 type MailerRepository struct {
-	cfg  *config.Mailer
-	pool *sync.Pool
+	mailerCfg *config.Mailer
+	pool      *sync.Pool
 }
 
 // New creates a new instance of MailerRepository with a pre-initialized pool of SMTP clients.
 // It returns an error if the initialization of the SMTP client pool fails.
-func New(cfg *config.Mailer) (*MailerRepository, error) {
+func New(mailerCfg *config.Mailer) (*MailerRepository, error) {
 	repo := &MailerRepository{
-		cfg: cfg,
+		mailerCfg: mailerCfg,
 	}
 
 	repo.pool = &sync.Pool{
 		New: func() interface{} {
-			client, err := createNewSMTPClient(cfg)
+			client, err := createNewSMTPClient(mailerCfg)
 			if err != nil {
 				slog.Error(fmt.Sprintf("error creating SMTP client: %v", err))
 				return nil
@@ -40,7 +40,7 @@ func New(cfg *config.Mailer) (*MailerRepository, error) {
 	}
 
 	for i := 0; i < 10; i++ {
-		client, err := createNewSMTPClient(cfg)
+		client, err := createNewSMTPClient(mailerCfg)
 		if err != nil {
 			return nil, fmt.Errorf("error initializing pool: %w", err)
 		}
@@ -52,11 +52,11 @@ func New(cfg *config.Mailer) (*MailerRepository, error) {
 
 // createNewSMTPClient creates a new SMTP client with TLS configuration.
 // It handles the connection, authentication and initial testing of the SMTP connection.
-func createNewSMTPClient(cfg *config.Mailer) (*smtp.Client, error) {
-	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+func createNewSMTPClient(mailerCfg *config.Mailer) (*smtp.Client, error) {
+	addr := fmt.Sprintf("%s:%d", mailerCfg.Host, mailerCfg.Port)
 
 	tlsConfig := &tls.Config{
-		ServerName: cfg.Host,
+		ServerName: mailerCfg.Host,
 		MinVersion: tls.VersionTLS12,
 	}
 
@@ -75,7 +75,7 @@ func createNewSMTPClient(cfg *config.Mailer) (*smtp.Client, error) {
 		}
 	}()
 
-	client, err := smtp.NewClient(conn, cfg.Host)
+	client, err := smtp.NewClient(conn, mailerCfg.Host)
 	if err != nil {
 		return nil, fmt.Errorf("SMTP client creation error: %w", err)
 	}
@@ -88,7 +88,7 @@ func createNewSMTPClient(cfg *config.Mailer) (*smtp.Client, error) {
 		}
 	}()
 
-	auth := smtp.PlainAuth("", cfg.Username, cfg.Password, cfg.Host)
+	auth := smtp.PlainAuth("", mailerCfg.Username, mailerCfg.Password, mailerCfg.Host)
 	if err = client.Auth(auth); err != nil {
 		return nil, fmt.Errorf("authentication error: %w", err)
 	}
@@ -104,12 +104,12 @@ func createNewSMTPClient(cfg *config.Mailer) (*smtp.Client, error) {
 // It will retry sending the email based on the configuration's MaxRetries and RetryDelayInSeconds.
 func (m *MailerRepository) Send(msg ports.EmailMessage) error {
 	var lastErr error
-	maxRetries := m.cfg.MaxRetries
+	maxRetries := m.mailerCfg.MaxRetries
 	if maxRetries <= 0 {
 		maxRetries = 3
 	}
 
-	retryDelayInSeconds := m.cfg.RetryDelayInSeconds
+	retryDelayInSeconds := m.mailerCfg.RetryDelayInSeconds
 	var retryDelay time.Duration
 	if retryDelayInSeconds <= 0 {
 		retryDelay = 2 * time.Second
@@ -143,7 +143,7 @@ func (m *MailerRepository) sendWithRetry(msg ports.EmailMessage) error {
 	client := m.pool.Get().(*smtp.Client)
 	if client == nil {
 		var err error
-		client, err = createNewSMTPClient(m.cfg)
+		client, err = createNewSMTPClient(m.mailerCfg)
 		if err != nil {
 			return fmt.Errorf("unable to create new client: %w", err)
 		}
@@ -160,7 +160,7 @@ func (m *MailerRepository) sendWithRetry(msg ports.EmailMessage) error {
 	}()
 
 	headers := make(map[string]string)
-	headers["From"] = m.cfg.From
+	headers["From"] = m.mailerCfg.From
 	headers["To"] = strings.Join(msg.To, ", ")
 	headers["Subject"] = msg.Subject
 	headers["MIME-Version"] = "1.0"
@@ -176,7 +176,7 @@ func (m *MailerRepository) sendWithRetry(msg ports.EmailMessage) error {
 		return fmt.Errorf("session reset error: %w", err)
 	}
 
-	if err := client.Mail(m.cfg.From); err != nil {
+	if err := client.Mail(m.mailerCfg.From); err != nil {
 		return fmt.Errorf("MAIL FROM error: %w", err)
 	}
 

@@ -16,6 +16,7 @@ func main() {
 		slog.Error("application error", "error", err)
 		os.Exit(1)
 	}
+	os.Exit(0)
 }
 
 func run() error {
@@ -35,7 +36,7 @@ func run() error {
 		return fmt.Errorf("seeding users: %w", err)
 	}
 
-	slog.Info("Seeding completed successfully")
+	slog.Info("seeding completed successfully")
 	return nil
 }
 
@@ -53,5 +54,5 @@ func closeDB(db *sql.DB) {
 		slog.Error("failed to close database connection", "error", err)
 		return
 	}
-	slog.Info("Successfully closed database connection")
+	slog.Info("successfully closed database connection")
 }
