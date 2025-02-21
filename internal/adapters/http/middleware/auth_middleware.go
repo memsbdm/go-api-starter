@@ -18,7 +18,7 @@ const (
 )
 
 // AuthMiddleware is a middleware function that validates the authorization token from the incoming HTTP request.
-func AuthMiddleware(tokenService ports.TokenService, errTrackerAdapter ports.ErrTrackerAdapter) Middleware {
+func AuthMiddleware(tokenSvc ports.TokenService, errTracker ports.ErrTrackerAdapter) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			authorizationHeader := r.Header.Get(authorizationHeaderKey)
@@ -39,13 +39,13 @@ func AuthMiddleware(tokenService ports.TokenService, errTrackerAdapter ports.Err
 			}
 
 			accessToken := fields[1]
-			tokenPayload, err := tokenService.ValidateAndParseAccessToken(accessToken)
+			tokenPayload, err := tokenSvc.ValidateAndParseAccessToken(accessToken)
 			if err != nil {
 				responses.HandleError(w, domain.ErrUnauthorized)
 				return
 			}
 
-			errTrackerAdapter.SetUser(tokenPayload.Subject.String(), r.RemoteAddr)
+			errTracker.SetUser(tokenPayload.Subject.String(), r.RemoteAddr)
 			ctx := context.WithValue(r.Context(), helpers.AuthorizationPayloadKey, tokenPayload)
 			r = r.WithContext(ctx)
 
@@ -57,7 +57,7 @@ func AuthMiddleware(tokenService ports.TokenService, errTrackerAdapter ports.Err
 // GuestMiddleware is a middleware function that allows access to HTTP requests from guests (unauthenticated users).
 // It checks for the presence of an authorization token in the request header. If a valid token is found,
 // it responds with a forbidden error, preventing authenticated users from accessing guest-only routes.
-func GuestMiddleware(tokenService ports.TokenService) Middleware {
+func GuestMiddleware(tokenSvc ports.TokenService) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			authorizationHeader := r.Header.Get(authorizationHeaderKey)
@@ -73,7 +73,7 @@ func GuestMiddleware(tokenService ports.TokenService) Middleware {
 			}
 
 			accessToken := fields[1]
-			_, err := tokenService.ValidateAndParseAccessToken(accessToken)
+			_, err := tokenSvc.ValidateAndParseAccessToken(accessToken)
 			if err == nil {
 				responses.HandleError(w, domain.ErrForbidden)
 				return

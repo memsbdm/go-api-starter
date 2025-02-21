@@ -13,17 +13,17 @@ import (
 // JWTProvider implements the ports.TokenProvider interface, providing access to
 // JWT-related functionalities for token management.
 type JWTProvider struct {
-	errTrackerAdapter ports.ErrTrackerAdapter
-	timeGenerator     ports.TimeGenerator
-	signingMethod     jwt.SigningMethod
+	errTracker    ports.ErrTrackerAdapter
+	timeGenerator ports.TimeGenerator
+	signingMethod jwt.SigningMethod
 }
 
 // NewJWTProvider creates a new instance of JWTProvider.
-func NewJWTProvider(timeGenerator ports.TimeGenerator, errTrackerAdapter ports.ErrTrackerAdapter) *JWTProvider {
+func NewJWTProvider(timeGenerator ports.TimeGenerator, errTracker ports.ErrTrackerAdapter) *JWTProvider {
 	return &JWTProvider{
-		timeGenerator:     timeGenerator,
-		signingMethod:     jwt.SigningMethodHS256,
-		errTrackerAdapter: errTrackerAdapter,
+		timeGenerator: timeGenerator,
+		signingMethod: jwt.SigningMethodHS256,
+		errTracker:    errTracker,
 	}
 }
 
@@ -40,7 +40,7 @@ func (jp *JWTProvider) GenerateAccessToken(user *entities.User, duration time.Du
 	token := jwt.NewWithClaims(jp.signingMethod, claims)
 	signedToken, err := token.SignedString(signature)
 	if err != nil {
-		jp.errTrackerAdapter.CaptureException(err)
+		jp.errTracker.CaptureException(err)
 	}
 	return entities.AccessToken(signedToken), err
 }
@@ -54,7 +54,7 @@ func (jp *JWTProvider) ValidateAndParseAccessToken(token string, signature []byt
 		return signature, nil
 	})
 	if err != nil {
-		jp.errTrackerAdapter.CaptureException(err)
+		jp.errTracker.CaptureException(err)
 		return nil, err
 	}
 
@@ -69,14 +69,14 @@ func (jp *JWTProvider) ValidateAndParseAccessToken(token string, signature []byt
 	tokenUUID, err := entities.ParseAccessTokenID(tokenIDstr)
 	if err != nil {
 		err = fmt.Errorf("could not parse access token %s: %w", tokenIDstr, err)
-		jp.errTrackerAdapter.CaptureException(err)
+		jp.errTracker.CaptureException(err)
 		return nil, err
 	}
 
 	userID, err := entities.ParseUserID(userIDstr)
 	if err != nil {
 		err = fmt.Errorf("could not parse user id %s: %w", userIDstr, err)
-		jp.errTrackerAdapter.CaptureException(err)
+		jp.errTracker.CaptureException(err)
 		return nil, err
 	}
 
@@ -102,7 +102,7 @@ func (jp *JWTProvider) GenerateRefreshToken(userID entities.UserID, duration tim
 	token := jwt.NewWithClaims(jp.signingMethod, claims)
 	signedToken, err := token.SignedString(signature)
 	if err != nil {
-		jp.errTrackerAdapter.CaptureException(err)
+		jp.errTracker.CaptureException(err)
 	}
 	return id, entities.RefreshToken(signedToken), err
 }
@@ -117,7 +117,7 @@ func (jp *JWTProvider) ValidateAndParseRefreshToken(token string, signature []by
 	})
 	if err != nil {
 		err = fmt.Errorf("could not parse refresh token %s: %w", token, err)
-		jp.errTrackerAdapter.CaptureException(err)
+		jp.errTracker.CaptureException(err)
 		return nil, err
 	}
 
@@ -132,14 +132,14 @@ func (jp *JWTProvider) ValidateAndParseRefreshToken(token string, signature []by
 	tokenUUID, err := uuid.Parse(tokenIDstr)
 	if err != nil {
 		err = fmt.Errorf("could not parse refresh token %s: %w", tokenIDstr, err)
-		jp.errTrackerAdapter.CaptureException(err)
+		jp.errTracker.CaptureException(err)
 		return nil, err
 	}
 
 	userID, err := entities.ParseUserID(userIDstr)
 	if err != nil {
 		err = fmt.Errorf("could not parse user id %s: %w", userIDstr, err)
-		jp.errTrackerAdapter.CaptureException(err)
+		jp.errTracker.CaptureException(err)
 		return nil, err
 	}
 

@@ -10,12 +10,12 @@ import (
 
 // ErrTrackingMiddleware creates a middleware that integrates error tracking functionality
 // into the HTTP request pipeline. It captures request details and bodies for error monitoring.
-func ErrTrackingMiddleware(errTrackerAdapter ports.ErrTrackerAdapter) HandlerMiddleware {
+func ErrTrackingMiddleware(errTracker ports.ErrTrackerAdapter) HandlerMiddleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Skip body reading for GET/HEAD requests
 			if r.Method == http.MethodGet || r.Method == http.MethodHead {
-				errTrackerAdapter.SetRequest(r)
+				errTracker.SetRequest(r)
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -27,7 +27,7 @@ func ErrTrackingMiddleware(errTrackerAdapter ports.ErrTrackerAdapter) HandlerMid
 					"path", r.URL.Path,
 					"method", r.Method,
 				)
-				errTrackerAdapter.CaptureException(err)
+				errTracker.CaptureException(err)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 				return
 			}
@@ -36,8 +36,8 @@ func ErrTrackingMiddleware(errTrackerAdapter ports.ErrTrackerAdapter) HandlerMid
 			r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 			// Track request with body
-			errTrackerAdapter.SetRequest(r)
-			errTrackerAdapter.SetBody(body)
+			errTracker.SetRequest(r)
+			errTracker.SetBody(body)
 
 			// Call the next handler
 			next.ServeHTTP(w, r)

@@ -9,15 +9,15 @@ import (
 
 // CacheService implements ports.CacheService interface and provides access to the cache repository
 type CacheService struct {
-	repo              ports.CacheRepository
-	errTrackerAdapter ports.ErrTrackerAdapter
+	repo       ports.CacheRepository
+	errTracker ports.ErrTrackerAdapter
 }
 
 // NewCacheService creates a new cache service instance
-func NewCacheService(repo ports.CacheRepository, errTrackerAdapter ports.ErrTrackerAdapter) *CacheService {
+func NewCacheService(repo ports.CacheRepository, errTracker ports.ErrTrackerAdapter) *CacheService {
 	return &CacheService{
-		repo:              repo,
-		errTrackerAdapter: errTrackerAdapter,
+		repo:       repo,
+		errTracker: errTracker,
 	}
 }
 

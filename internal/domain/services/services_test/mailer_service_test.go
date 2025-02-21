@@ -10,15 +10,6 @@ import (
 	"testing"
 )
 
-func getSentEmailsCount(t *testing.T, repo ports.MailerAdapter) int {
-	t.Helper()
-	if v, ok := repo.(interface{ SentEmailsCount() int }); ok {
-		return v.SentEmailsCount()
-	}
-	t.Fatal("the mailer adapter does not implement SentEmailsCount()")
-	return 0
-}
-
 func TestMailerService_Send_Debug(t *testing.T) {
 	t.Parallel()
 

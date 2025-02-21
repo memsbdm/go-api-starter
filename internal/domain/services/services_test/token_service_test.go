@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"github.com/google/uuid"
-	"go-starter/internal/adapters/timegen"
+	"go-starter/internal/adapters/mocks"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"testing"
@@ -38,7 +38,7 @@ func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
+			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 
 			user := &entities.User{
@@ -50,7 +50,7 @@ func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
 				t.Fatalf("failed to generated access token: %v", err)
 			}
 
-			builder.TimeGenerator.Advance(tt.advance)
+			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			// Act & Assert
 			claims, err := builder.TokenService.ValidateAndParseAccessToken(string(accessToken))
@@ -88,7 +88,7 @@ func TestTokenService_ValidateAndParseRefreshToken(t *testing.T) {
 
 			// Arrange
 			ctx := context.Background()
-			timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
+			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 			user := &entities.User{
 				ID: entities.UserID(uuid.New()),
@@ -97,7 +97,7 @@ func TestTokenService_ValidateAndParseRefreshToken(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to generated refresh token: %v", err)
 			}
-			builder.TimeGenerator.Advance(tt.advance)
+			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			// Act & Assert
 			claims, err := builder.TokenService.ValidateAndParseRefreshToken(ctx, string(refreshToken))
@@ -134,7 +134,7 @@ func TestTokenService_RevokeRefreshToken(t *testing.T) {
 
 			// Arrange
 			ctx := context.Background()
-			timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
+			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 			user := &entities.User{
 				ID: entities.UserID(uuid.New()),
@@ -144,7 +144,7 @@ func TestTokenService_RevokeRefreshToken(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to generated refresh token: %v", err)
 			}
-			builder.TimeGenerator.Advance(tt.advance)
+			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			err = builder.TokenService.RevokeRefreshToken(ctx, string(refreshToken))
 			if !errors.Is(err, tt.expectedErr) {

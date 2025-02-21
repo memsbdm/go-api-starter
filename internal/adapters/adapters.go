@@ -17,12 +17,12 @@ type Adapters struct {
 }
 
 // New creates and initializes a new Adapters instance with the provided dependencies.
-func New(db *sql.DB, timeGenerator ports.TimeGenerator, cacheRepo ports.CacheRepository, errTrackerAdapter ports.ErrTrackerAdapter, mailerAdapter ports.MailerAdapter) *Adapters {
+func New(db *sql.DB, timeGenerator ports.TimeGenerator, cache ports.CacheRepository, errTracker ports.ErrTrackerAdapter, mailer ports.MailerAdapter) *Adapters {
 	return &Adapters{
-		UserRepository:    repositories.NewUserRepository(db, errTrackerAdapter),
-		TokenRepository:   token.NewJWTProvider(timeGenerator, errTrackerAdapter),
-		CacheRepository:   cacheRepo,
-		ErrTrackerAdapter: errTrackerAdapter,
-		MailerAdapter:     mailerAdapter,
+		UserRepository:    repositories.NewUserRepository(db, errTracker),
+		TokenRepository:   token.NewJWTProvider(timeGenerator, errTracker),
+		CacheRepository:   cache,
+		ErrTrackerAdapter: errTracker,
+		MailerAdapter:     mailer,
 	}
 }

@@ -22,14 +22,14 @@ type Server struct {
 func New(
 	httpConfig *config.HTTP,
 	handlers *handlers.Handlers,
-	tokenService ports.TokenService,
-	errTrackerAdapter ports.ErrTrackerAdapter,
+	tokenSvc ports.TokenService,
+	errTracker ports.ErrTrackerAdapter,
 ) *Server {
 	auth := func() m.Middleware {
-		return m.AuthMiddleware(tokenService, errTrackerAdapter)
+		return m.AuthMiddleware(tokenSvc, errTracker)
 	}
 	guest := func() m.Middleware {
-		return m.GuestMiddleware(tokenService)
+		return m.GuestMiddleware(tokenSvc)
 	}
 
 	mux := http.NewServeMux()
@@ -51,14 +51,14 @@ func New(
 	mux.HandleFunc("PATCH /v1/users/password", m.Chain(handlers.UserHandler.UpdatePassword, auth()))
 
 	routerMiddleware := []m.HandlerMiddleware{
-		m.ErrTrackingMiddleware(errTrackerAdapter),
+		m.ErrTrackingMiddleware(errTracker),
 		m.LoggingMiddleware(),
 		m.SecurityHeadersMiddleware(),
 		m.CorsMiddleware(),
 	}
 
 	router := m.ChainHandlerFunc(mux, routerMiddleware...)
-	handler := errTrackerAdapter.Handle(router)
+	handler := errTracker.Handle(router)
 
 	return &Server{
 		Server: &http.Server{

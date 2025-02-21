@@ -13,15 +13,15 @@ import (
 
 // UserRepository implements the ports.UserRepository interface and provides access to the database.
 type UserRepository struct {
-	db                *sql.DB
-	errTrackerAdapter ports.ErrTrackerAdapter
+	db         *sql.DB
+	errTracker ports.ErrTrackerAdapter
 }
 
 // NewUserRepository creates and returns a new UserRepository instance.
-func NewUserRepository(db *sql.DB, errTrackerAdapter ports.ErrTrackerAdapter) *UserRepository {
+func NewUserRepository(db *sql.DB, errTracker ports.ErrTrackerAdapter) *UserRepository {
 	return &UserRepository{
-		db:                db,
-		errTrackerAdapter: errTrackerAdapter,
+		db:         db,
+		errTracker: errTracker,
 	}
 }
 
@@ -42,7 +42,7 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 			return nil, fmt.Errorf("%w: id=%s", domain.ErrUserNotFound, id)
 		default:
 			err = fmt.Errorf("failed to get user %s: %w", id.String(), err)
-			ur.errTrackerAdapter.CaptureException(err)
+			ur.errTracker.CaptureException(err)
 			return nil, err
 		}
 	}
@@ -50,7 +50,7 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 	userID, err := entities.ParseUserID(uuidStr)
 	if err != nil {
 		err = fmt.Errorf("failed to parse user id %s: %w", uuidStr, err)
-		ur.errTrackerAdapter.CaptureException(err)
+		ur.errTracker.CaptureException(err)
 		return nil, err
 	}
 	user.ID = userID
@@ -74,7 +74,7 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 			return nil, domain.ErrUserNotFound
 		default:
 			err = fmt.Errorf("failed to get user %s: %w", username, err)
-			ur.errTrackerAdapter.CaptureException(err)
+			ur.errTracker.CaptureException(err)
 			return nil, err
 		}
 	}
@@ -82,7 +82,7 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 	parsedID, err := entities.ParseUserID(uuidStr)
 	if err != nil {
 		err = fmt.Errorf("failed to parse user id %s: %w", uuidStr, err)
-		ur.errTrackerAdapter.CaptureException(err)
+		ur.errTracker.CaptureException(err)
 		return nil, err
 	}
 	user.ID = parsedID
@@ -127,14 +127,14 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 			}
 		}
 		err = fmt.Errorf("failed to insert user %s: %w", user.Username, err)
-		ur.errTrackerAdapter.CaptureException(err)
+		ur.errTracker.CaptureException(err)
 		return nil, err
 	}
 
 	parsedID, err := entities.ParseUserID(uuidStr)
 	if err != nil {
 		err = fmt.Errorf("failed to parse user id %s: %w", uuidStr, err)
-		ur.errTrackerAdapter.CaptureException(err)
+		ur.errTracker.CaptureException(err)
 		return nil, err
 	}
 	user.ID = parsedID
@@ -152,7 +152,7 @@ func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.Us
 	_, err := ur.db.ExecContext(ctx, query, newPassword, userID.String())
 	if err != nil {
 		err = fmt.Errorf("failed to update user password for user %s: %w", userID.String(), err)
-		ur.errTrackerAdapter.CaptureException(err)
+		ur.errTracker.CaptureException(err)
 		return err
 	}
 

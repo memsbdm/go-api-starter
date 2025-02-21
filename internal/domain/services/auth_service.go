@@ -12,17 +12,17 @@ import (
 
 // AuthService implements ports.AuthService interface.
 type AuthService struct {
-	userSvc           ports.UserService
-	tokenSvc          ports.TokenService
-	errTrackerAdapter ports.ErrTrackerAdapter
+	userSvc    ports.UserService
+	tokenSvc   ports.TokenService
+	errTracker ports.ErrTrackerAdapter
 }
 
 // NewAuthService creates a new instance of AuthService.
-func NewAuthService(userSvc ports.UserService, tokenSvc ports.TokenService, errTrackerAdapter ports.ErrTrackerAdapter) *AuthService {
+func NewAuthService(userSvc ports.UserService, tokenSvc ports.TokenService, errTracker ports.ErrTrackerAdapter) *AuthService {
 	return &AuthService{
-		userSvc:           userSvc,
-		tokenSvc:          tokenSvc,
-		errTrackerAdapter: errTrackerAdapter,
+		userSvc:    userSvc,
+		tokenSvc:   tokenSvc,
+		errTracker: errTracker,
 	}
 }
 

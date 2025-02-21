@@ -5,7 +5,7 @@ package services_test
 import (
 	"context"
 	"errors"
-	"go-starter/internal/adapters/timegen"
+	"go-starter/internal/adapters/mocks"
 	"go-starter/internal/domain"
 	"testing"
 	"time"
@@ -98,7 +98,7 @@ func TestAuthService_Refresh(t *testing.T) {
 
 			// Arrange
 			ctx := context.Background()
-			timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
+			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 
 			userToCreate := newValidUserToCreate()
@@ -113,7 +113,7 @@ func TestAuthService_Refresh(t *testing.T) {
 				t.Fatalf("failed to login: %v", err)
 			}
 
-			builder.TimeGenerator.Advance(tt.advance)
+			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			refreshToken := string(authTokens.RefreshToken)
 			if tt.modifyToken != nil {

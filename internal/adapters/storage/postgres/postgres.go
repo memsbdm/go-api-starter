@@ -18,7 +18,7 @@ var (
 )
 
 // New creates a postgres database instance.
-func New(ctx context.Context, config *config.DB) (*sql.DB, error) {
+func New(ctx context.Context, dbCfg *config.DB) (*sql.DB, error) {
 	mu.RLock()
 	if dbInstance != nil {
 		defer mu.RUnlock()
@@ -34,7 +34,7 @@ func New(ctx context.Context, config *config.DB) (*sql.DB, error) {
 		return dbInstance, nil
 	}
 
-	db, err := createConnection(ctx, config)
+	db, err := createConnection(ctx, dbCfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create database connection: %w", err)
 	}
@@ -44,14 +44,14 @@ func New(ctx context.Context, config *config.DB) (*sql.DB, error) {
 }
 
 // createConnection establishes a new database connection with the given configuration.
-func createConnection(c context.Context, config *config.DB) (*sql.DB, error) {
-	db, err := sql.Open("postgres", config.Addr)
+func createConnection(c context.Context, dbCfg *config.DB) (*sql.DB, error) {
+	db, err := sql.Open("postgres", dbCfg.Addr)
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(config.MaxOpenConns)
-	db.SetMaxIdleConns(config.MaxIdleConns)
-	db.SetConnMaxIdleTime(config.MaxIdleTime)
+	db.SetMaxOpenConns(dbCfg.MaxOpenConns)
+	db.SetMaxIdleConns(dbCfg.MaxIdleConns)
+	db.SetConnMaxIdleTime(dbCfg.MaxIdleTime)
 
 	ctx, cancel := context.WithTimeout(c, 5*time.Second)
 	defer cancel()

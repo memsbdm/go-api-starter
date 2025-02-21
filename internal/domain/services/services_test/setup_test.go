@@ -33,7 +33,7 @@ type TestBuilder struct {
 func NewTestBuilder() *TestBuilder {
 	mailerAdapter := mocks.NewMailerAdapterMock()
 	errTrackerAdapter := mocks.NewErrTrackerAdapterMock()
-	timeGenerator := timegen.NewRealTimeGenerator()
+	timeGenerator := timegen.NewTimeGenerator()
 	cacheRepo := mocks.NewCacheRepositoryMock(timeGenerator)
 	tokenProvider := token.NewJWTProvider(timeGenerator, errTrackerAdapter)
 	userRepo := mocks.NewUserRepositoryMock()
@@ -61,8 +61,8 @@ func (tb *TestBuilder) WithTimeGenerator(tg ports.TimeGenerator) *TestBuilder {
 func (tb *TestBuilder) Build() *TestBuilder {
 	tb.MailerService = services.NewMailerService(tb.Config, tb.MailerAdapter, tb.ErrTrackerAdapter)
 	tb.CacheService = services.NewCacheService(tb.CacheRepo, tb.ErrTrackerAdapter)
-	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService, tb.ErrTrackerAdapter)
-	tb.TokenService = services.NewTokenService(tb.Config.Token, tb.TokenProvider, tb.CacheService, tb.ErrTrackerAdapter)
+	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService)
+	tb.TokenService = services.NewTokenService(tb.Config.Token, tb.TokenProvider, tb.CacheService)
 	tb.AuthService = services.NewAuthService(tb.UserService, tb.TokenService, tb.ErrTrackerAdapter)
 	return tb
 }

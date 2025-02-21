@@ -12,15 +12,15 @@ import (
 
 // UserHandler represents the HTTP handler for user-related requests.
 type UserHandler struct {
-	svc               ports.UserService
-	errTrackerAdapter ports.ErrTrackerAdapter
+	svc        ports.UserService
+	errTracker ports.ErrTrackerAdapter
 }
 
 // NewUserHandler creates and returns a new UserHandler instance.
-func NewUserHandler(svc ports.UserService, errTrackerAdapter ports.ErrTrackerAdapter) *UserHandler {
+func NewUserHandler(svc ports.UserService, errTracker ports.ErrTrackerAdapter) *UserHandler {
 	return &UserHandler{
-		svc:               svc,
-		errTrackerAdapter: errTrackerAdapter,
+		svc:        svc,
+		errTracker: errTracker,
 	}
 }
 
@@ -125,7 +125,7 @@ func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := helpers.ExtractAccessTokenClaims(ctx)
 	if err != nil {
-		uh.errTrackerAdapter.CaptureException(err)
+		uh.errTracker.CaptureException(err)
 		responses.HandleError(w, domain.ErrInternal)
 		return
 	}

@@ -15,10 +15,10 @@ type Redis struct {
 }
 
 // New creates a new instance of Redis.
-func New(ctx context.Context, config *config.Redis) (ports.CacheRepository, error) {
+func New(ctx context.Context, redisCfg *config.Redis) (ports.CacheRepository, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr:     config.Addr,
-		Password: config.Password,
+		Addr:     redisCfg.Addr,
+		Password: redisCfg.Password,
 		DB:       0,
 	})
 

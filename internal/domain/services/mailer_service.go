@@ -9,21 +9,21 @@ import (
 // MailerService implements the ports.MailerService interface.
 // It provides high-level email sending functionality with error tracking and debug capabilities.
 type MailerService struct {
-	cfg               *config.Container
-	adapter           ports.MailerAdapter
-	errTrackerAdapter ports.ErrTrackerAdapter
+	cfg        *config.Container
+	adapter    ports.MailerAdapter
+	errTracker ports.ErrTrackerAdapter
 }
 
 // NewMailerService creates a new instance of MailerService.
 func NewMailerService(
 	cfg *config.Container,
 	adapter ports.MailerAdapter,
-	errTrackerAdapter ports.ErrTrackerAdapter,
+	errTracker ports.ErrTrackerAdapter,
 ) *MailerService {
 	return &MailerService{
-		cfg:               cfg,
-		adapter:           adapter,
-		errTrackerAdapter: errTrackerAdapter,
+		cfg:        cfg,
+		adapter:    adapter,
+		errTracker: errTracker,
 	}
 }
 
@@ -41,7 +41,7 @@ func (m *MailerService) Send(msg *ports.EmailMessage) error {
 
 	err := m.adapter.Send(*msg)
 	if err != nil {
-		m.errTrackerAdapter.CaptureException(err)
+		m.errTracker.CaptureException(err)
 		return domain.ErrMailer
 	}
 

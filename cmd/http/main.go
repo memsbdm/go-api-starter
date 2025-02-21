@@ -55,7 +55,7 @@ func run() error {
 
 	// Dependency injection
 
-	timeGenerator := timegen.NewRealTimeGenerator()
+	timeGenerator := timegen.NewTimeGenerator()
 
 	apiAdapters := adapters.New(extServices.db, timeGenerator, extServices.cache, extServices.errTracker, extServices.mailer)
 	apiServices := services.New(cfg, apiAdapters)

@@ -49,9 +49,9 @@ func SeedUsers(ctx context.Context, db *sql.DB) error {
 	// Initialize dependencies
 	errTrackerAdapter := mocks.NewErrTrackerAdapterMock()
 	userRepo := repositories.NewUserRepository(db, errTrackerAdapter)
-	timeGenerator := timegen.NewRealTimeGenerator()
+	timeGenerator := timegen.NewTimeGenerator()
 	cacheService := mocks.NewCacheRepositoryMock(timeGenerator)
-	userService := services.NewUserService(userRepo, cacheService, errTrackerAdapter)
+	userService := services.NewUserService(userRepo, cacheService)
 
 	// Configure and run user generator
 	slog.Info("Starting user seeding process")

@@ -16,17 +16,15 @@ import (
 
 // UserService implements ports.UserService interface and provides access to the user repository.
 type UserService struct {
-	repo              ports.UserRepository
-	cache             ports.CacheService
-	errTrackerAdapter ports.ErrTrackerAdapter
+	repo     ports.UserRepository
+	cacheSvc ports.CacheService
 }
 
 // NewUserService creates a new instance of UserService.
-func NewUserService(repo ports.UserRepository, cache ports.CacheService, errTrackerAdapter ports.ErrTrackerAdapter) *UserService {
+func NewUserService(repo ports.UserRepository, cacheSvc ports.CacheService) *UserService {
 	return &UserService{
-		repo:              repo,
-		cache:             cache,
-		errTrackerAdapter: errTrackerAdapter,
+		repo:     repo,
+		cacheSvc: cacheSvc,
 	}
 }
 
@@ -38,7 +36,7 @@ const UserCachePrefix = "user"
 func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	var user *entities.User
 	cacheKey := utils.GenerateCacheKey(UserCachePrefix, id)
-	cachedUser, err := us.cache.Get(ctx, cacheKey)
+	cachedUser, err := us.cacheSvc.Get(ctx, cacheKey)
 	if err == nil {
 		err := utils.Deserialize(cachedUser, &user)
 		if err != nil {
@@ -60,7 +58,7 @@ func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entiti
 		return nil, domain.ErrInternal
 	}
 
-	err = us.cache.Set(ctx, cacheKey, userSerialized, time.Hour)
+	err = us.cacheSvc.Set(ctx, cacheKey, userSerialized, time.Hour)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}

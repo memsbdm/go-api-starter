@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go-starter/internal/adapters/timegen"
+	"go-starter/internal/adapters/mocks"
 	"go-starter/internal/domain"
 	"reflect"
 	"testing"
@@ -190,7 +190,7 @@ func TestCacheService_CacheExpiration(t *testing.T) {
 			// Arrange
 			ctx := context.Background()
 			key := "example"
-			timeGenerator := timegen.NewFakeTimeGenerator(time.Now())
+			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 
 			err := builder.CacheService.Set(ctx, key, []byte("value"), tt.duration)
