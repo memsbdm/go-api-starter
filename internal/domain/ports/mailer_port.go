@@ -14,10 +14,6 @@ type MailerAdapter interface {
 	// Send sends an email message.
 	// It takes an EmailMessage by value and returns an error if the sending fails.
 	Send(msg EmailMessage) error
-
-	// Close closes any open connections and cleans up resources.
-	// Returns an error if the cleanup fails.
-	Close() error
 }
 
 // EmailMessage represents an email to be sent.

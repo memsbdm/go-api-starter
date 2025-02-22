@@ -48,7 +48,7 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 		return nil, nil, err
 	}
 
-	cleanup := createCleanupFunction(db, cache, smtp, errTracker)
+	cleanup := createCleanupFunction(db, cache, errTracker)
 
 	return &externalServices{
 		db:         db,
@@ -89,15 +89,15 @@ func initializeCache(ctx context.Context, cfg *config.Container, errTracker port
 }
 
 func initializeMailer(cfg *config.Container, errTracker ports.ErrTrackerAdapter) (ports.MailerAdapter, error) {
-	smtp, err := mailer.NewSMTPAdapter(cfg.Mailer)
+	adapter, err := mailer.NewSESAdapter(cfg.Mailer)
 	if err != nil {
 		errTracker.CaptureException(err)
 		return nil, fmt.Errorf("failed to initialize mailer: %w", err)
 	}
-	return smtp, nil
+	return adapter, nil
 }
 
-func createCleanupFunction(db *sql.DB, cache ports.CacheRepository, smtp ports.MailerAdapter, errTracker ports.ErrTrackerAdapter) func() {
+func createCleanupFunction(db *sql.DB, cache ports.CacheRepository, errTracker ports.ErrTrackerAdapter) func() {
 	return func() {
 		if err := db.Close(); err != nil {
 			err = fmt.Errorf("failed to close database connection: %w", err)
@@ -106,11 +106,6 @@ func createCleanupFunction(db *sql.DB, cache ports.CacheRepository, smtp ports.M
 		}
 		if err := cache.Close(); err != nil {
 			err = fmt.Errorf("failed to close cache connection: %w", err)
-			errTracker.CaptureException(err)
-			slog.Error(err.Error())
-		}
-		if err := smtp.Close(); err != nil {
-			err = fmt.Errorf("failed to close mailer connection: %w", err)
 			errTracker.CaptureException(err)
 			slog.Error(err.Error())
 		}

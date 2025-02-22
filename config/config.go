@@ -63,14 +63,11 @@ type (
 
 	// Mailer contains all the environment variables for the mailer.
 	Mailer struct {
-		Host                string
-		Port                int
-		Username            string
-		Password            string
-		From                string
-		DebugTo             string
-		MaxRetries          int
-		RetryDelayInSeconds int
+		Region    string
+		AccessKey string
+		SecretKey string
+		From      string
+		DebugTo   string
 	}
 )
 
@@ -109,14 +106,11 @@ func New() *Container {
 	}
 
 	mailer := &Mailer{
-		Host:                env.GetString("MAILER_HOST"),
-		Port:                env.GetInt("MAILER_PORT"),
-		Username:            env.GetString("MAILER_USERNAME"),
-		Password:            env.GetString("MAILER_PASSWORD"),
-		From:                env.GetString("MAILER_FROM"),
-		DebugTo:             env.GetString("MAILER_DEBUG_TO"),
-		MaxRetries:          env.GetOptionalInt("MAILER_MAX_RETRIES"),
-		RetryDelayInSeconds: env.GetOptionalInt("MAILER_RETRIES_DELAY_IN_SECONDS"),
+		Region:    env.GetString("SES_REGION"),
+		AccessKey: env.GetString("SES_ACCESS_KEY"),
+		SecretKey: env.GetString("SES_SECRET_KEY"),
+		From:      env.GetString("SES_FROM"),
+		DebugTo:   env.GetString("SES_DEBUG_TO"),
 	}
 
 	c := &Container{
@@ -168,14 +162,6 @@ func (c *Container) setDefaultValues() {
 	if c.ErrTracker.TracesSampleRate == 0 {
 		c.ErrTracker.TracesSampleRate = 1.0
 	}
-
-	// Mailer
-	if c.Mailer.MaxRetries == 0 {
-		c.Mailer.MaxRetries = 3
-	}
-	if c.Mailer.RetryDelayInSeconds == 0 {
-		c.Mailer.RetryDelayInSeconds = 10
-	}
 }
 
 // validate validates the container.
@@ -223,15 +209,6 @@ func (c *Container) validate() error {
 	// ErrTracker
 	if c.ErrTracker.TracesSampleRate < 0 || c.ErrTracker.TracesSampleRate > 1.0 {
 		return fmt.Errorf("invalid environment variable: %s should be between 0 and 1", "SENTRY_TRACES_SAMPLE_RATE")
-	}
-
-	// Mailer
-	if c.Mailer.MaxRetries < 0 {
-		return fmt.Errorf("invalid environment variable: %s", "MAILER_MAX_RETRIES")
-	}
-
-	if c.Mailer.RetryDelayInSeconds < 0 {
-		return fmt.Errorf("invalid environment variable: %s", "MAILER_RETRIES_DELAY_IN_SECONDS")
 	}
 
 	return nil

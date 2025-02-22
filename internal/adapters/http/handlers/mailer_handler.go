@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"go-starter/internal/adapters/http/responses"
-	_ "go-starter/internal/adapters/http/responses"
 	"go-starter/internal/domain/mailtemplates"
 	"go-starter/internal/domain/ports"
 	"net/http"
@@ -39,7 +38,6 @@ func (mh *MailerHandler) SendEmail(w http.ResponseWriter, _ *http.Request) {
 		Body:    mailtemplates.Hello("John Doe"),
 	})
 	if err != nil {
-		mh.errTracker.CaptureException(err)
 		responses.HandleError(w, err)
 		return
 	}

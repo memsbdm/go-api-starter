@@ -2,13 +2,14 @@ package errtracker
 
 import (
 	"fmt"
-	"github.com/getsentry/sentry-go"
-	sentryhttp "github.com/getsentry/sentry-go/http"
 	"go-starter/config"
 	"go-starter/internal/domain/ports"
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/getsentry/sentry-go"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 )
 
 // SentryAdapter implements ports.ErrTrackerAdapter interface and provides integration
