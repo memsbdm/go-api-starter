@@ -1,6 +1,6 @@
 include .env
 
-all: build test
+all: clean test build
 
 build:
 	@echo "Building..."
@@ -8,7 +8,7 @@ build:
 
 clean:
 	@echo "Cleaning..."
-	@rm -f main
+	@rm -rf bin
 
 # Run integrations tests
 itest:
