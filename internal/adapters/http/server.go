@@ -2,7 +2,6 @@ package http
 
 import (
 	"fmt"
-	httpSwagger "github.com/swaggo/http-swagger"
 	"go-starter/config"
 	_ "go-starter/docs"
 	"go-starter/internal/adapters/http/handlers"
@@ -11,11 +10,16 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // Server is a wrapper for HTTP server.
 type Server struct {
 	*http.Server
+	mux        *http.ServeMux
+	handlers   *handlers.Handlers
+	errTracker ports.ErrTrackerAdapter
 }
 
 // New creates and initializes a new HTTP server.
@@ -25,50 +29,58 @@ func New(
 	tokenSvc ports.TokenService,
 	errTracker ports.ErrTrackerAdapter,
 ) *Server {
-	auth := func() m.Middleware {
-		return m.AuthMiddleware(tokenSvc, errTracker)
+	server := &Server{
+		mux:        http.NewServeMux(),
+		handlers:   handlers,
+		errTracker: errTracker,
 	}
-	guest := func() m.Middleware {
-		return m.GuestMiddleware(tokenSvc)
+
+	// Configure routes
+	server.setupRoutes(tokenSvc)
+
+	// Configure server
+	server.Server = &http.Server{
+		Addr:         fmt.Sprintf(":%d", httpConfig.Port),
+		Handler:      server.setupMiddleware(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
-	mux.HandleFunc("GET /v1/health", handlers.HealthHandler.Health)
+	return server
+}
 
-	// Mailer
-	mux.HandleFunc("GET /v1/mailer", handlers.MailerHandler.SendEmail)
+func (s *Server) setupRoutes(tokenSvc ports.TokenService) {
+	auth := m.AuthMiddleware(tokenSvc, s.errTracker)
+	guest := m.GuestMiddleware(tokenSvc)
 
-	// Auth
-	mux.HandleFunc("POST /v1/auth/login", m.Chain(handlers.AuthHandler.Login, guest()))
-	mux.HandleFunc("POST /v1/auth/register", m.Chain(handlers.AuthHandler.Register, guest()))
-	mux.HandleFunc("POST /v1/auth/refresh", handlers.AuthHandler.Refresh)
-	mux.HandleFunc("DELETE /v1/auth/logout", m.Chain(handlers.AuthHandler.Logout, auth()))
+	// Global routes
+	s.mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
+	s.mux.HandleFunc("GET /v1/health", s.handlers.HealthHandler.Health)
+	s.mux.HandleFunc("GET /v1/mailer", s.handlers.MailerHandler.SendEmail)
 
-	// Users
-	mux.HandleFunc("GET /v1/users/me", m.Chain(handlers.UserHandler.Me, auth()))
-	mux.HandleFunc("GET /v1/users/{uuid}", handlers.UserHandler.GetByID)
-	mux.HandleFunc("PATCH /v1/users/password", m.Chain(handlers.UserHandler.UpdatePassword, auth()))
+	// Auth routes
+	s.mux.HandleFunc("POST /v1/auth/login", m.Chain(s.handlers.AuthHandler.Login, guest))
+	s.mux.HandleFunc("POST /v1/auth/register", m.Chain(s.handlers.AuthHandler.Register, guest))
+	s.mux.HandleFunc("POST /v1/auth/refresh", s.handlers.AuthHandler.Refresh)
+	s.mux.HandleFunc("DELETE /v1/auth/logout", m.Chain(s.handlers.AuthHandler.Logout, auth))
 
+	// User routes
+	s.mux.HandleFunc("GET /v1/users/me", m.Chain(s.handlers.UserHandler.Me, auth))
+	s.mux.HandleFunc("GET /v1/users/{uuid}", s.handlers.UserHandler.GetByID)
+	s.mux.HandleFunc("PATCH /v1/users/password", m.Chain(s.handlers.UserHandler.UpdatePassword, auth))
+}
+
+func (s *Server) setupMiddleware() http.Handler {
 	routerMiddleware := []m.HandlerMiddleware{
-		m.ErrTrackingMiddleware(errTracker),
+		m.ErrTrackingMiddleware(s.errTracker),
 		m.LoggingMiddleware(),
 		m.SecurityHeadersMiddleware(),
 		m.CorsMiddleware(),
 	}
 
-	router := m.ChainHandlerFunc(mux, routerMiddleware...)
-	handler := errTracker.Handle(router)
-
-	return &Server{
-		Server: &http.Server{
-			Addr:         fmt.Sprintf(":%d", httpConfig.Port),
-			Handler:      handler,
-			IdleTimeout:  time.Minute,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 30 * time.Second,
-		},
-	}
+	router := m.ChainHandlerFunc(s.mux, routerMiddleware...)
+	return s.errTracker.Handle(router)
 }
 
 // Serve starts the HTTP server and listens for incoming requests.

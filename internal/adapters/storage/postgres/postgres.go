@@ -4,32 +4,20 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq"
 	"go-starter/config"
 	"log"
 	"strconv"
-	"sync"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 var (
 	dbInstance *sql.DB
-	mu         sync.RWMutex
 )
 
 // New creates a postgres database instance.
 func New(ctx context.Context, dbCfg *config.DB) (*sql.DB, error) {
-	mu.RLock()
-	if dbInstance != nil {
-		defer mu.RUnlock()
-		return dbInstance, nil
-	}
-	mu.RUnlock()
-
-	mu.Lock()
-	defer mu.Unlock()
-
-	// Double verification
 	if dbInstance != nil {
 		return dbInstance, nil
 	}
@@ -63,13 +51,9 @@ func createConnection(c context.Context, dbCfg *config.DB) (*sql.DB, error) {
 
 // Health checks the health status of the database.
 func Health() map[string]string {
-	mu.RLock()
-	db := dbInstance
-	mu.RUnlock()
-
 	stats := make(map[string]string)
 
-	if db == nil {
+	if dbInstance == nil {
 		stats["status"] = "down"
 		stats["error"] = "database instance is nil"
 		log.Fatal("database instance is nil")
@@ -93,9 +77,7 @@ func Health() map[string]string {
 	stats["message"] = "It's healthy"
 
 	// Get database stats (like open connections, in use, idle, etc.)
-	mu.RLock()
 	dbStats := dbInstance.Stats()
-	mu.RUnlock()
 
 	stats["open_connections"] = strconv.Itoa(dbStats.OpenConnections)
 	stats["in_use"] = strconv.Itoa(dbStats.InUse)

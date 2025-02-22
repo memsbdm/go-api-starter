@@ -39,7 +39,7 @@ func NewSMTPAdapter(mailerCfg *config.Mailer) (*SMTPAdapter, error) {
 		},
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 3; i++ {
 		client, err := createNewSMTPClient(mailerCfg)
 		if err != nil {
 			return nil, fmt.Errorf("error initializing pool: %w", err)
@@ -68,12 +68,6 @@ func createNewSMTPClient(mailerCfg *config.Mailer) (*smtp.Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("TLS connection error: %w", err)
 	}
-	// Defer conn close with error checking
-	defer func() {
-		if closeErr := conn.Close(); closeErr != nil && err == nil {
-			err = fmt.Errorf("error closing TLS connection: %w", closeErr)
-		}
-	}()
 
 	client, err := smtp.NewClient(conn, mailerCfg.Host)
 	if err != nil {

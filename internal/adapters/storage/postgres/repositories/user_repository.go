@@ -5,10 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/lib/pq"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
+
+	"github.com/lib/pq"
 )
 
 // UserRepository implements the ports.UserRepository interface and provides access to the database.

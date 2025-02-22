@@ -26,10 +26,7 @@ import (
 // @name						Authorization
 // @description				Type "Bearer" followed by a space and the access token.
 func main() {
-	if err := run(); err != nil {
-		if errors.Is(err, httpx.ErrServerClosed) {
-			os.Exit(0)
-		}
+	if err := run(); err != nil && !errors.Is(err, httpx.ErrServerClosed) {
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
@@ -64,7 +61,7 @@ func run() error {
 	// Init and start server
 	srv := http.New(cfg.HTTP, apiHandlers, apiServices.TokenService, extServices.errTracker)
 
-	done := make(chan bool, 1)
+	done := make(chan bool)
 	go gracefulShutdown(srv, done, extServices.errTracker)
 
 	err = srv.Serve()

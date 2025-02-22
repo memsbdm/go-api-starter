@@ -2,12 +2,13 @@ package token
 
 import (
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // JWTProvider implements the ports.TokenProvider interface, providing access to
@@ -63,19 +64,26 @@ func (jp *JWTProvider) ValidateAndParseAccessToken(token string, signature []byt
 		return nil, domain.ErrInvalidToken
 	}
 
-	tokenIDstr := claimsList["id"].(string)
-	userIDstr := claimsList["sub"].(string)
+	id, ok := claimsList["id"].(string)
+	if !ok {
+		return nil, domain.ErrInvalidToken
+	}
 
-	tokenUUID, err := entities.ParseAccessTokenID(tokenIDstr)
+	sub, ok := claimsList["sub"].(string)
+	if !ok {
+		return nil, domain.ErrInvalidToken
+	}
+
+	tokenUUID, err := entities.ParseAccessTokenID(id)
 	if err != nil {
-		err = fmt.Errorf("could not parse access token %s: %w", tokenIDstr, err)
+		err = fmt.Errorf("could not parse access token %s: %w", id, err)
 		jp.errTracker.CaptureException(err)
 		return nil, err
 	}
 
-	userID, err := entities.ParseUserID(userIDstr)
+	userID, err := entities.ParseUserID(sub)
 	if err != nil {
-		err = fmt.Errorf("could not parse user id %s: %w", userIDstr, err)
+		err = fmt.Errorf("could not parse user id %s: %w", sub, err)
 		jp.errTracker.CaptureException(err)
 		return nil, err
 	}
@@ -123,22 +131,29 @@ func (jp *JWTProvider) ValidateAndParseRefreshToken(token string, signature []by
 
 	claimsList, ok := parsedToken.Claims.(jwt.MapClaims)
 	if !ok || !parsedToken.Valid {
-		return nil, err
+		return nil, domain.ErrInvalidToken
 	}
 
-	userIDstr := claimsList["sub"].(string)
-	tokenIDstr := claimsList["id"].(string)
+	id, ok := claimsList["id"].(string)
+	if !ok {
+		return nil, domain.ErrInvalidToken
+	}
 
-	tokenUUID, err := uuid.Parse(tokenIDstr)
+	sub, ok := claimsList["sub"].(string)
+	if !ok {
+		return nil, domain.ErrInvalidToken
+	}
+
+	tokenUUID, err := uuid.Parse(id)
 	if err != nil {
-		err = fmt.Errorf("could not parse refresh token %s: %w", tokenIDstr, err)
+		err = fmt.Errorf("could not parse refresh token %s: %w", id, err)
 		jp.errTracker.CaptureException(err)
 		return nil, err
 	}
 
-	userID, err := entities.ParseUserID(userIDstr)
+	userID, err := entities.ParseUserID(sub)
 	if err != nil {
-		err = fmt.Errorf("could not parse user id %s: %w", userIDstr, err)
+		err = fmt.Errorf("could not parse user id %s: %w", sub, err)
 		jp.errTracker.CaptureException(err)
 		return nil, err
 	}

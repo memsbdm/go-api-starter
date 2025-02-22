@@ -28,38 +28,77 @@ type externalServices struct {
 // The cleanup function should be deferred by the caller.
 // If any service fails to initialize, it ensures proper cleanup of already initialized services.
 func initializeExternalServices(ctx context.Context, cfg *config.Container) (*externalServices, func(), error) {
-	// Init error tracker
+	errTracker := initializeErrTracker(cfg)
+
+	db, err := initializeDatabase(ctx, cfg, errTracker)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cache, err := initializeCache(ctx, cfg, errTracker)
+	if err != nil {
+		db.Close()
+		return nil, nil, err
+	}
+
+	smtp, err := initializeMailer(cfg, errTracker)
+	if err != nil {
+		db.Close()
+		cache.Close()
+		return nil, nil, err
+	}
+
+	cleanup := createCleanupFunction(db, cache, smtp, errTracker)
+
+	return &externalServices{
+		db:         db,
+		cache:      cache,
+		errTracker: errTracker,
+		mailer:     smtp,
+	}, cleanup, nil
+}
+
+func initializeErrTracker(cfg *config.Container) ports.ErrTrackerAdapter {
 	var errTracker ports.ErrTrackerAdapter
 	errTracker = mocks.NewErrTrackerAdapterMock()
 	if cfg.Application.Env == config.EnvProduction {
 		errTracker = errtracker.NewSentryAdapter(cfg.ErrTracker)
 	}
+	return errTracker
+}
 
-	// Init database
+func initializeDatabase(ctx context.Context, cfg *config.Container, errTracker ports.ErrTrackerAdapter) (*sql.DB, error) {
 	db, err := postgres.New(ctx, cfg.DB)
 	if err != nil {
 		err = fmt.Errorf("failed to connect to database: %w", err)
 		errTracker.CaptureException(err)
-		return nil, nil, err
+		return nil, err
 	}
 	slog.Info("Successfully connected to the database")
+	return db, nil
+}
 
-	// Init cache service
+func initializeCache(ctx context.Context, cfg *config.Container, errTracker ports.ErrTrackerAdapter) (ports.CacheRepository, error) {
 	cache, err := redis.New(ctx, cfg.Redis)
 	if err != nil {
 		errTracker.CaptureException(err)
-		return nil, nil, fmt.Errorf("failed to connect to cache service: %w", err)
+		return nil, fmt.Errorf("failed to connect to cache service: %w", err)
 	}
 	slog.Info("Successfully connected to the cache service")
+	return cache, nil
+}
 
-	// Init mailer
+func initializeMailer(cfg *config.Container, errTracker ports.ErrTrackerAdapter) (ports.MailerAdapter, error) {
 	smtp, err := mailer.NewSMTPAdapter(cfg.Mailer)
 	if err != nil {
 		errTracker.CaptureException(err)
-		return nil, nil, fmt.Errorf("failed to initialize mailer: %w", err)
+		return nil, fmt.Errorf("failed to initialize mailer: %w", err)
 	}
+	return smtp, nil
+}
 
-	cleanup := func() {
+func createCleanupFunction(db *sql.DB, cache ports.CacheRepository, smtp ports.MailerAdapter, errTracker ports.ErrTrackerAdapter) func() {
+	return func() {
 		if err := db.Close(); err != nil {
 			err = fmt.Errorf("failed to close database connection: %w", err)
 			errTracker.CaptureException(err)
@@ -76,11 +115,4 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 			slog.Error(err.Error())
 		}
 	}
-
-	return &externalServices{
-		db:         db,
-		cache:      cache,
-		errTracker: errTracker,
-		mailer:     smtp,
-	}, cleanup, nil
 }
