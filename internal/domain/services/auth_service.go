@@ -46,12 +46,12 @@ func (as *AuthService) Login(ctx context.Context, username, password string) (*e
 		return nil, nil, domain.ErrInvalidCredentials
 	}
 
-	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
+	accessToken, err := as.tokenSvc.Generate(entities.AccessToken, user)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	refreshToken, err := as.tokenSvc.GenerateRefreshToken(ctx, user.ID)
+	refreshToken, err := as.tokenSvc.GenerateTokenWithCache(ctx, entities.RefreshToken, user)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,7 +78,7 @@ func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string)
 	if previousRefreshToken == "" {
 		return nil, domain.ErrRefreshTokenRequired
 	}
-	claims, err := as.tokenSvc.ValidateAndParseRefreshToken(ctx, previousRefreshToken)
+	claims, err := as.tokenSvc.ValidateAndParseWithCache(ctx, entities.RefreshToken, previousRefreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -88,17 +88,17 @@ func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string)
 		return nil, err
 	}
 
-	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
+	accessToken, err := as.tokenSvc.Generate(entities.AccessToken, user)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := as.tokenSvc.GenerateRefreshToken(ctx, claims.Subject)
+	refreshToken, err := as.tokenSvc.GenerateTokenWithCache(ctx, entities.RefreshToken, user)
 	if err != nil {
 		return nil, err
 	}
 
-	err = as.tokenSvc.RevokeRefreshToken(ctx, previousRefreshToken)
+	err = as.tokenSvc.RevokeTokenFromCache(ctx, entities.RefreshToken, previousRefreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -114,5 +114,5 @@ func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string)
 // Logout invalidates the specified refresh token, effectively logging the user out.
 // Returns an error if the logout operation fails (e.g., if the refresh token is not found).
 func (as *AuthService) Logout(ctx context.Context, refreshToken string) error {
-	return as.tokenSvc.RevokeRefreshToken(ctx, refreshToken)
+	return as.tokenSvc.RevokeTokenFromCache(ctx, entities.RefreshToken, refreshToken)
 }

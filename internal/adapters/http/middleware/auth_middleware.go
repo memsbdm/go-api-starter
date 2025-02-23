@@ -5,6 +5,7 @@ import (
 	"go-starter/internal/adapters/http/helpers"
 	"go-starter/internal/adapters/http/responses"
 	"go-starter/internal/domain"
+	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
 	"strings"
@@ -39,7 +40,7 @@ func AuthMiddleware(tokenSvc ports.TokenService, errTracker ports.ErrTrackerAdap
 			}
 
 			accessToken := fields[1]
-			tokenPayload, err := tokenSvc.ValidateAndParseAccessToken(accessToken)
+			tokenPayload, err := tokenSvc.ValidateAndParse(entities.AccessToken, accessToken)
 			if err != nil {
 				responses.HandleError(w, domain.ErrUnauthorized)
 				return
@@ -73,7 +74,7 @@ func GuestMiddleware(tokenSvc ports.TokenService) Middleware {
 			}
 
 			accessToken := fields[1]
-			_, err := tokenSvc.ValidateAndParseAccessToken(accessToken)
+			_, err := tokenSvc.ValidateAndParse(entities.AccessToken, accessToken)
 			if err == nil {
 				responses.HandleError(w, domain.ErrForbidden)
 				return

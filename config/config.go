@@ -49,10 +49,9 @@ type (
 
 	// Token contains all the environment variables for the token service.
 	Token struct {
-		AccessTokenSignature  []byte
-		RefreshTokenSignature []byte
-		AccessTokenDuration   time.Duration
-		RefreshTokenDuration  time.Duration
+		TokenSignature       []byte
+		AccessTokenDuration  time.Duration
+		RefreshTokenDuration time.Duration
 	}
 
 	// ErrTracker contains all the environment variables for the error tracking.
@@ -94,10 +93,9 @@ func New() *Container {
 	}
 
 	token := &Token{
-		AccessTokenSignature:  []byte(env.GetString("ACCESS_TOKEN_SIGNATURE")),
-		RefreshTokenSignature: []byte(env.GetString("REFRESH_TOKEN_SIGNATURE")),
-		AccessTokenDuration:   env.GetOptionalDuration("ACCESS_TOKEN_DURATION"),
-		RefreshTokenDuration:  env.GetOptionalDuration("REFRESH_TOKEN_DURATION"),
+		TokenSignature:       []byte(env.GetString("TOKEN_SIGNATURE")),
+		AccessTokenDuration:  env.GetOptionalDuration("ACCESS_TOKEN_DURATION"),
+		RefreshTokenDuration: env.GetOptionalDuration("REFRESH_TOKEN_DURATION"),
 	}
 
 	errTracker := &ErrTracker{

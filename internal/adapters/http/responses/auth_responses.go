@@ -33,8 +33,8 @@ func NewAuthTokensResponse(tokens *entities.AuthTokens) AuthTokensResponse {
 	accessTokenDuration := env.GetDuration("ACCESS_TOKEN_DURATION")
 	refreshTokenDuration := env.GetDuration("REFRESH_TOKEN_DURATION")
 	return AuthTokensResponse{
-		AccessToken:             string(tokens.AccessToken),
-		RefreshToken:            string(tokens.RefreshToken),
+		AccessToken:             tokens.AccessToken,
+		RefreshToken:            tokens.RefreshToken,
 		AccessTokenExpiredInMs:  accessTokenDuration.Milliseconds(),
 		RefreshTokenExpiredInMs: refreshTokenDuration.Milliseconds(),
 	}

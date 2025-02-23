@@ -78,10 +78,9 @@ func setConfig() *config.Container {
 	}
 
 	tokenConfig := &config.Token{
-		AccessTokenDuration:   accessTokenExpirationDuration,
-		RefreshTokenDuration:  refreshTokenExpirationDuration,
-		AccessTokenSignature:  []byte("access"),
-		RefreshTokenSignature: []byte("refresh"),
+		AccessTokenDuration:  accessTokenExpirationDuration,
+		RefreshTokenDuration: refreshTokenExpirationDuration,
+		TokenSignature:       []byte("token"),
 	}
 
 	mailerConfig := &config.Mailer{

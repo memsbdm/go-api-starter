@@ -115,7 +115,7 @@ func TestAuthService_Refresh(t *testing.T) {
 
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
-			refreshToken := string(authTokens.RefreshToken)
+			refreshToken := authTokens.RefreshToken
 			if tt.modifyToken != nil {
 				refreshToken = tt.modifyToken()
 			}

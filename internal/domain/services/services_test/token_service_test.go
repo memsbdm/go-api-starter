@@ -16,18 +16,21 @@ import (
 var refreshTokenExpirationDuration = 2 * time.Hour
 var accessTokenExpirationDuration = 20 * time.Minute
 
-func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
+func TestTokenService_ValidateAndParse(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
+		input       entities.TokenType
 		advance     time.Duration
 		expectedErr error
 	}{
 		"validate and parse valid access token": {
+			input:       entities.AccessToken,
 			advance:     0,
 			expectedErr: nil,
 		},
 		"validate and parse expired access token": {
+			input:       entities.AccessToken,
 			advance:     accessTokenExpirationDuration,
 			expectedErr: domain.ErrInvalidToken,
 		},
@@ -45,7 +48,7 @@ func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
 				ID: entities.UserID(uuid.New()),
 			}
 
-			accessToken, err := builder.TokenService.GenerateAccessToken(user)
+			token, err := builder.TokenService.Generate(tt.input, user)
 			if err != nil {
 				t.Fatalf("failed to generated access token: %v", err)
 			}
@@ -53,7 +56,7 @@ func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			// Act & Assert
-			claims, err := builder.TokenService.ValidateAndParseAccessToken(string(accessToken))
+			claims, err := builder.TokenService.ValidateAndParse(tt.input, token)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
@@ -65,18 +68,21 @@ func TestTokenService_ValidateAndParseAccessToken(t *testing.T) {
 	}
 }
 
-func TestTokenService_ValidateAndParseRefreshToken(t *testing.T) {
+func TestTokenService_ValidateAndParseWithCache(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
+		input       entities.TokenType
 		advance     time.Duration
 		expectedErr error
 	}{
 		"validate and parse valid refresh token": {
+			input:       entities.RefreshToken,
 			advance:     0,
 			expectedErr: nil,
 		},
 		"validate and parse expired refresh token": {
+			input:       entities.RefreshToken,
 			advance:     refreshTokenExpirationDuration,
 			expectedErr: domain.ErrInvalidToken,
 		},
@@ -93,14 +99,14 @@ func TestTokenService_ValidateAndParseRefreshToken(t *testing.T) {
 			user := &entities.User{
 				ID: entities.UserID(uuid.New()),
 			}
-			refreshToken, err := builder.TokenService.GenerateRefreshToken(ctx, user.ID)
+			token, err := builder.TokenService.GenerateTokenWithCache(ctx, tt.input, user)
 			if err != nil {
 				t.Fatalf("failed to generated refresh token: %v", err)
 			}
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			// Act & Assert
-			claims, err := builder.TokenService.ValidateAndParseRefreshToken(ctx, string(refreshToken))
+			claims, err := builder.TokenService.ValidateAndParseWithCache(ctx, tt.input, token)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
@@ -111,19 +117,22 @@ func TestTokenService_ValidateAndParseRefreshToken(t *testing.T) {
 	}
 }
 
-func TestTokenService_RevokeRefreshToken(t *testing.T) {
+func TestTokenService_RevokeTokenFromCache(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
+		input       entities.TokenType
 		advance     time.Duration
 		expectedErr error
 	}{
 		"revoke valid refresh token": {
+			input:       entities.RefreshToken,
 			advance:     0,
 			expectedErr: nil,
 		},
 		"revoke expired refresh token": {
-			advance:     accessTokenExpirationDuration,
+			input:       entities.RefreshToken,
+			advance:     refreshTokenExpirationDuration,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
@@ -140,13 +149,13 @@ func TestTokenService_RevokeRefreshToken(t *testing.T) {
 				ID: entities.UserID(uuid.New()),
 			}
 
-			refreshToken, err := builder.TokenService.GenerateRefreshToken(ctx, user.ID)
+			token, err := builder.TokenService.GenerateTokenWithCache(ctx, tt.input, user)
 			if err != nil {
 				t.Fatalf("failed to generated refresh token: %v", err)
 			}
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
-			err = builder.TokenService.RevokeRefreshToken(ctx, string(refreshToken))
+			err = builder.TokenService.RevokeTokenFromCache(ctx, tt.input, token)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}

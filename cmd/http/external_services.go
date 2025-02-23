@@ -41,7 +41,7 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 		return nil, nil, err
 	}
 
-	smtp, err := initializeMailer(cfg, errTracker)
+	ses, err := initializeMailer(cfg, errTracker)
 	if err != nil {
 		db.Close()
 		cache.Close()
@@ -54,7 +54,7 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 		db:         db,
 		cache:      cache,
 		errTracker: errTracker,
-		mailer:     smtp,
+		mailer:     ses,
 	}, cleanup, nil
 }
 
