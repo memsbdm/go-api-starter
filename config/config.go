@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	EnvDevelopment = "development"
 	EnvProduction  = "production"
+	EnvStaging     = "staging"
+	EnvDevelopment = "development"
 )
 
 type (
@@ -165,7 +166,7 @@ func (c *Container) setDefaultValues() {
 // validate validates the container.
 func (c *Container) validate() error {
 	// Application
-	if c.Application.Env != EnvDevelopment && c.Application.Env != EnvProduction {
+	if c.Application.Env != EnvDevelopment && c.Application.Env != EnvProduction && c.Application.Env != EnvStaging {
 		return fmt.Errorf("invalid environment variable: %s", "ENVIRONMENT")
 	}
 

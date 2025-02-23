@@ -14,18 +14,22 @@ import (
 
 // SentryAdapter implements ports.ErrTrackerAdapter interface and provides integration
 // with Sentry error monitoring service.
-type SentryAdapter struct{}
+type SentryAdapter struct {
+	Cfg *config.Container
+}
 
 // NewSentryAdapter creates a new instance of SentryAdapter.
-func NewSentryAdapter(errTrackerCfg *config.ErrTracker) *SentryAdapter {
+func NewSentryAdapter(cfg *config.Container) *SentryAdapter {
 	if err := sentry.Init(sentry.ClientOptions{
-		Dsn:              errTrackerCfg.DSN,
-		TracesSampleRate: errTrackerCfg.TracesSampleRate,
+		Dsn:              cfg.ErrTracker.DSN,
+		TracesSampleRate: cfg.ErrTracker.TracesSampleRate,
 	}); err != nil {
 		slog.Error(fmt.Sprintf("Sentry initialization failed: %v\n", err))
 	}
 
-	return &SentryAdapter{}
+	return &SentryAdapter{
+		Cfg: cfg,
+	}
 }
 
 // Handle wraps the provided http.Handler with Sentry middleware for automatic
@@ -48,7 +52,13 @@ func (sa *SentryAdapter) SetUser(id, ipAddr string) {
 
 // CaptureException sends an error to Sentry and returns the event ID as a string.
 func (sa *SentryAdapter) CaptureException(err error) string {
-	eventID := sentry.CaptureException(err)
+	event := &sentry.Event{
+		Environment: sa.Cfg.Application.Env,
+		Exception:   []sentry.Exception{{Value: err.Error()}},
+	}
+
+	eventID := sentry.CaptureEvent(event)
+
 	return string(*eventID)
 }
 

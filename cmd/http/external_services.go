@@ -61,8 +61,8 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 func initializeErrTracker(cfg *config.Container) ports.ErrTrackerAdapter {
 	var errTracker ports.ErrTrackerAdapter
 	errTracker = mocks.NewErrTrackerAdapterMock()
-	if cfg.Application.Env == config.EnvProduction {
-		errTracker = errtracker.NewSentryAdapter(cfg.ErrTracker)
+	if cfg.Application.Env != config.EnvDevelopment {
+		errTracker = errtracker.NewSentryAdapter(cfg)
 	}
 	return errTracker
 }

@@ -12,7 +12,7 @@ import (
 func New(appCfg *config.App) {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	if appCfg.Env == config.EnvProduction {
+	if appCfg.Env != config.EnvDevelopment {
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	}
 
