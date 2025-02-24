@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"go-starter/config"
 	"go-starter/internal/adapters/mocks"
 	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/adapters/timegen"
+	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/services"
 	"log/slog"
@@ -46,12 +48,22 @@ func newUserGenerator(svc *services.UserService) *userGenerator {
 
 // SeedUsers populates the database with sample user data for testing or development purposes.
 func SeedUsers(ctx context.Context, db *sql.DB) error {
+	cfg := &config.Container{
+		Token: &config.Token{
+			TokenSignature:                 []byte("seed"),
+			AccessTokenDuration:            0,
+			RefreshTokenDuration:           0,
+			EmailVerificationTokenDuration: 0,
+		},
+	}
 	// Initialize dependencies
 	errTrackerAdapter := mocks.NewErrTrackerAdapterMock()
 	userRepo := repositories.NewUserRepository(db, errTrackerAdapter)
 	timeGenerator := timegen.NewTimeGenerator()
 	cacheService := mocks.NewCacheRepositoryMock(timeGenerator)
-	userService := services.NewUserService(userRepo, cacheService)
+	tokenProvider := token.NewTokenProvider(timeGenerator, errTrackerAdapter)
+	tokenService := services.NewTokenService(cfg.Token, tokenProvider, cacheService)
+	userService := services.NewUserService(userRepo, cacheService, tokenService)
 
 	// Configure and run user generator
 	slog.Info("Starting user seeding process")
@@ -133,6 +145,7 @@ func (g *userGenerator) generateUsersBatch(ctx context.Context, start, size int,
 			Username: username,
 			Name:     g.usernames[idx%len(g.usernames)],
 			Password: password,
+			Email:    fmt.Sprintf("%s%d@example.com", g.usernames[idx%len(g.usernames)], idx),
 		}
 	}
 

@@ -19,10 +19,10 @@ type Services struct {
 // New creates and initializes a new Services instance with the provided dependencies.
 func New(cfg *config.Container, a *adapters.Adapters) *Services {
 	cacheSvc := NewCacheService(a.CacheRepository, a.ErrTrackerAdapter)
-	userSvc := NewUserService(a.UserRepository, cacheSvc)
 	tokenSvc := NewTokenService(cfg.Token, a.TokenRepository, cacheSvc)
+	userSvc := NewUserService(a.UserRepository, cacheSvc, tokenSvc)
 	mailerSvc := NewMailerService(cfg, a.MailerAdapter, a.ErrTrackerAdapter)
-	authSvc := NewAuthService(userSvc, tokenSvc, a.ErrTrackerAdapter)
+	authSvc := NewAuthService(cfg.Application, userSvc, tokenSvc, a.ErrTrackerAdapter, mailerSvc)
 	return &Services{
 		CacheService:  cacheSvc,
 		UserService:   userSvc,

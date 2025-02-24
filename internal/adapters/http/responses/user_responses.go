@@ -12,6 +12,7 @@ type UserResponse struct {
 	UpdatedAt       time.Time `json:"updated_at" example:"2025-01-15T14:29:33.455225Z"`
 	Name            string    `json:"name" example:"John Doe"`
 	Username        string    `json:"username" example:"john"`
+	Email           string    `json:"email" example:"john@example.com"`
 	IsEmailVerified bool      `json:"is_email_verified" example:"true"`
 }
 
@@ -23,6 +24,7 @@ func NewUserResponse(user *entities.User) UserResponse {
 		UpdatedAt:       user.UpdatedAt,
 		Name:            user.Name,
 		Username:        user.Username,
+		Email:           user.Email,
 		IsEmailVerified: user.IsEmailVerified,
 	}
 }

@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"errors"
+	"go-starter/config"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
+	"go-starter/internal/domain/mailtemplates"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
 	"strings"
@@ -12,17 +14,28 @@ import (
 
 // AuthService implements ports.AuthService interface.
 type AuthService struct {
+	appCfg     *config.App
 	userSvc    ports.UserService
 	tokenSvc   ports.TokenService
 	errTracker ports.ErrTrackerAdapter
+	mailerSvc  ports.MailerService
 }
 
 // NewAuthService creates a new instance of AuthService.
-func NewAuthService(userSvc ports.UserService, tokenSvc ports.TokenService, errTracker ports.ErrTrackerAdapter) *AuthService {
+func NewAuthService(
+	appCfg *config.App,
+	userSvc ports.UserService,
+	tokenSvc ports.TokenService,
+	errTracker ports.ErrTrackerAdapter,
+	mailerSvc ports.MailerService,
+) *AuthService {
+
 	return &AuthService{
+		appCfg:     appCfg,
 		userSvc:    userSvc,
 		tokenSvc:   tokenSvc,
 		errTracker: errTracker,
+		mailerSvc:  mailerSvc,
 	}
 }
 
@@ -46,12 +59,12 @@ func (as *AuthService) Login(ctx context.Context, username, password string) (*e
 		return nil, nil, domain.ErrInvalidCredentials
 	}
 
-	accessToken, err := as.tokenSvc.Generate(entities.AccessToken, user)
+	accessToken, err := as.tokenSvc.GenerateJWT(entities.AccessToken, user)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	refreshToken, err := as.tokenSvc.GenerateTokenWithCache(ctx, entities.RefreshToken, user)
+	refreshToken, err := as.tokenSvc.CreateAndCacheJWT(ctx, entities.RefreshToken, user)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -68,7 +81,26 @@ func (as *AuthService) Login(ctx context.Context, username, password string) (*e
 // Returns the created user entity and an error if the registration fails
 // (e.g., due to username already existing or validation issues).
 func (as *AuthService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {
-	return as.userSvc.Register(ctx, user)
+	createdUser, err := as.userSvc.Register(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := as.tokenSvc.CreateAndCacheSecureToken(ctx, entities.EmailVerificationToken, createdUser)
+	if err != nil {
+		return nil, err
+	}
+
+	err = as.mailerSvc.Send(&ports.EmailMessage{
+		To:      []string{createdUser.Email},
+		Subject: "Verify your email!",
+		Body:    mailtemplates.VerifyEmail(as.appCfg.BaseURL, token),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return createdUser, nil
 }
 
 // Refresh generates new access and refresh tokens using the previous refresh token.
@@ -78,7 +110,7 @@ func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string)
 	if previousRefreshToken == "" {
 		return nil, domain.ErrRefreshTokenRequired
 	}
-	claims, err := as.tokenSvc.ValidateAndParseWithCache(ctx, entities.RefreshToken, previousRefreshToken)
+	claims, err := as.tokenSvc.VerifyCachedJWT(ctx, entities.RefreshToken, previousRefreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -88,17 +120,17 @@ func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string)
 		return nil, err
 	}
 
-	accessToken, err := as.tokenSvc.Generate(entities.AccessToken, user)
+	accessToken, err := as.tokenSvc.GenerateJWT(entities.AccessToken, user)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := as.tokenSvc.GenerateTokenWithCache(ctx, entities.RefreshToken, user)
+	refreshToken, err := as.tokenSvc.CreateAndCacheJWT(ctx, entities.RefreshToken, user)
 	if err != nil {
 		return nil, err
 	}
 
-	err = as.tokenSvc.RevokeTokenFromCache(ctx, entities.RefreshToken, previousRefreshToken)
+	err = as.tokenSvc.RevokeJWT(ctx, entities.RefreshToken, previousRefreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -114,5 +146,5 @@ func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string)
 // Logout invalidates the specified refresh token, effectively logging the user out.
 // Returns an error if the logout operation fails (e.g., if the refresh token is not found).
 func (as *AuthService) Logout(ctx context.Context, refreshToken string) error {
-	return as.tokenSvc.RevokeTokenFromCache(ctx, entities.RefreshToken, refreshToken)
+	return as.tokenSvc.RevokeJWT(ctx, entities.RefreshToken, refreshToken)
 }

@@ -9,8 +9,9 @@ type TokenType string
 
 // Token type constants define the available types of tokens in the system.
 const (
-	RefreshToken TokenType = "refresh_token"
-	AccessToken  TokenType = "access_token"
+	RefreshToken           TokenType = "refresh_token"
+	AccessToken            TokenType = "access_token"
+	EmailVerificationToken TokenType = "email_verification_token"
 )
 
 // String converts the TokenType to its string representation.
@@ -30,4 +31,11 @@ type TokenClaims struct {
 type AuthTokens struct {
 	AccessToken  string
 	RefreshToken string
+}
+
+// SecureToken contains a user ID and a token.
+// This structure is typically used when returning a secure token to clients and parsing it back.
+type SecureToken struct {
+	UserID uuid.UUID
+	Token  string
 }

@@ -5,13 +5,14 @@ package services_test
 import (
 	"context"
 	"errors"
-	"github.com/google/uuid"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/services"
 	"go-starter/internal/domain/utils"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func newValidUserToCreate() *entities.User {
@@ -19,6 +20,7 @@ func newValidUserToCreate() *entities.User {
 		Name:     "John Doe",
 		Username: "example",
 		Password: "secret123",
+		Email:    "example@example.com",
 	}
 }
 
@@ -28,9 +30,7 @@ func TestUserService_Register(t *testing.T) {
 	// Arrange
 	ctx := context.Background()
 	builder := NewTestBuilder().Build()
-
 	userToCreate := newValidUserToCreate()
-
 	createdUser, err := builder.UserService.Register(ctx, userToCreate)
 	if err != nil {
 		t.Fatalf("error while registering user: %v", err)
@@ -45,6 +45,7 @@ func TestUserService_Register(t *testing.T) {
 				Name:     userToCreate.Name,
 				Username: "success",
 				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: nil,
 		},
@@ -53,13 +54,24 @@ func TestUserService_Register(t *testing.T) {
 				Name:     userToCreate.Name,
 				Username: createdUser.Username,
 				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrUsernameAlreadyTaken,
+		},
+		"register user with conflicting not verified email": {
+			input: &entities.User{
+				Name:     userToCreate.Name,
+				Username: "conflict",
+				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
+			},
+			expectedErr: nil,
 		},
 		"register user without username": {
 			input: &entities.User{
 				Name:     userToCreate.Name,
 				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrUsernameRequired,
 		},
@@ -67,6 +79,7 @@ func TestUserService_Register(t *testing.T) {
 			input: &entities.User{
 				Name:     userToCreate.Name,
 				Username: createdUser.Username,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrPasswordRequired,
 		},
@@ -75,6 +88,7 @@ func TestUserService_Register(t *testing.T) {
 				Name:     userToCreate.Name,
 				Username: createdUser.Username,
 				Password: "short",
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrPasswordTooShort,
 		},
@@ -83,6 +97,7 @@ func TestUserService_Register(t *testing.T) {
 				Name:     userToCreate.Name,
 				Username: strings.Repeat("x", domain.UsernameMinLength-1),
 				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrUsernameTooShort,
 		},
@@ -91,14 +106,16 @@ func TestUserService_Register(t *testing.T) {
 				Name:     userToCreate.Name,
 				Username: strings.Repeat("x", domain.UsernameMaxLength+1),
 				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrUsernameTooLong,
 		},
 		"register user with invalid username": {
 			input: &entities.User{
 				Name:     userToCreate.Name,
-				Username: " invalid ",
+				Username: "invalid%@",
 				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrUsernameInvalid,
 		},
@@ -106,6 +123,7 @@ func TestUserService_Register(t *testing.T) {
 			input: &entities.User{
 				Username: userToCreate.Username,
 				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrNameRequired,
 		},
@@ -114,6 +132,7 @@ func TestUserService_Register(t *testing.T) {
 				Name:     strings.Repeat("x", domain.NameMaxLength+1),
 				Username: userToCreate.Username,
 				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrNameTooLong,
 		},
@@ -122,6 +141,7 @@ func TestUserService_Register(t *testing.T) {
 				Name:     strings.Repeat("🥵", domain.NameMaxLength/4+1),
 				Username: userToCreate.Username,
 				Password: userToCreate.Password,
+				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrNameTooLong,
 		},
@@ -139,6 +159,41 @@ func TestUserService_Register(t *testing.T) {
 				t.Errorf("expected username %s, got %s", tt.input.Username, result.Username)
 			}
 		})
+	}
+}
+
+func TestUserService_Register_EmailVerification(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	builder := NewTestBuilder().Build()
+
+	userToCreate := newValidUserToCreate()
+	createdUser, err := builder.UserService.Register(ctx, userToCreate)
+	if err != nil {
+		t.Fatalf("error while registering user: %v", err)
+	}
+
+	err = builder.UserRepo.VerifyEmail(ctx, createdUser.ID.UUID())
+	if err != nil {
+		t.Fatalf("error while verifying email: %v", err)
+	}
+
+	testedUser := &entities.User{
+		Username: "valid",
+		Password: userToCreate.Password,
+		Name:     userToCreate.Name,
+		Email:    userToCreate.Email,
+	}
+
+	// Act & Assert
+	newUser, err := builder.UserService.Register(ctx, testedUser)
+	if !errors.Is(err, domain.ErrEmailAlreadyTaken) {
+		t.Errorf("expected error %v, got %v", domain.ErrEmailAlreadyTaken, err)
+	}
+	if newUser != nil {
+		t.Errorf("expected user to be nil, got %v", newUser)
 	}
 }
 

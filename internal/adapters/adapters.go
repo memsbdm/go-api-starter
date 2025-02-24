@@ -20,7 +20,7 @@ type Adapters struct {
 func New(db *sql.DB, timeGenerator ports.TimeGenerator, cache ports.CacheRepository, errTracker ports.ErrTrackerAdapter, mailer ports.MailerAdapter) *Adapters {
 	return &Adapters{
 		UserRepository:    repositories.NewUserRepository(db, errTracker),
-		TokenRepository:   token.NewJWTProvider(timeGenerator, errTracker),
+		TokenRepository:   token.NewTokenProvider(timeGenerator, errTracker),
 		CacheRepository:   cache,
 		ErrTrackerAdapter: errTracker,
 		MailerAdapter:     mailer,

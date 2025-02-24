@@ -67,6 +67,7 @@ func (s *Server) setupRoutes(tokenSvc ports.TokenService) {
 
 	// User routes
 	s.mux.HandleFunc("GET /v1/users/me", m.Chain(s.handlers.UserHandler.Me, auth))
+	s.mux.HandleFunc("GET /v1/users/verify-email/{token}", s.handlers.UserHandler.VerifyEmail)
 	s.mux.HandleFunc("GET /v1/users/{uuid}", s.handlers.UserHandler.GetByID)
 	s.mux.HandleFunc("PATCH /v1/users/password", m.Chain(s.handlers.UserHandler.UpdatePassword, auth))
 }

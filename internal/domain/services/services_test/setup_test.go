@@ -35,7 +35,7 @@ func NewTestBuilder() *TestBuilder {
 	errTrackerAdapter := mocks.NewErrTrackerAdapterMock()
 	timeGenerator := timegen.NewTimeGenerator()
 	cacheRepo := mocks.NewCacheRepositoryMock(timeGenerator)
-	tokenProvider := token.NewJWTProvider(timeGenerator, errTrackerAdapter)
+	tokenProvider := token.NewTokenProvider(timeGenerator, errTrackerAdapter)
 	userRepo := mocks.NewUserRepositoryMock()
 
 	cfg := setConfig()
@@ -54,16 +54,16 @@ func NewTestBuilder() *TestBuilder {
 func (tb *TestBuilder) WithTimeGenerator(tg ports.TimeGenerator) *TestBuilder {
 	tb.TimeGenerator = tg
 	tb.CacheRepo = mocks.NewCacheRepositoryMock(tg)
-	tb.TokenProvider = token.NewJWTProvider(tg, tb.ErrTrackerAdapter)
+	tb.TokenProvider = token.NewTokenProvider(tg, tb.ErrTrackerAdapter)
 	return tb
 }
 
 func (tb *TestBuilder) Build() *TestBuilder {
 	tb.MailerService = services.NewMailerService(tb.Config, tb.MailerAdapter, tb.ErrTrackerAdapter)
 	tb.CacheService = services.NewCacheService(tb.CacheRepo, tb.ErrTrackerAdapter)
-	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService)
+	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService, tb.TokenService)
 	tb.TokenService = services.NewTokenService(tb.Config.Token, tb.TokenProvider, tb.CacheService)
-	tb.AuthService = services.NewAuthService(tb.UserService, tb.TokenService, tb.ErrTrackerAdapter)
+	tb.AuthService = services.NewAuthService(tb.Config.Application, tb.UserService, tb.TokenService, tb.ErrTrackerAdapter, tb.MailerService)
 	return tb
 }
 
@@ -78,9 +78,10 @@ func setConfig() *config.Container {
 	}
 
 	tokenConfig := &config.Token{
-		AccessTokenDuration:  accessTokenExpirationDuration,
-		RefreshTokenDuration: refreshTokenExpirationDuration,
-		TokenSignature:       []byte("token"),
+		AccessTokenDuration:            accessTokenExpirationDuration,
+		RefreshTokenDuration:           refreshTokenExpirationDuration,
+		EmailVerificationTokenDuration: emailVerificationTokenExpirationDuration,
+		TokenSignature:                 []byte("token"),
 	}
 
 	mailerConfig := &config.Mailer{

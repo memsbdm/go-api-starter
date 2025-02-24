@@ -128,3 +128,24 @@ func TestAuthService_Refresh(t *testing.T) {
 		})
 	}
 }
+
+func TestAuthService_Register_SendsEmail(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	builder := NewTestBuilder().Build()
+
+	// Act & Assert
+	userToCreate := newValidUserToCreate()
+	_, err := builder.AuthService.Register(ctx, userToCreate)
+	if err != nil {
+		t.Fatalf("error while registering user: %v", err)
+	}
+
+	if v, ok := builder.MailerAdapter.(interface{ SentEmailsCount() int }); ok {
+		if v.SentEmailsCount() != 1 {
+			t.Errorf("expected 1 email to be sent, got %d", v.SentEmailsCount())
+		}
+	}
+}

@@ -68,6 +68,7 @@ type registerRequest struct {
 	Name     string `json:"name" validate:"required,min=1,max=50" example:"John Doe"`
 	Username string `json:"username" validate:"required,min=4,max=15" example:"john"`
 	Password string `json:"password" validate:"required,min=8" example:"secret123"`
+	Email    string `json:"email" validate:"required,email" example:"john@example.com"`
 }
 
 // Register godoc
@@ -98,9 +99,8 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Name:     payload.Name,
 		Username: payload.Username,
 		Password: payload.Password,
+		Email:    payload.Email,
 	}
-	user.Name = strings.TrimSpace(user.Name)
-	user.Username = strings.TrimSpace(user.Username)
 
 	created, err := ah.svc.Register(ctx, user)
 	if err != nil {

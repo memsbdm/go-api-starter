@@ -17,6 +17,7 @@ type User struct {
 	Name            string
 	Username        string
 	Password        string
+	Email           string
 	IsEmailVerified bool
 }
 

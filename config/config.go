@@ -26,7 +26,8 @@ type (
 
 	// App contains all the environment variables for the application.
 	App struct {
-		Env string
+		Env     string
+		BaseURL string
 	}
 
 	// DB contains all the environment variables for the database.
@@ -50,9 +51,10 @@ type (
 
 	// Token contains all the environment variables for the token service.
 	Token struct {
-		TokenSignature       []byte
-		AccessTokenDuration  time.Duration
-		RefreshTokenDuration time.Duration
+		TokenSignature                 []byte
+		AccessTokenDuration            time.Duration
+		RefreshTokenDuration           time.Duration
+		EmailVerificationTokenDuration time.Duration
 	}
 
 	// ErrTracker contains all the environment variables for the error tracking.
@@ -74,7 +76,8 @@ type (
 // New creates a new container instance.
 func New() *Container {
 	app := &App{
-		Env: env.GetString("ENVIRONMENT"),
+		Env:     env.GetString("ENVIRONMENT"),
+		BaseURL: env.GetString("BASE_URL"),
 	}
 
 	db := &DB{
@@ -94,9 +97,10 @@ func New() *Container {
 	}
 
 	token := &Token{
-		TokenSignature:       []byte(env.GetString("TOKEN_SIGNATURE")),
-		AccessTokenDuration:  env.GetOptionalDuration("ACCESS_TOKEN_DURATION"),
-		RefreshTokenDuration: env.GetOptionalDuration("REFRESH_TOKEN_DURATION"),
+		TokenSignature:                 []byte(env.GetString("TOKEN_SIGNATURE")),
+		AccessTokenDuration:            env.GetOptionalDuration("ACCESS_TOKEN_DURATION"),
+		RefreshTokenDuration:           env.GetOptionalDuration("REFRESH_TOKEN_DURATION"),
+		EmailVerificationTokenDuration: env.GetOptionalDuration("EMAIL_VERIFICATION_TOKEN_DURATION"),
 	}
 
 	errTracker := &ErrTracker{

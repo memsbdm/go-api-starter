@@ -2,11 +2,13 @@ package mocks
 
 import (
 	"context"
-	"github.com/google/uuid"
+	"fmt"
 	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"sync"
+
+	"github.com/google/uuid"
 )
 
 type db struct {
@@ -78,9 +80,11 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 
 	id := uuid.New()
 	newUser := &entities.User{
-		ID:       entities.UserID(id),
-		Username: user.Username,
-		Password: user.Password,
+		ID:              entities.UserID(id),
+		Username:        user.Username,
+		Password:        user.Password,
+		Email:           user.Email,
+		IsEmailVerified: false,
 	}
 	ur.db.data[newUser.ID] = newUser
 
@@ -98,4 +102,45 @@ func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.Us
 
 	ur.db.data[userID].Username = newPassword
 	return nil
+}
+
+// VerifyEmail updates the email verification status of a user.
+func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) error {
+	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
+	defer cancel()
+
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+
+	ur.db.data[entities.UserID(userID)].IsEmailVerified = true
+	return nil
+}
+
+// CheckEmailAvailability checks if an email is available for registration.
+// Returns an error if the email is already taken.
+func (ur *UserRepository) CheckEmailAvailability(ctx context.Context, email string) error {
+	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
+	defer cancel()
+
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+
+	for _, v := range ur.db.data {
+		if v.Email == email && v.IsEmailVerified {
+			return domain.ErrEmailAlreadyTaken
+		}
+	}
+
+	return nil
+}
+
+// PrintAllUsers prints all users in the database.
+// This is only for testing purposes.
+func (ur *UserRepository) PrintAllUsers() {
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+
+	for _, v := range ur.db.data {
+		fmt.Println(v)
+	}
 }

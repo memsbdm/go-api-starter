@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"fmt"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/ports"
 	"strings"
@@ -82,4 +83,14 @@ func (cm *CacheRepositoryMock) DeleteByPrefix(_ context.Context, prefix string) 
 // Returns an error if the operation fails (e.g., if there are issues closing the connection).
 func (cm *CacheRepositoryMock) Close() error {
 	return nil
+}
+
+// PrintAllCache prints all the data in the cache.
+// This is only for testing purposes.
+func (cm *CacheRepositoryMock) PrintAllCache() {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+	for key, value := range cm.data {
+		fmt.Println(key, string(value))
+	}
 }

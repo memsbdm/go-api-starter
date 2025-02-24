@@ -7,8 +7,13 @@ CREATE TABLE users (
     name VARCHAR(50) NOT NULL,
     username VARCHAR(15) UNIQUE NOT NULL,
     password VARCHAR(60) NOT NULL,
+    email VARCHAR(254) NOT NULL,
     is_email_verified BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+CREATE UNIQUE INDEX idx_verified_email
+    ON users (email)
+    WHERE is_email_verified = TRUE;
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
     RETURNS TRIGGER AS $$
@@ -26,6 +31,7 @@ EXECUTE FUNCTION update_updated_at_column();
 
 -- +goose Down
 -- +goose StatementBegin
+DROP INDEX IF EXISTS idx_verified_email;
 DROP TRIGGER IF EXISTS set_updated_at ON users;
 DROP FUNCTION IF EXISTS update_updated_at_column();
 DROP TABLE IF EXISTS users;

@@ -3,28 +3,32 @@ package services
 import (
 	"context"
 	"errors"
+	"go-starter/internal/adapters/http/helpers"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"regexp"
 	"strings"
 	"time"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // UserService implements ports.UserService interface and provides access to the user repository.
 type UserService struct {
 	repo     ports.UserRepository
 	cacheSvc ports.CacheService
+	tokenSvc ports.TokenService
 }
 
 // NewUserService creates a new instance of UserService.
-func NewUserService(repo ports.UserRepository, cacheSvc ports.CacheService) *UserService {
+func NewUserService(repo ports.UserRepository, cacheSvc ports.CacheService, tokenSvc ports.TokenService) *UserService {
 	return &UserService{
 		repo:     repo,
 		cacheSvc: cacheSvc,
+		tokenSvc: tokenSvc,
 	}
 }
 
@@ -88,6 +92,12 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 		return nil, err
 	}
 
+	if err := us.repo.CheckEmailAvailability(ctx, user.Email); err != nil {
+		if errors.Is(err, domain.ErrEmailAlreadyTaken) {
+			return nil, domain.ErrEmailAlreadyTaken
+		}
+		return nil, domain.ErrInternal
+	}
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
 		return nil, domain.ErrInternal
@@ -97,6 +107,7 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 		Name:     user.Name,
 		Username: user.Username,
 		Password: hashedPassword,
+		Email:    user.Email,
 	}
 
 	created, err := us.repo.Create(ctx, userToCreate)
@@ -108,6 +119,20 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 	}
 
 	return created, nil
+}
+
+func (us *UserService) VerifyEmail(ctx context.Context, token string) error {
+	userID, err := us.tokenSvc.VerifyAndInvalidateSecureToken(ctx, entities.EmailVerificationToken, token)
+	if err != nil {
+		return err
+	}
+
+	err = us.repo.VerifyEmail(ctx, userID)
+	if err != nil {
+		return domain.ErrInternal
+	}
+
+	return nil
 }
 
 // UpdatePassword updates a user password.
@@ -136,23 +161,21 @@ func (us *UserService) UpdatePassword(ctx context.Context, userID entities.UserI
 	return nil
 }
 
-// validatePassword checks if the provided username meets the required criteria.
+// validateAndFormatUsername checks if the provided username meets the required criteria.
 // Returns an error if any validation fails.
-func validateUsername(username string) error {
-	if username == "" {
+func validateAndFormatUsername(user *entities.User) error {
+	user.Username = strings.TrimSpace(user.Username)
+	if user.Username == "" {
 		return domain.ErrUsernameRequired
 	}
-	if len(username) < domain.UsernameMinLength {
+	if len(user.Username) < domain.UsernameMinLength {
 		return domain.ErrUsernameTooShort
 	}
-	if len(username) > domain.UsernameMaxLength {
+	if len(user.Username) > domain.UsernameMaxLength {
 		return domain.ErrUsernameTooLong
 	}
-	ok, err := regexp.Match("^[a-zA-Z0-9_]*$", []byte(username))
-	if err != nil {
-		return domain.ErrInternal
-	}
-	if !ok {
+	usernameRegex := regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+	if !usernameRegex.MatchString(user.Username) {
 		return domain.ErrUsernameInvalid
 	}
 	return nil
@@ -192,16 +215,35 @@ func validateAndFormatName(user *entities.User) error {
 	return nil
 }
 
+// validateAndFormatEmail validates and formats a user email.
+// Returns an error if any validation fails.
+func validateAndFormatEmail(user *entities.User) error {
+	user.Email = strings.TrimSpace(user.Email)
+	if user.Email == "" {
+		return domain.ErrEmailRequired
+	}
+
+	ok := helpers.IsValidEmail(user.Email)
+	if !ok {
+		return domain.ErrEmailInvalid
+	}
+
+	return nil
+}
+
 // validateRegisterRequest validates the registration details of a user.
 // Returns an error if any validation fails.
 func validateRegisterRequest(user *entities.User) error {
 	if err := validateAndFormatName(user); err != nil {
 		return err
 	}
-	if err := validateUsername(user.Username); err != nil {
+	if err := validateAndFormatUsername(user); err != nil {
 		return err
 	}
 	if err := validatePassword(user.Password); err != nil {
+		return err
+	}
+	if err := validateAndFormatEmail(user); err != nil {
 		return err
 	}
 	return nil

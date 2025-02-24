@@ -37,14 +37,14 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 
 	cache, err := initializeCache(ctx, cfg, errTracker)
 	if err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, nil, err
 	}
 
 	ses, err := initializeMailer(cfg, errTracker)
 	if err != nil {
-		db.Close()
-		cache.Close()
+		_ = db.Close()
+		_ = cache.Close()
 		return nil, nil, err
 	}
 

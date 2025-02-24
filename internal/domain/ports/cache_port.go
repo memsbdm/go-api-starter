@@ -12,7 +12,7 @@ type CacheService interface {
 	Set(ctx context.Context, key string, value []byte, ttl time.Duration) error
 
 	// Get retrieves the value associated with the specified key from the cache.
-	// Returns the value as a byte slice and an error if the key is not found
+	// Returns the value as a byte slice and an error if the key is not found (domain.ErrCacheNotFound)
 	// or if there are issues accessing the cache.
 	Get(ctx context.Context, key string) ([]byte, error)
 

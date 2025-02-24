@@ -416,6 +416,50 @@
                 }
             }
         },
+        "/v1/users/verify-email/{token}": {
+            "get": {
+                "description": "Verify user email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Verify user email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Verification token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User displayed",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error / invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/users/{uuid}": {
             "get": {
                 "security": [
@@ -651,6 +695,10 @@
                     "type": "string",
                     "example": "2024-08-15T16:23:33.455225Z"
                 },
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
                 "id": {
                     "type": "string",
                     "example": "6b947a32-8919-4974-9ef3-048a556b0b75"
@@ -705,11 +753,16 @@
         "internal_adapters_http_handlers.registerRequest": {
             "type": "object",
             "required": [
+                "email",
                 "name",
                 "password",
                 "username"
             ],
             "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 50,

@@ -138,3 +138,28 @@ func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 
 	responses.HandleSuccess(w, http.StatusOK, nil)
 }
+
+// VerifyEmail godoc
+//
+//	@Summary		Verify user email
+//	@Description	Verify user email
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Param			token	path		string		true	"Verification token"
+//	@Success		200	{object}	responses.EmptyResponse	"User displayed"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error / invalid token"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
+//	@Router			/v1/users/verify-email/{token} [get]
+func (uh *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	token := r.PathValue("token")
+	err := uh.svc.VerifyEmail(ctx, token)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	responses.HandleSuccess(w, http.StatusOK, nil)
+}

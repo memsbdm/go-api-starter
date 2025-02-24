@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-playground/validator/v10"
 	"go-starter/internal/domain"
 	"log/slog"
 	"net/http"
 	"sync"
+
+	"github.com/go-playground/validator/v10"
 )
 
 const (
@@ -46,6 +47,8 @@ var validationMessages = map[string]error{
 	"registerRequest.Username.max":              domain.ErrUsernameTooLong,
 	"registerRequest.Password.required":         domain.ErrPasswordRequired,
 	"registerRequest.Password.min":              domain.ErrPasswordTooShort,
+	"registerRequest.Email.required":            domain.ErrEmailRequired,
+	"registerRequest.Email.email":               domain.ErrEmailInvalid,
 
 	// Users
 	"updatePasswordRequest.Password.required":             domain.ErrPasswordRequired,
@@ -78,7 +81,7 @@ func ValidateRequest(w http.ResponseWriter, r *http.Request, payload interface{}
 			field := fmt.Sprintf("%s.%s", err.StructNamespace(), err.Tag())
 			message, ok := validationMessages[field]
 			if !ok {
-				message = errors.New(fmt.Sprintf("Validation failed on field '%s' for condition '%s'", err.Field(), err.Tag()))
+				message = fmt.Errorf("validation failed on field '%s' for condition '%s'", err.Field(), err.Tag())
 			}
 			errs = append(errs, message)
 		}

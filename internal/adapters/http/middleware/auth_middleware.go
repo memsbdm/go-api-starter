@@ -40,7 +40,7 @@ func AuthMiddleware(tokenSvc ports.TokenService, errTracker ports.ErrTrackerAdap
 			}
 
 			accessToken := fields[1]
-			tokenPayload, err := tokenSvc.ValidateAndParse(entities.AccessToken, accessToken)
+			tokenPayload, err := tokenSvc.ValidateJWT(entities.AccessToken, accessToken)
 			if err != nil {
 				responses.HandleError(w, domain.ErrUnauthorized)
 				return
@@ -74,7 +74,7 @@ func GuestMiddleware(tokenSvc ports.TokenService) Middleware {
 			}
 
 			accessToken := fields[1]
-			_, err := tokenSvc.ValidateAndParse(entities.AccessToken, accessToken)
+			_, err := tokenSvc.ValidateJWT(entities.AccessToken, accessToken)
 			if err == nil {
 				responses.HandleError(w, domain.ErrForbidden)
 				return

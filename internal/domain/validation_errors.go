@@ -10,6 +10,7 @@ const (
 	UsernameMinLength = 4
 	UsernameMaxLength = 15
 	PasswordMinLength = 8
+	EmailMaxLength    = 254
 )
 
 // Returned validation errors
@@ -26,19 +27,27 @@ var (
 	ErrPasswordConfirmationRequired = errors.New("password confirmation required")
 	// ErrNameRequired represents an error when name is required but not provided.
 	ErrNameRequired = errors.New("name is required")
+	// ErrEmailRequired represents an error when email is required but not provided.
+	ErrEmailRequired = errors.New("email is required")
 
 	// Other validation errors
 
 	// ErrPasswordsNotMatch represents an error when the provided passwords do not match.
 	ErrPasswordsNotMatch = errors.New("passwords does not match")
 	// ErrPasswordTooShort represents an error when the password is too short, less than the minimum required length.
-	ErrPasswordTooShort = errors.New(fmt.Sprintf("password is too short, it should be at least %d characters", PasswordMinLength))
+	ErrPasswordTooShort = fmt.Errorf("password is too short, it should be at least %d characters", PasswordMinLength)
 	// ErrUsernameTooShort represents an error when the username is too short, less than the minimum required length.
-	ErrUsernameTooShort = errors.New(fmt.Sprintf("username is too short, it should be at least %d characters", UsernameMinLength))
+	ErrUsernameTooShort = fmt.Errorf("username is too short, it should be at least %d characters", UsernameMinLength)
+	// ErrUsernameAlreadyTaken represents a conflict error when trying to create a user with an existing username.
+	ErrUsernameAlreadyTaken = errors.New("username already taken")
 	// ErrUsernameTooLong represents an error when the username is too long, greater than the minimum required length.
-	ErrUsernameTooLong = errors.New(fmt.Sprintf("username is too long, it should be at most %d characters", UsernameMaxLength))
+	ErrUsernameTooLong = fmt.Errorf("username is too long, it should be at most %d characters", UsernameMaxLength)
 	// ErrUsernameInvalid represents an error when the username is invalid, not respecting the regex pattern.
 	ErrUsernameInvalid = errors.New("username can only contain alphanumeric characters and underscore")
 	// ErrNameTooLong represents an error when the name is too long, greater than the minimum required length.
-	ErrNameTooLong = errors.New(fmt.Sprintf("name is too long, it should be at most %d characters", NameMaxLength))
+	ErrNameTooLong = fmt.Errorf("name is too long, it should be at most %d characters", NameMaxLength)
+	// ErrEmailInvalid represents an error when the email is invalid.
+	ErrEmailInvalid = errors.New("email is invalid")
+	// ErrEmailAlreadyTaken represents a conflict error when trying to create a user with an existing email.
+	ErrEmailAlreadyTaken = errors.New("email already taken")
 )

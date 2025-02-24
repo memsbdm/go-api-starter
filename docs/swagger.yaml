@@ -120,6 +120,9 @@ definitions:
       created_at:
         example: "2024-08-15T16:23:33.455225Z"
         type: string
+      email:
+        example: john@example.com
+        type: string
       id:
         example: 6b947a32-8919-4974-9ef3-048a556b0b75
         type: string
@@ -158,6 +161,9 @@ definitions:
     type: object
   internal_adapters_http_handlers.registerRequest:
     properties:
+      email:
+        example: john@example.com
+        type: string
       name:
         example: John Doe
         maxLength: 50
@@ -173,6 +179,7 @@ definitions:
         minLength: 4
         type: string
     required:
+    - email
     - name
     - password
     - username
@@ -494,6 +501,35 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user password
+      tags:
+      - Users
+  /v1/users/verify-email/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Verify user email
+      parameters:
+      - description: Verification token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User displayed
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "401":
+          description: Unauthorized error / invalid token
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      summary: Verify user email
       tags:
       - Users
 securityDefinitions:
