@@ -160,6 +160,9 @@ func (c *Container) setDefaultValues() {
 	if c.Token.RefreshTokenDuration == 0 {
 		c.Token.RefreshTokenDuration = 1 * time.Hour
 	}
+	if c.Token.EmailVerificationTokenDuration == 0 {
+		c.Token.EmailVerificationTokenDuration = 24 * time.Hour
+	}
 
 	// ErrTracker
 	if c.ErrTracker.TracesSampleRate == 0 {
