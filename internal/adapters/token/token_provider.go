@@ -200,16 +200,9 @@ func (p *Provider) GenerateOneTimeToken(userID uuid.UUID) (token string, hash st
 	}
 
 	token = base64.RawURLEncoding.EncodeToString(tokenJSON)
-	hash = p.HashOneTimeToken(token)
+	hash = p.HashToken(token)
 
 	return token, hash, nil
-}
-
-// HashOneTimeToken creates a secure hash of the given token for storage and validation.
-// Returns the base64-encoded hash string.
-func (p *Provider) HashOneTimeToken(token string) string {
-	h := sha256.Sum256([]byte(token))
-	return base64.RawURLEncoding.EncodeToString(h[:])
 }
 
 // ParseOneTimeToken decodes and validates the structure of a one-time token.
@@ -230,4 +223,11 @@ func (p *Provider) ParseOneTimeToken(token string) (*entities.OneTimeToken, erro
 	}
 
 	return &oneTimeToken, nil
+}
+
+// HashToken creates a secure hash of the given token for storage and validation.
+// Returns the base64-encoded hash string.
+func (p *Provider) HashToken(token string) string {
+	h := sha256.Sum256([]byte(token))
+	return base64.RawURLEncoding.EncodeToString(h[:])
 }

@@ -61,11 +61,11 @@ type TokenProvider interface {
 	// Returns the token, its hash for storage, and any error that occurred.
 	GenerateOneTimeToken(userID uuid.UUID) (token string, hash string, err error)
 
-	// HashOneTimeToken creates a secure hash of the given token for storage and validation.
-	// Returns the base64-encoded hash string.
-	HashOneTimeToken(token string) string
-
 	// ParseOneTimeToken decodes and validates the structure of a one-time token.
 	// Returns the parsed token data or an error if the token is invalid.
 	ParseOneTimeToken(token string) (*entities.OneTimeToken, error)
+
+	// HashToken creates a secure hash of the given token for storage and validation.
+	// Returns the base64-encoded hash string.
+	HashToken(token string) string
 }

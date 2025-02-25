@@ -57,8 +57,9 @@ func (ts *TokenService) GenerateRefreshToken(ctx context.Context, userID entitie
 		return "", domain.ErrInternal
 	}
 
+	hashedToken := ts.provider.HashToken(token)
 	key := utils.GenerateCacheKey(entities.RefreshToken.String(), userID.String(), tokenID.String())
-	err = ts.cacheSvc.Set(ctx, key, []byte(token), ts.getTokenTypeDuration(entities.RefreshToken))
+	err = ts.cacheSvc.Set(ctx, key, []byte(hashedToken), ts.getTokenTypeDuration(entities.RefreshToken))
 	if err != nil {
 		return "", err
 	}
@@ -78,11 +79,16 @@ func (ts *TokenService) VerifyAndParseRefreshToken(ctx context.Context, token st
 	}
 
 	key := utils.GenerateCacheKey(entities.RefreshToken.String(), claims.Subject.String(), claims.ID.String())
-	if _, err := ts.cacheSvc.Get(ctx, key); err != nil {
+	storedHash, err := ts.cacheSvc.Get(ctx, key)
+	if err != nil {
 		if errors.Is(err, domain.ErrCacheNotFound) {
 			return nil, domain.ErrInvalidToken
 		}
 		return nil, err
+	}
+
+	if ts.provider.HashToken(token) != string(storedHash) {
+		return nil, domain.ErrInvalidToken
 	}
 
 	return claims, nil
@@ -145,7 +151,7 @@ func (ts *TokenService) VerifyAndConsumeOneTimeToken(ctx context.Context, tokenT
 		return nilUserID, err
 	}
 
-	if ts.provider.HashOneTimeToken(token) != string(dbHashedToken) {
+	if ts.provider.HashToken(token) != string(dbHashedToken) {
 		return nilUserID, domain.ErrInvalidToken
 	}
 

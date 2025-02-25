@@ -232,7 +232,7 @@ func TestTokenService_CreateAndCacheSecureToken(t *testing.T) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 
-			if err == nil && string(value) != builder.TokenProvider.HashOneTimeToken(token) {
+			if err == nil && string(value) != builder.TokenProvider.HashToken(token) {
 				t.Errorf("expected token %s, got %s", token, string(value))
 			}
 		})
