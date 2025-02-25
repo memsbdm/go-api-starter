@@ -4,7 +4,6 @@ import (
 	"go-starter/internal/adapters/http/helpers"
 	"go-starter/internal/adapters/http/responses"
 	"go-starter/internal/adapters/validator"
-	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
@@ -40,7 +39,7 @@ func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 	claims, err := helpers.ExtractAccessTokenClaims(ctx)
 	if err != nil {
-		responses.HandleError(w, domain.ErrInternal)
+		responses.HandleError(w, err)
 		return
 	}
 
@@ -126,7 +125,7 @@ func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	claims, err := helpers.ExtractAccessTokenClaims(ctx)
 	if err != nil {
 		uh.errTracker.CaptureException(err)
-		responses.HandleError(w, domain.ErrInternal)
+		responses.HandleError(w, err)
 		return
 	}
 

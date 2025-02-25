@@ -109,7 +109,10 @@ func (ts *TokenService) VerifyCachedJWT(ctx context.Context, tokenType entities.
 	}
 
 	ok, err := ts.isTokenValid(ctx, tokenType, claims.ID, claims.Subject)
-	if err != nil || !ok {
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, domain.ErrInvalidToken
 	}
 
@@ -186,10 +189,11 @@ func (ts *TokenService) cacheToken(ctx context.Context, tokenType entities.Token
 // Returns a boolean indicating presence and an error if the operation fails.
 func (ts *TokenService) isTokenValid(ctx context.Context, tokenType entities.TokenType, tokenID uuid.UUID, userID entities.UserID) (bool, error) {
 	key := generateTokenCacheKey(tokenType, userID, tokenID)
-	if value, err := ts.cacheSvc.Get(ctx, key); err != nil {
-		return false, domain.ErrInternal
-	} else if value == nil {
-		return false, nil
+	if _, err := ts.cacheSvc.Get(ctx, key); err != nil {
+		if errors.Is(err, domain.ErrCacheNotFound) {
+			return false, nil
+		}
+		return false, err
 	}
 
 	return true, nil

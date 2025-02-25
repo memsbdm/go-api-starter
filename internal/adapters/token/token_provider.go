@@ -32,7 +32,7 @@ func NewTokenProvider(timeGenerator ports.TimeGenerator, errTracker ports.ErrTra
 	}
 }
 
-// Generate generates a new JWT token for the given user.
+// GenerateJWT generates a new JWT token for the given user.
 // Returns the generated token or an error if the generation fails.
 func (p *Provider) GenerateJWT(tokenType entities.TokenType, user *entities.User, duration time.Duration, signature []byte) (string, error) {
 	claims := jwt.MapClaims{
@@ -105,29 +105,24 @@ func (p *Provider) ValidateAndParseJWT(tokenType entities.TokenType, token strin
 // GenerateSecureToken creates a new secure random token associated with a user ID.
 // Returns the token, its hash for storage, and any error that occurred.
 func (p *Provider) GenerateSecureToken(userID uuid.UUID) (token string, hash string, err error) {
-	// Générer bytes aléatoires
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		p.errTracker.CaptureException(err)
 		return "", "", err
 	}
 
-	// Créer le token avec userID
 	randomToken := &entities.SecureToken{
 		UserID: userID,
 		Token:  base64.RawURLEncoding.EncodeToString(b),
 	}
 
-	// Encoder en JSON
 	tokenJSON, err := json.Marshal(randomToken)
 	if err != nil {
 		p.errTracker.CaptureException(err)
 		return "", "", err
 	}
 
-	// Encoder en base64
 	token = base64.RawURLEncoding.EncodeToString(tokenJSON)
-	// Générer le hash
 	hash = p.HashSecureToken(token)
 
 	return token, hash, nil
@@ -143,14 +138,12 @@ func (p *Provider) HashSecureToken(token string) string {
 // ParseSecureToken decodes and validates the structure of a secure token.
 // Returns the parsed token data or an error if the token is invalid.
 func (p *Provider) ParseSecureToken(token string) (*entities.SecureToken, error) {
-	// Decoder le base64
 	tokenJSON, err := base64.RawURLEncoding.DecodeString(token)
 	if err != nil {
 		p.errTracker.CaptureException(err)
 		return nil, fmt.Errorf("invalid token encoding: %w", err)
 	}
 
-	// Parser le JSON
 	var randomToken entities.SecureToken
 	if err := json.Unmarshal(tokenJSON, &randomToken); err != nil {
 		p.errTracker.CaptureException(err)

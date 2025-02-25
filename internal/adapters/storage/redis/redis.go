@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/redis/go-redis/v9"
 	"go-starter/config"
 	"go-starter/internal/domain"
@@ -41,11 +43,13 @@ func (r *Redis) Set(ctx context.Context, key string, value []byte, ttl time.Dura
 // or if there are issues accessing the cache.
 func (r *Redis) Get(ctx context.Context, key string) ([]byte, error) {
 	res, err := r.client.Get(ctx, key).Result()
-	bytes := []byte(res)
 	if err != nil {
-		return nil, domain.ErrCacheNotFound
+		if errors.Is(err, redis.Nil) {
+			return nil, domain.ErrCacheNotFound
+		}
+		return nil, err
 	}
-	return bytes, nil
+	return []byte(res), nil
 }
 
 // Delete removes the value associated with the specified key from the cache.
@@ -58,19 +62,18 @@ func (r *Redis) Delete(ctx context.Context, key string) error {
 // Returns an error if the operation fails (e.g., if there are issues accessing the cache).
 func (r *Redis) DeleteByPrefix(ctx context.Context, prefix string) error {
 	var cursor uint64
-	var keys []string
-
+	prefix = prefix + "*"
 	for {
 		var err error
-		keys, cursor, err = r.client.Scan(ctx, cursor, prefix, 100).Result()
+		keys, cursor, err := r.client.Scan(ctx, cursor, prefix, 100).Result()
 		if err != nil {
-			return err
+			return fmt.Errorf("scan error: %w", err)
 		}
 
 		for _, key := range keys {
 			err := r.client.Del(ctx, key).Err()
 			if err != nil {
-				return err
+				return fmt.Errorf("delete error: %w", err)
 			}
 		}
 
