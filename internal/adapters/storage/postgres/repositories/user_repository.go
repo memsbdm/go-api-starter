@@ -30,7 +30,7 @@ func NewUserRepository(db *sql.DB, errTracker ports.ErrTrackerAdapter) *UserRepo
 
 // GetByID selects a user by their unique identifier from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
-func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
+func (ur *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.User, error) {
 	const query = `SELECT id, created_at, updated_at, name, username, email, is_email_verified FROM users WHERE id = $1`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -170,7 +170,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 
 // UpdatePassword updates a user password.
 // Returns an error if the update fails.
-func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.UserID, newPassword string) error {
+func (ur *UserRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, newPassword string) error {
 	const query = `UPDATE users SET password = $1 WHERE id = $2 `
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -198,5 +198,5 @@ func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*e
 		return nil, err
 	}
 
-	return ur.GetByID(ctx, entities.UserID(userID))
+	return ur.GetByID(ctx, userID)
 }

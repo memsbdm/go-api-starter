@@ -12,7 +12,7 @@ import (
 )
 
 type db struct {
-	data map[entities.UserID]*entities.User
+	data map[uuid.UUID]*entities.User
 	mu   sync.RWMutex
 }
 
@@ -25,7 +25,7 @@ type UserRepository struct {
 func NewUserRepositoryMock() *UserRepository {
 	return &UserRepository{
 		db: db{
-			data: map[entities.UserID]*entities.User{},
+			data: map[uuid.UUID]*entities.User{},
 			mu:   sync.RWMutex{},
 		},
 	}
@@ -33,7 +33,7 @@ func NewUserRepositoryMock() *UserRepository {
 
 // GetByID selects a user by their unique identifier from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
-func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
+func (ur *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
 	defer cancel()
 
@@ -86,14 +86,14 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 		Email:           user.Email,
 		IsEmailVerified: false,
 	}
-	ur.db.data[newUser.ID] = newUser
+	ur.db.data[newUser.ID.UUID()] = newUser
 
 	return newUser, nil
 }
 
 // UpdatePassword updates a user password.
 // Returns an error if the update fails (e.g., due to validation issues).
-func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.UserID, newPassword string) error {
+func (ur *UserRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, newPassword string) error {
 	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
 	defer cancel()
 
@@ -113,8 +113,8 @@ func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*e
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 
-	ur.db.data[entities.UserID(userID)].IsEmailVerified = true
-	return ur.db.data[entities.UserID(userID)], nil
+	ur.db.data[userID].IsEmailVerified = true
+	return ur.db.data[userID], nil
 }
 
 // CheckEmailAvailability checks if an email is available for registration.

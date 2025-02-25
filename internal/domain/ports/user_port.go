@@ -34,7 +34,7 @@ type UserService interface {
 type UserRepository interface {
 	// GetByID selects a user by their unique identifier from the database.
 	// Returns the user entity if found or an error if not found or any other issue occurs.
-	GetByID(ctx context.Context, id entities.UserID) (*entities.User, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*entities.User, error)
 
 	// GetByUsername selects a user by their username from the database.
 	// Returns the user entity if found or an error if not found or any other issue occurs.
@@ -50,7 +50,7 @@ type UserRepository interface {
 
 	// UpdatePassword updates a user password.
 	// Returns an error if the update fails (e.g., due to validation issues).
-	UpdatePassword(ctx context.Context, userID entities.UserID, newPassword string) error
+	UpdatePassword(ctx context.Context, userID uuid.UUID, newPassword string) error
 
 	// VerifyEmail updates the email verification status of a user.
 	// Returns the updated user or an error if the verification fails.

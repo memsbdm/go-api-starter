@@ -43,7 +43,7 @@ func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entiti
 		return cacheUser, nil
 	}
 
-	user, err := us.repo.GetByID(ctx, id)
+	user, err := us.repo.GetByID(ctx, id.UUID())
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return nil, err
@@ -147,7 +147,7 @@ func (us *UserService) UpdatePassword(ctx context.Context, userID entities.UserI
 	if err != nil {
 		return domain.ErrInternal
 	}
-	err = us.repo.UpdatePassword(ctx, userID, hashedPassword)
+	err = us.repo.UpdatePassword(ctx, userID.UUID(), hashedPassword)
 	if err != nil {
 		return domain.ErrInternal
 	}
