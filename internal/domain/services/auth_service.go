@@ -59,12 +59,12 @@ func (as *AuthService) Login(ctx context.Context, username, password string) (*e
 		return nil, nil, domain.ErrInvalidCredentials
 	}
 
-	accessToken, err := as.tokenSvc.GenerateJWT(entities.AccessToken, user)
+	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	refreshToken, err := as.tokenSvc.CreateAndCacheJWT(ctx, entities.RefreshToken, user)
+	refreshToken, err := as.tokenSvc.GenerateRefreshToken(ctx, user.ID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -86,7 +86,7 @@ func (as *AuthService) Register(ctx context.Context, user *entities.User) (*enti
 		return nil, err
 	}
 
-	token, err := as.tokenSvc.CreateAndCacheSecureToken(ctx, entities.EmailVerificationToken, createdUser)
+	token, err := as.tokenSvc.GenerateOneTimeToken(ctx, entities.EmailVerificationToken, createdUser.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string)
 	if previousRefreshToken == "" {
 		return nil, domain.ErrRefreshTokenRequired
 	}
-	claims, err := as.tokenSvc.VerifyCachedJWT(ctx, entities.RefreshToken, previousRefreshToken)
+	claims, err := as.tokenSvc.VerifyAndParseRefreshToken(ctx, previousRefreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -120,17 +120,17 @@ func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string)
 		return nil, err
 	}
 
-	accessToken, err := as.tokenSvc.GenerateJWT(entities.AccessToken, user)
+	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := as.tokenSvc.CreateAndCacheJWT(ctx, entities.RefreshToken, user)
+	refreshToken, err := as.tokenSvc.GenerateRefreshToken(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = as.tokenSvc.RevokeJWT(ctx, entities.RefreshToken, previousRefreshToken)
+	err = as.tokenSvc.RevokeRefreshToken(ctx, previousRefreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -146,5 +146,5 @@ func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string)
 // Logout invalidates the specified refresh token, effectively logging the user out.
 // Returns an error if the logout operation fails (e.g., if the refresh token is not found).
 func (as *AuthService) Logout(ctx context.Context, refreshToken string) error {
-	return as.tokenSvc.RevokeJWT(ctx, entities.RefreshToken, refreshToken)
+	return as.tokenSvc.RevokeRefreshToken(ctx, refreshToken)
 }

@@ -88,9 +88,11 @@ func (cm *CacheRepositoryMock) Close() error {
 // PrintAllCache prints all the data in the cache.
 // This is only for testing purposes.
 func (cm *CacheRepositoryMock) PrintAllCache() {
+	fmt.Println("Printing all cache")
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 	for key, value := range cm.data {
 		fmt.Println(key, string(value))
 	}
+	fmt.Println("Finished printing all cache")
 }

@@ -25,7 +25,7 @@ definitions:
       messages:
         example:
         - Error message 1
-        - ' Error message 2'
+        - Error message 2
         items:
           type: string
         type: array

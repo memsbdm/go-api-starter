@@ -111,12 +111,12 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 }
 
 func (us *UserService) VerifyEmail(ctx context.Context, token string) error {
-	userID, err := us.tokenSvc.VerifyAndInvalidateSecureToken(ctx, entities.EmailVerificationToken, token)
+	userID, err := us.tokenSvc.VerifyAndConsumeOneTimeToken(ctx, entities.EmailVerificationToken, token)
 	if err != nil {
 		return err
 	}
 
-	user, err := us.repo.VerifyEmail(ctx, userID)
+	user, err := us.repo.VerifyEmail(ctx, userID.UUID())
 	if err != nil {
 		return domain.ErrInternal
 	}

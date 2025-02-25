@@ -13,8 +13,8 @@ const (
 
 // ExtractAccessTokenClaims retrieves the AccessTokenClaims from the provided context.
 // Returns an error if the claims are not present or cannot be cast to the expected type.
-func ExtractAccessTokenClaims(ctx context.Context) (*entities.TokenClaims, error) {
-	payload, ok := ctx.Value(AuthorizationPayloadKey).(*entities.TokenClaims)
+func ExtractAccessTokenClaims(ctx context.Context) (*entities.AccessTokenClaims, error) {
+	payload, ok := ctx.Value(AuthorizationPayloadKey).(*entities.AccessTokenClaims)
 	if !ok {
 		return nil, domain.ErrTokenClaimsNotFound
 	}

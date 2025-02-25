@@ -10,54 +10,62 @@ import (
 
 // TokenService is an interface for interacting with token-related business logic.
 type TokenService interface {
-	// GenerateJWT generates a new token for the given user.
-	// Returns the generated token or an error if the generation fails.
-	GenerateJWT(tokenType entities.TokenType, user *entities.User) (string, error)
+	// GenerateAccessToken generates a new access token for a user.
+	// Returns the signed token string or an error if generation fails.
+	GenerateAccessToken(user *entities.User) (string, error)
 
-	// CreateAndCacheJWT creates a new token for the given user and stores it in cache.
-	// Returns the generated token or an error if the operation fails.
-	CreateAndCacheJWT(ctx context.Context, tokenType entities.TokenType, user *entities.User) (string, error)
+	// GenerateRefreshToken generates a new refresh token for a user.
+	// Returns the signed token string or an error if generation fails.
+	GenerateRefreshToken(ctx context.Context, userID entities.UserID) (string, error)
 
-	// CreateAndCacheSecureToken creates a new secure token for the given user and stores it in cache.
-	// Returns the generated token or an error if the operation fails.
-	CreateAndCacheSecureToken(ctx context.Context, tokenType entities.TokenType, user *entities.User) (string, error)
+	// VerifyAndParseRefreshToken verifies and parses a refresh token.
+	// Returns the parsed token claims or an error if validation fails.
+	VerifyAndParseRefreshToken(ctx context.Context, token string) (*entities.RefreshTokenClaims, error)
 
-	// VerifyAndInvalidateSecureToken validates the secure token and removes it from cache.
-	// Returns the user ID associated with the token or an error if validation fails.
-	VerifyAndInvalidateSecureToken(ctx context.Context, tokenType entities.TokenType, token string) (uuid.UUID, error)
+	// VerifyAndParseAccessToken verifies and parses a JWT access token.
+	// Returns the parsed token claims or an error if validation fails.
+	VerifyAndParseAccessToken(token string) (*entities.AccessTokenClaims, error)
 
-	// ValidateJWT validates the given token and extracts its claims.
-	// Returns a structured representation of the token claims or an error if validation fails.
-	ValidateJWT(tokenType entities.TokenType, token string) (*entities.TokenClaims, error)
+	// RevokeRefreshToken revokes a refresh token by deleting it from the cache.
+	// Returns an error if the token is not found or if the cache deletion fails.
+	RevokeRefreshToken(ctx context.Context, token string) error
 
-	// VerifyCachedJWT validates the given token and verifies its presence in cache.
-	// Returns a structured representation of the token claims or an error if validation fails.
-	VerifyCachedJWT(ctx context.Context, tokenType entities.TokenType, token string) (*entities.TokenClaims, error)
+	// GenerateOneTimeToken generates a new one-time token for a user.
+	// Returns the token string or an error if generation fails.
+	GenerateOneTimeToken(ctx context.Context, tokenType entities.TokenType, userID entities.UserID) (string, error)
 
-	// RevokeJWT deletes the given token from cache.
-	// Returns an error if the revocation process fails.
-	RevokeJWT(ctx context.Context, tokenType entities.TokenType, token string) error
+	// VerifyAndConsumeOneTimeToken verifies and consumes a one-time token.
+	// Returns the user ID or an error if the token is not found or if the token is invalid.
+	VerifyAndConsumeOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) (entities.UserID, error)
 }
 
 // TokenProvider is an interface for interacting with token-related data and cryptographic operations.
 type TokenProvider interface {
-	// GenerateJWT generates a new JWT token for the given user with specified duration and signature.
-	// Returns the generated token or an error if the generation fails.
-	GenerateJWT(tokenType entities.TokenType, user *entities.User, duration time.Duration, signature []byte) (string, error)
+	// GenerateAccessToken creates a new JWT access token for a user.
+	// Returns the signed token string or an error if generation fails.
+	GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (string, error)
 
-	// ValidateAndParseJWT validates the given JWT token and extracts its claims.
-	// Returns a structured representation of the token claims or an error if validation fails.
-	ValidateAndParseJWT(tokenType entities.TokenType, token string, signature []byte) (*entities.TokenClaims, error)
+	// GenerateRefreshToken creates a new JWT refresh token for a user.
+	// Returns the signed token string or an error if generation fails.
+	GenerateRefreshToken(userID uuid.UUID, duration time.Duration, signature []byte) (uuid.UUID, string, error)
 
-	// GenerateSecureToken creates a new secure random token associated with a user ID.
+	// VerifyAndParseAccessToken verifies and parses a JWT access token.
+	// Returns the parsed token claims or an error if validation fails.
+	VerifyAndParseAccessToken(accessToken string, signature []byte) (*entities.AccessTokenClaims, error)
+
+	// VerifyAndParseRefreshToken verifies and parses a JWT refresh token.
+	// Returns the parsed token claims or an error if validation fails.
+	VerifyAndParseRefreshToken(refreshToken string, signature []byte) (*entities.RefreshTokenClaims, error)
+
+	// GenerateOneTimeToken creates a new secure random token associated with a user ID.
 	// Returns the token, its hash for storage, and any error that occurred.
-	GenerateSecureToken(userID uuid.UUID) (token string, hash string, err error)
+	GenerateOneTimeToken(userID uuid.UUID) (token string, hash string, err error)
 
-	// HashSecureToken creates a secure hash of the given token for storage and validation.
+	// HashOneTimeToken creates a secure hash of the given token for storage and validation.
 	// Returns the base64-encoded hash string.
-	HashSecureToken(token string) string
+	HashOneTimeToken(token string) string
 
-	// ParseSecureToken decodes and validates the structure of a secure token.
+	// ParseOneTimeToken decodes and validates the structure of a one-time token.
 	// Returns the parsed token data or an error if the token is invalid.
-	ParseSecureToken(token string) (*entities.SecureToken, error)
+	ParseOneTimeToken(token string) (*entities.OneTimeToken, error)
 }

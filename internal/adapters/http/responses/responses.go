@@ -52,7 +52,7 @@ type EmptyResponse struct {
 // ErrorResponse represents the format of an error response body.
 type ErrorResponse struct {
 	Success  bool     `json:"success" example:"false"`
-	Messages []string `json:"messages" example:"Error message 1, Error message 2"`
+	Messages []string `json:"messages" example:"Error message 1,Error message 2"`
 }
 
 // NewErrorResponse is a helper function that creates an error response body from a slice of error messages.

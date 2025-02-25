@@ -5,7 +5,6 @@ package services_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go-starter/internal/adapters/mocks"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
@@ -54,7 +53,7 @@ func TestTokenService_ValidateJWT(t *testing.T) {
 				ID: entities.UserID(uuid.New()),
 			}
 
-			token, err := builder.TokenService.GenerateJWT(tt.input, user)
+			token, err := builder.TokenService.GenerateAccessToken(user)
 			if err != nil {
 				t.Fatalf("failed to generated access token: %v", err)
 			}
@@ -62,7 +61,7 @@ func TestTokenService_ValidateJWT(t *testing.T) {
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			// Act & Assert
-			claims, err := builder.TokenService.ValidateJWT(tt.input, token)
+			claims, err := builder.TokenService.VerifyAndParseAccessToken(token)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
@@ -105,14 +104,14 @@ func TestTokenService_VerifyCachedJWT(t *testing.T) {
 			user := &entities.User{
 				ID: entities.UserID(uuid.New()),
 			}
-			token, err := builder.TokenService.CreateAndCacheJWT(ctx, tt.input, user)
+			token, err := builder.TokenService.GenerateRefreshToken(ctx, user.ID)
 			if err != nil {
 				t.Fatalf("failed to generated refresh token: %v", err)
 			}
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			// Act & Assert
-			claims, err := builder.TokenService.VerifyCachedJWT(ctx, tt.input, token)
+			claims, err := builder.TokenService.VerifyAndParseRefreshToken(ctx, token)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
@@ -156,18 +155,18 @@ func TestTokenService_RevokeJWT(t *testing.T) {
 			}
 
 			// Act & Assert
-			token, err := builder.TokenService.CreateAndCacheJWT(ctx, tt.input, user)
+			token, err := builder.TokenService.GenerateRefreshToken(ctx, user.ID)
 			if err != nil {
 				t.Fatalf("failed to generated refresh token: %v", err)
 			}
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
-			err = builder.TokenService.RevokeJWT(ctx, tt.input, token)
+			err = builder.TokenService.RevokeRefreshToken(ctx, token)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 
-			_, err = builder.TokenService.VerifyCachedJWT(ctx, tt.input, token)
+			_, err = builder.TokenService.VerifyAndParseRefreshToken(ctx, token)
 			if !errors.Is(err, domain.ErrInvalidToken) {
 				t.Errorf("expected error %v, got %v", domain.ErrInvalidToken, err)
 			}
@@ -220,7 +219,7 @@ func TestTokenService_CreateAndCacheSecureToken(t *testing.T) {
 			t.Parallel()
 
 			// Act & Assert
-			token, err := builder.TokenService.CreateAndCacheSecureToken(ctx, tt.input.tokenType, tt.input.user)
+			token, err := builder.TokenService.GenerateOneTimeToken(ctx, tt.input.tokenType, tt.input.user.ID)
 			if err != nil {
 				t.Fatalf("failed to create and cache secure token: %v", err)
 			}
@@ -230,11 +229,10 @@ func TestTokenService_CreateAndCacheSecureToken(t *testing.T) {
 			key := utils.GenerateCacheKey(tt.input.tokenType.String(), tt.input.user.ID.String())
 			value, err := builder.CacheService.Get(ctx, key)
 			if !errors.Is(err, tt.expectedErr) {
-				fmt.Println(err, tt.expectedErr)
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 
-			if err == nil && string(value) != builder.TokenProvider.HashSecureToken(token) {
+			if err == nil && string(value) != builder.TokenProvider.HashOneTimeToken(token) {
 				t.Errorf("expected token %s, got %s", token, string(value))
 			}
 		})
@@ -286,20 +284,20 @@ func TestTokenService_VerifyAndInvalidateSecureToken(t *testing.T) {
 			t.Parallel()
 
 			// Act & Assert
-			token, err := builder.TokenService.CreateAndCacheSecureToken(ctx, tt.input.tokenType, tt.input.user)
+			token, err := builder.TokenService.GenerateOneTimeToken(ctx, tt.input.tokenType, tt.input.user.ID)
 			if err != nil {
 				t.Fatalf("failed to create and cache secure token: %v", err)
 			}
 
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
-			userID, err := builder.TokenService.VerifyAndInvalidateSecureToken(ctx, tt.input.tokenType, token)
+			userID, err := builder.TokenService.VerifyAndConsumeOneTimeToken(ctx, tt.input.tokenType, token)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 
-			if err == nil && userID != tt.input.user.ID.UUID() {
-				t.Errorf("expected user id %s, got %s", tt.input.user.ID.UUID(), userID)
+			if err == nil && userID != tt.input.user.ID {
+				t.Errorf("expected user id %s, got %s", tt.input.user.ID, userID)
 			}
 
 			key := utils.GenerateCacheKey(tt.input.tokenType.String(), tt.input.user.ID.String())

@@ -15,6 +15,7 @@ import (
 )
 
 // TokenService implements ports.TokenService interface.
+// It manages both JWT tokens for authentication and secure tokens for email verification, password reset etc.
 type TokenService struct {
 	provider          ports.TokenProvider
 	cacheSvc          ports.CacheService
@@ -38,6 +39,124 @@ type tokenTypeDuration struct {
 	mu   sync.RWMutex
 }
 
+// GenerateAccessToken generates a new access token for a user.
+// Returns the signed token string or an error if generation fails.
+func (ts *TokenService) GenerateAccessToken(user *entities.User) (string, error) {
+	token, err := ts.provider.GenerateAccessToken(user, ts.getTokenTypeDuration(entities.AccessToken), ts.tokenCfg.TokenSignature)
+	if err != nil {
+		return "", domain.ErrInternal
+	}
+	return token, nil
+}
+
+// GenerateRefreshToken generates a new refresh token for a user.
+// Returns the signed token string or an error if generation fails.
+func (ts *TokenService) GenerateRefreshToken(ctx context.Context, userID entities.UserID) (string, error) {
+	tokenID, token, err := ts.provider.GenerateRefreshToken(userID.UUID(), ts.getTokenTypeDuration(entities.RefreshToken), ts.tokenCfg.TokenSignature)
+	if err != nil {
+		return "", domain.ErrInternal
+	}
+
+	key := utils.GenerateCacheKey(entities.RefreshToken.String(), userID.String(), tokenID.String())
+	err = ts.cacheSvc.Set(ctx, key, []byte(token), ts.getTokenTypeDuration(entities.RefreshToken))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+// VerifyAndParseRefreshToken verifies and parses a refresh token.
+// Returns the parsed token claims or an error if validation fails.
+func (ts *TokenService) VerifyAndParseRefreshToken(ctx context.Context, token string) (*entities.RefreshTokenClaims, error) {
+	claims, err := ts.provider.VerifyAndParseRefreshToken(token, ts.tokenCfg.TokenSignature)
+	if err != nil {
+		if errors.Is(err, domain.ErrInvalidToken) {
+			return nil, err
+		}
+		return nil, domain.ErrInternal
+	}
+
+	key := utils.GenerateCacheKey(entities.RefreshToken.String(), claims.Subject.String(), claims.ID.String())
+	if _, err := ts.cacheSvc.Get(ctx, key); err != nil {
+		if errors.Is(err, domain.ErrCacheNotFound) {
+			return nil, domain.ErrInvalidToken
+		}
+		return nil, err
+	}
+
+	return claims, nil
+}
+
+func (ts *TokenService) VerifyAndParseAccessToken(token string) (*entities.AccessTokenClaims, error) {
+	claims, err := ts.provider.VerifyAndParseAccessToken(token, ts.tokenCfg.TokenSignature)
+	if err != nil {
+		if errors.Is(err, domain.ErrInvalidToken) {
+			return nil, err
+		}
+		return nil, domain.ErrInternal
+	}
+
+	return claims, nil
+}
+
+// RevokeRefreshToken revokes a refresh token by deleting it from the cache.
+// Returns an error if the token is not found or if the cache deletion fails.
+func (ts *TokenService) RevokeRefreshToken(ctx context.Context, token string) error {
+	claims, err := ts.VerifyAndParseRefreshToken(ctx, token)
+	if err != nil {
+		return err
+	}
+	key := utils.GenerateCacheKey(entities.RefreshToken.String(), claims.Subject.String(), claims.ID.String())
+	return ts.cacheSvc.Delete(ctx, key)
+}
+
+// GenerateOneTimeToken generates a new one-time token for a user.
+// Returns the token string or an error if generation fails.
+func (ts *TokenService) GenerateOneTimeToken(ctx context.Context, tokenType entities.TokenType, userID entities.UserID) (string, error) {
+	token, hash, err := ts.provider.GenerateOneTimeToken(userID.UUID())
+	if err != nil {
+		return "", domain.ErrInternal
+	}
+
+	key := utils.GenerateCacheKey(tokenType.String(), userID.String())
+	err = ts.cacheSvc.Set(ctx, key, []byte(hash), ts.getTokenTypeDuration(tokenType))
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+// VerifyAndConsumeOneTimeToken verifies and consumes a one-time token.
+// Returns the user ID or an error if the token is not found or if the token is invalid.
+func (ts *TokenService) VerifyAndConsumeOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) (entities.UserID, error) {
+	nilUserID := entities.UserID(uuid.Nil)
+	parsedToken, err := ts.provider.ParseOneTimeToken(token)
+	if err != nil {
+		return nilUserID, domain.ErrInvalidToken
+	}
+
+	key := utils.GenerateCacheKey(tokenType.String(), parsedToken.UserID.String())
+	dbHashedToken, err := ts.cacheSvc.Get(ctx, key)
+	if err != nil && errors.Is(err, domain.ErrCacheNotFound) {
+		return nilUserID, domain.ErrInvalidToken
+	} else if err != nil {
+		return nilUserID, err
+	}
+
+	if ts.provider.HashOneTimeToken(token) != string(dbHashedToken) {
+		return nilUserID, domain.ErrInvalidToken
+	}
+
+	err = ts.cacheSvc.Delete(ctx, key)
+	if err != nil {
+		return nilUserID, err
+	}
+
+	return parsedToken.UserID, nil
+}
+
 // initTokenTypeDuration initializes a new tokenTypeDuration structure with predefined durations.
 func initTokenTypeDuration(tokenCfg *config.Token) *tokenTypeDuration {
 	data := map[entities.TokenType]time.Duration{
@@ -56,150 +175,4 @@ func (ts *TokenService) getTokenTypeDuration(tokenType entities.TokenType) time.
 	ts.tokenTypeDuration.mu.RLock()
 	defer ts.tokenTypeDuration.mu.RUnlock()
 	return ts.tokenTypeDuration.data[tokenType]
-}
-
-// GenerateJWT generates a new token for the given user.
-// Returns the generated token or an error if the generation fails.
-func (ts *TokenService) GenerateJWT(tokenType entities.TokenType, user *entities.User) (string, error) {
-	token, err := ts.provider.GenerateJWT(tokenType, user, ts.getTokenTypeDuration(tokenType), ts.tokenCfg.TokenSignature)
-	if err != nil {
-		return "", domain.ErrInternal
-	}
-	return token, nil
-}
-
-// CreateAndCacheJWT creates a new token for the given user and stores it in cache.
-// Returns the generated token or an error if the operation fails.
-func (ts *TokenService) CreateAndCacheJWT(ctx context.Context, tokenType entities.TokenType, user *entities.User) (string, error) {
-	token, err := ts.GenerateJWT(tokenType, user)
-	if err != nil {
-		return "", domain.ErrInternal
-	}
-
-	parsedToken, err := ts.ValidateJWT(tokenType, token)
-	if err != nil {
-		return "", domain.ErrInvalidToken
-	}
-
-	err = ts.cacheToken(ctx, tokenType, user.ID, parsedToken.ID, token)
-	if err != nil {
-		return "", domain.ErrInternal
-	}
-
-	return token, nil
-}
-
-// ValidateJWT validates the given token and extracts its claims.
-// Returns a structured representation of the token claims or an error if validation fails.
-func (ts *TokenService) ValidateJWT(tokenType entities.TokenType, token string) (*entities.TokenClaims, error) {
-	claims, err := ts.provider.ValidateAndParseJWT(tokenType, token, ts.tokenCfg.TokenSignature)
-	if err != nil {
-		return nil, domain.ErrInvalidToken
-	}
-	return claims, nil
-}
-
-// VerifyCachedJWT validates the given token and extracts its claims.
-// Returns a structured representation of the token claims or an error if validation fails or if
-// the token is not stored in cache.
-func (ts *TokenService) VerifyCachedJWT(ctx context.Context, tokenType entities.TokenType, token string) (*entities.TokenClaims, error) {
-	claims, err := ts.provider.ValidateAndParseJWT(tokenType, token, ts.tokenCfg.TokenSignature)
-	if err != nil {
-		return nil, domain.ErrInvalidToken
-	}
-
-	ok, err := ts.isTokenValid(ctx, tokenType, claims.ID, claims.Subject)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, domain.ErrInvalidToken
-	}
-
-	return claims, nil
-}
-
-// RevokeJWT deletes the given token from cache.
-// Returns an error if the revocation process fails (e.g., if the token is invalid).
-func (ts *TokenService) RevokeJWT(ctx context.Context, tokenType entities.TokenType, token string) error {
-	claims, err := ts.VerifyCachedJWT(ctx, tokenType, token)
-	if err != nil {
-		return domain.ErrInvalidToken
-	}
-	key := generateTokenCacheKey(tokenType, claims.Subject, claims.ID)
-	return ts.cacheSvc.Delete(ctx, key)
-}
-
-// CreateAndCacheSecureToken creates a new token for the given user and stores it in cache.
-// Returns the generated token or an error if the operation fails.
-func (ts *TokenService) CreateAndCacheSecureToken(ctx context.Context, tokenType entities.TokenType, user *entities.User) (string, error) {
-	token, hashedToken, err := ts.provider.GenerateSecureToken(user.ID.UUID())
-	if err != nil {
-		return "", domain.ErrInvalidToken
-	}
-
-	key := utils.GenerateCacheKey(tokenType.String(), user.ID.String())
-
-	err = ts.cacheSvc.Set(ctx, key, []byte(hashedToken), ts.getTokenTypeDuration(tokenType))
-	if err != nil {
-		return "", domain.ErrInternal
-	}
-
-	return token, nil
-}
-
-// VerifyAndInvalidateSecureToken validates the given token and extracts its claims.
-// Returns a structured representation of the token claims or an error if validation fails or if
-// the token is not stored in cache.
-func (ts *TokenService) VerifyAndInvalidateSecureToken(ctx context.Context, tokenType entities.TokenType, token string) (uuid.UUID, error) {
-	parsedToken, err := ts.provider.ParseSecureToken(token)
-	if err != nil {
-		return uuid.Nil, domain.ErrInvalidToken
-	}
-
-	key := utils.GenerateCacheKey(tokenType.String(), parsedToken.UserID.String())
-	dbHashedToken, err := ts.cacheSvc.Get(ctx, key)
-	if err != nil && !errors.Is(err, domain.ErrCacheNotFound) {
-		return uuid.Nil, domain.ErrInternal
-	} else if errors.Is(err, domain.ErrCacheNotFound) {
-		return uuid.Nil, domain.ErrInvalidToken
-	}
-
-	userHashedToken := ts.provider.HashSecureToken(token)
-	if userHashedToken != string(dbHashedToken) {
-		return uuid.Nil, domain.ErrInvalidToken
-	}
-
-	err = ts.cacheSvc.DeleteByPrefix(ctx, key)
-	if err != nil {
-		return uuid.Nil, domain.ErrInternal
-	}
-
-	return parsedToken.UserID, nil
-}
-
-// cacheToken stores the token in the cache associated with the given user ID and token ID.
-// It constructs a unique cache key and sets the token with an expiration duration.
-func (ts *TokenService) cacheToken(ctx context.Context, tokenType entities.TokenType, userID entities.UserID, tokenID uuid.UUID, token string) error {
-	key := generateTokenCacheKey(tokenType, userID, tokenID)
-	return ts.cacheSvc.Set(ctx, key, []byte(token), ts.getTokenTypeDuration(tokenType))
-}
-
-// isTokenValid checks if the token is present in the cache for the given user ID and token ID.
-// Returns a boolean indicating presence and an error if the operation fails.
-func (ts *TokenService) isTokenValid(ctx context.Context, tokenType entities.TokenType, tokenID uuid.UUID, userID entities.UserID) (bool, error) {
-	key := generateTokenCacheKey(tokenType, userID, tokenID)
-	if _, err := ts.cacheSvc.Get(ctx, key); err != nil {
-		if errors.Is(err, domain.ErrCacheNotFound) {
-			return false, nil
-		}
-		return false, err
-	}
-
-	return true, nil
-}
-
-// generateTokenCacheKey creates a unique cache key by combining the token type, user ID, and token ID.
-func generateTokenCacheKey(tokenType entities.TokenType, userID entities.UserID, tokenID uuid.UUID) string {
-	return utils.GenerateCacheKey(tokenType.String(), userID.String(), tokenID)
 }

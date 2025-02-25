@@ -5,7 +5,6 @@ import (
 	"go-starter/internal/adapters/http/helpers"
 	"go-starter/internal/adapters/http/responses"
 	"go-starter/internal/domain"
-	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
 	"strings"
@@ -34,15 +33,15 @@ func AuthMiddleware(tokenSvc ports.TokenService, errTracker ports.ErrTrackerAdap
 				return
 			}
 
-			if strings.ToLower(fields[0]) != strings.ToLower(authorizationType) {
+			if !strings.EqualFold(fields[0], authorizationType) {
 				responses.HandleError(w, domain.ErrUnauthorized)
 				return
 			}
 
 			accessToken := fields[1]
-			tokenPayload, err := tokenSvc.ValidateJWT(entities.AccessToken, accessToken)
+			tokenPayload, err := tokenSvc.VerifyAndParseAccessToken(accessToken)
 			if err != nil {
-				responses.HandleError(w, domain.ErrUnauthorized)
+				responses.HandleError(w, err)
 				return
 			}
 
@@ -68,13 +67,13 @@ func GuestMiddleware(tokenSvc ports.TokenService) Middleware {
 			}
 
 			fields := strings.Fields(authorizationHeader)
-			if len(fields) != 2 || strings.ToLower(fields[0]) != strings.ToLower(authorizationType) {
+			if len(fields) != 2 || !strings.EqualFold(fields[0], authorizationType) {
 				f(w, r)
 				return
 			}
 
 			accessToken := fields[1]
-			_, err := tokenSvc.ValidateJWT(entities.AccessToken, accessToken)
+			_, err := tokenSvc.VerifyAndParseAccessToken(accessToken)
 			if err == nil {
 				responses.HandleError(w, domain.ErrForbidden)
 				return

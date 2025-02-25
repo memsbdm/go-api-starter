@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// TokenType represents the type of the token.
+// TokenType represents the type of token.
 type TokenType string
 
 // Token type constants define the available types of tokens in the system.
@@ -19,8 +19,15 @@ func (t TokenType) String() string {
 	return string(t)
 }
 
-// TokenClaims holds the claims associated with a token.
-type TokenClaims struct {
+// AccessTokenClaims represents the claims of an access token.
+type AccessTokenClaims struct {
+	ID      uuid.UUID
+	Subject UserID
+	Type    TokenType
+}
+
+// RefreshTokenClaims represents the claims of a refresh token.
+type RefreshTokenClaims struct {
 	ID      uuid.UUID
 	Subject UserID
 	Type    TokenType
@@ -33,9 +40,8 @@ type AuthTokens struct {
 	RefreshToken string
 }
 
-// SecureToken contains a user ID and a token.
-// This structure is typically used when returning a secure token to clients and parsing it back.
-type SecureToken struct {
-	UserID uuid.UUID
+// OneTimeToken represents a one-time token.
+type OneTimeToken struct {
+	UserID UserID
 	Token  string
 }

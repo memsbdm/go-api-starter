@@ -566,7 +566,7 @@ const docTemplate = `{
                     },
                     "example": [
                         "Error message 1",
-                        " Error message 2"
+                        "Error message 2"
                     ]
                 },
                 "success": {
