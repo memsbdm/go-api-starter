@@ -186,7 +186,7 @@ func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.Us
 }
 
 // VerifyEmail updates the email verification status of a user.
-func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) error {
+func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error) {
 	const query = `UPDATE users SET is_email_verified = true WHERE id = $1 `
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -195,8 +195,8 @@ func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) err
 	if err != nil {
 		err = fmt.Errorf("failed to update users email verification status for user %s: %w", userID.String(), err)
 		ur.errTracker.CaptureException(err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return ur.GetByID(ctx, entities.UserID(userID))
 }

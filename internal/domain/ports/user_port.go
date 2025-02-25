@@ -53,6 +53,6 @@ type UserRepository interface {
 	UpdatePassword(ctx context.Context, userID entities.UserID, newPassword string) error
 
 	// VerifyEmail updates the email verification status of a user.
-	// Returns an error if the verification fails.
-	VerifyEmail(ctx context.Context, userID uuid.UUID) error
+	// Returns the updated user or an error if the verification fails.
+	VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error)
 }

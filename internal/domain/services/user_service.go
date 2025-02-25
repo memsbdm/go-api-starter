@@ -38,18 +38,12 @@ const UserCachePrefix = "user"
 // GetByID retrieves a user by their unique identifier.
 // Returns the user entity if found or an error if not found or any other issue occurs.
 func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
-	var user *entities.User
-	cacheKey := utils.GenerateCacheKey(UserCachePrefix, id)
-	cachedUser, err := us.cacheSvc.Get(ctx, cacheKey)
+	cacheUser, err := us.getUserFromCache(ctx, id)
 	if err == nil {
-		err := utils.Deserialize(cachedUser, &user)
-		if err != nil {
-			return nil, domain.ErrInternal
-		}
-		return user, nil
+		return cacheUser, nil
 	}
 
-	user, err = us.repo.GetByID(ctx, id)
+	user, err := us.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return nil, err
@@ -57,14 +51,9 @@ func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entiti
 		return nil, domain.ErrInternal
 	}
 
-	userSerialized, err := utils.Serialize(user)
+	err = us.cacheUser(ctx, user)
 	if err != nil {
-		return nil, domain.ErrInternal
-	}
-
-	err = us.cacheSvc.Set(ctx, cacheKey, userSerialized, time.Hour)
-	if err != nil {
-		return nil, domain.ErrInternal
+		return nil, err
 	}
 
 	return user, nil
@@ -127,11 +116,15 @@ func (us *UserService) VerifyEmail(ctx context.Context, token string) error {
 		return err
 	}
 
-	err = us.repo.VerifyEmail(ctx, userID)
+	user, err := us.repo.VerifyEmail(ctx, userID)
 	if err != nil {
 		return domain.ErrInternal
 	}
 
+	err = us.cacheUser(ctx, user)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -245,6 +238,40 @@ func validateRegisterRequest(user *entities.User) error {
 	}
 	if err := validateAndFormatEmail(user); err != nil {
 		return err
+	}
+	return nil
+}
+
+// getUserFromCache retrieves a user from the cache.
+// Returns an error if the retrieval fails.
+func (us *UserService) getUserFromCache(ctx context.Context, userID entities.UserID) (*entities.User, error) {
+	var user *entities.User
+	cacheKey := utils.GenerateCacheKey(UserCachePrefix, userID.String())
+	cachedUser, err := us.cacheSvc.Get(ctx, cacheKey)
+	if err != nil {
+		return nil, err
+	}
+
+	err = utils.Deserialize(cachedUser, &user)
+	if err != nil {
+		return nil, domain.ErrInternal
+	}
+	return user, nil
+}
+
+// cacheUser caches a user in the cache.
+// Returns an error if the caching fails.
+func (us *UserService) cacheUser(ctx context.Context, user *entities.User) error {
+	userSerialized, err := utils.Serialize(user)
+	if err != nil {
+		return domain.ErrInternal
+	}
+
+	cacheKey := utils.GenerateCacheKey(UserCachePrefix, user.ID.String())
+
+	err = us.cacheSvc.Set(ctx, cacheKey, userSerialized, time.Hour)
+	if err != nil {
+		return domain.ErrInternal
 	}
 	return nil
 }

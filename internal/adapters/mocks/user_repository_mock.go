@@ -105,7 +105,8 @@ func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.Us
 }
 
 // VerifyEmail updates the email verification status of a user.
-func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) error {
+// Returns the updated user or an error if the verification fails.
+func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
 	defer cancel()
 
@@ -113,7 +114,7 @@ func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) err
 	defer ur.db.mu.Unlock()
 
 	ur.db.data[entities.UserID(userID)].IsEmailVerified = true
-	return nil
+	return ur.db.data[entities.UserID(userID)], nil
 }
 
 // CheckEmailAvailability checks if an email is available for registration.

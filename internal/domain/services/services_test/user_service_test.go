@@ -175,7 +175,7 @@ func TestUserService_Register_EmailVerification(t *testing.T) {
 		t.Fatalf("error while registering user: %v", err)
 	}
 
-	err = builder.UserRepo.VerifyEmail(ctx, createdUser.ID.UUID())
+	_, err = builder.UserRepo.VerifyEmail(ctx, createdUser.ID.UUID())
 	if err != nil {
 		t.Fatalf("error while verifying email: %v", err)
 	}
