@@ -21,22 +21,54 @@ const (
 	emailVerificationTokenExpirationDuration = 24 * time.Hour
 )
 
-func TestTokenService_ValidateJWT(t *testing.T) {
+func TestTokenService_VerifyAndParseAccessToken(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		input       entities.TokenType
+		tokenFunc   func(*TestBuilder, *entities.User) (string, error)
 		advance     time.Duration
 		expectedErr error
 	}{
-		"validate and parse valid access token": {
-			input:       entities.AccessToken,
+		"verify and parse valid access token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateAccessToken(user)
+			},
 			advance:     0,
 			expectedErr: nil,
 		},
-		"validate and parse expired access token": {
-			input:       entities.AccessToken,
+		"verify and parse expired access token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateAccessToken(user)
+			},
 			advance:     accessTokenExpirationDuration,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"verify and parse invalid token format": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return "invalid-token-format", nil
+			},
+			advance:     0,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"verify and parse refresh token instead of access token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateRefreshToken(context.Background(), user.ID)
+			},
+			advance:     0,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"verify and parse tampered token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				token, err := builder.TokenService.GenerateAccessToken(user)
+				if err != nil {
+					return "", err
+				}
+				if len(token) > 0 {
+					return token[:len(token)-1] + "X", nil
+				}
+				return token, nil
+			},
+			advance:     0,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
@@ -53,9 +85,9 @@ func TestTokenService_ValidateJWT(t *testing.T) {
 				ID: entities.UserID(uuid.New()),
 			}
 
-			token, err := builder.TokenService.GenerateAccessToken(user)
+			token, err := tt.tokenFunc(builder, user)
 			if err != nil {
-				t.Fatalf("failed to generated access token: %v", err)
+				t.Fatalf("failed to generate token: %v", err)
 			}
 
 			advanceTime(t, builder.TimeGenerator, tt.advance)
@@ -73,22 +105,54 @@ func TestTokenService_ValidateJWT(t *testing.T) {
 	}
 }
 
-func TestTokenService_VerifyCachedJWT(t *testing.T) {
+func TestTokenService_VerifyAndParseRefreshToken(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		input       entities.TokenType
+		tokenFunc   func(*TestBuilder, *entities.User) (string, error)
 		advance     time.Duration
 		expectedErr error
 	}{
-		"validate and parse valid refresh token": {
-			input:       entities.RefreshToken,
+		"verify and parse valid refresh token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateRefreshToken(context.Background(), user.ID)
+			},
 			advance:     0,
 			expectedErr: nil,
 		},
-		"validate and parse expired refresh token": {
-			input:       entities.RefreshToken,
+		"verify and parse expired refresh token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateRefreshToken(context.Background(), user.ID)
+			},
 			advance:     refreshTokenExpirationDuration,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"verify and parse invalid token format": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return "invalid-token-format", nil
+			},
+			advance:     0,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"verify and parse access token instead of refresh token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateAccessToken(user)
+			},
+			advance:     0,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"verify and parse tampered token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				token, err := builder.TokenService.GenerateRefreshToken(context.Background(), user.ID)
+				if err != nil {
+					return "", err
+				}
+				if len(token) > 0 {
+					return token[:len(token)-1] + "X", nil
+				}
+				return token, nil
+			},
+			advance:     0,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
@@ -98,23 +162,26 @@ func TestTokenService_VerifyCachedJWT(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			ctx := context.Background()
 			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
+
 			user := &entities.User{
 				ID: entities.UserID(uuid.New()),
 			}
-			token, err := builder.TokenService.GenerateRefreshToken(ctx, user.ID)
+
+			token, err := tt.tokenFunc(builder, user)
 			if err != nil {
-				t.Fatalf("failed to generated refresh token: %v", err)
+				t.Fatalf("failed to generate token: %v", err)
 			}
+
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			// Act & Assert
-			claims, err := builder.TokenService.VerifyAndParseRefreshToken(ctx, token)
+			claims, err := builder.TokenService.VerifyAndParseRefreshToken(context.Background(), token)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
+
 			if err == nil && claims.Subject != user.ID {
 				t.Errorf("expected user id %s, got %s", user.ID, claims.Subject)
 			}
@@ -122,22 +189,101 @@ func TestTokenService_VerifyCachedJWT(t *testing.T) {
 	}
 }
 
-func TestTokenService_RevokeJWT(t *testing.T) {
+func TestTokenService_RevokeRefreshToken(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		input       entities.TokenType
-		advance     time.Duration
+		tokenFunc   func(*TestBuilder, *entities.User) (string, error)
 		expectedErr error
 	}{
 		"revoke valid refresh token": {
-			input:       entities.RefreshToken,
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateRefreshToken(context.Background(), user.ID)
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			// Arrange
+			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
+			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
+
+			user := &entities.User{
+				ID: entities.UserID(uuid.New()),
+			}
+
+			token, err := tt.tokenFunc(builder, user)
+			if err != nil {
+				t.Fatalf("failed to generate token: %v", err)
+			}
+
+			// Act & Assert
+			err = builder.TokenService.RevokeRefreshToken(context.Background(), token)
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+
+			key := utils.GenerateCacheKey(entities.RefreshToken.String(), user.ID.String(), token)
+			_, err = builder.CacheService.Get(context.Background(), key)
+			if !errors.Is(err, domain.ErrCacheNotFound) {
+				t.Errorf("expected error %v, got %v", domain.ErrCacheNotFound, err)
+			}
+		})
+	}
+}
+
+func TestTokenService_VerifyAndConsumeOneTimeToken(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		tokenFunc   func(*TestBuilder, *entities.User) (string, error)
+		advance     time.Duration
+		expectedErr error
+	}{
+		"verify and consume valid one-time token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateOneTimeToken(context.Background(), entities.EmailVerificationToken, user.ID)
+			},
 			advance:     0,
 			expectedErr: nil,
 		},
-		"revoke expired refresh token": {
-			input:       entities.RefreshToken,
-			advance:     refreshTokenExpirationDuration,
+		"verify and consume expired one-time token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateOneTimeToken(context.Background(), entities.EmailVerificationToken, user.ID)
+			},
+			advance:     emailVerificationTokenExpirationDuration,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"verify and consume invalid token format": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return "invalid-token-format", nil
+			},
+			advance:     0,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"verify and consume tampered token": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				token, err := builder.TokenService.GenerateOneTimeToken(context.Background(), entities.EmailVerificationToken, user.ID)
+				if err != nil {
+					return "", err
+				}
+				if len(token) > 0 {
+					return token[:len(token)-1] + "X", nil
+				}
+				return token, nil
+			},
+			advance:     0,
+			expectedErr: domain.ErrInvalidToken,
+		},
+		"verify and consume invalid token type": {
+			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
+				return builder.TokenService.GenerateOneTimeToken(context.Background(), "invalid-token-type", user.ID)
+			},
+			advance:     0,
 			expectedErr: domain.ErrInvalidToken,
 		},
 	}
@@ -147,162 +293,32 @@ func TestTokenService_RevokeJWT(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			ctx := context.Background()
 			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
+
 			user := &entities.User{
 				ID: entities.UserID(uuid.New()),
 			}
 
-			// Act & Assert
-			token, err := builder.TokenService.GenerateRefreshToken(ctx, user.ID)
+			token, err := tt.tokenFunc(builder, user)
 			if err != nil {
-				t.Fatalf("failed to generated refresh token: %v", err)
-			}
-			advanceTime(t, builder.TimeGenerator, tt.advance)
-
-			err = builder.TokenService.RevokeRefreshToken(ctx, token)
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
-			}
-
-			_, err = builder.TokenService.VerifyAndParseRefreshToken(ctx, token)
-			if !errors.Is(err, domain.ErrInvalidToken) {
-				t.Errorf("expected error %v, got %v", domain.ErrInvalidToken, err)
-			}
-		})
-	}
-}
-
-func TestTokenService_CreateAndCacheSecureToken(t *testing.T) {
-	t.Parallel()
-
-	// Arrange
-	ctx := context.Background()
-	timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
-	builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
-
-	tests := map[string]struct {
-		input struct {
-			tokenType entities.TokenType
-			user      *entities.User
-		}
-		advance     time.Duration
-		expectedErr error
-	}{
-		"get a valid email verification token": {
-			input: struct {
-				tokenType entities.TokenType
-				user      *entities.User
-			}{
-				tokenType: entities.EmailVerificationToken,
-				user:      &entities.User{ID: entities.UserID(uuid.New())},
-			},
-			advance:     0,
-			expectedErr: nil,
-		},
-		"get an expired email verification token": {
-			input: struct {
-				tokenType entities.TokenType
-				user      *entities.User
-			}{
-				tokenType: entities.EmailVerificationToken,
-				user:      &entities.User{ID: entities.UserID(uuid.New())},
-			},
-			advance:     emailVerificationTokenExpirationDuration,
-			expectedErr: domain.ErrCacheNotFound,
-		},
-	}
-
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			// Act & Assert
-			token, err := builder.TokenService.GenerateOneTimeToken(ctx, tt.input.tokenType, tt.input.user.ID)
-			if err != nil {
-				t.Fatalf("failed to create and cache secure token: %v", err)
+				t.Fatalf("failed to generate token: %v", err)
 			}
 
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
-			key := utils.GenerateCacheKey(tt.input.tokenType.String(), tt.input.user.ID.String())
-			value, err := builder.CacheService.Get(ctx, key)
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
-			}
-
-			if err == nil && string(value) != builder.TokenProvider.HashToken(token) {
-				t.Errorf("expected token %s, got %s", token, string(value))
-			}
-		})
-	}
-}
-
-func TestTokenService_VerifyAndInvalidateSecureToken(t *testing.T) {
-	t.Parallel()
-
-	// Arrange
-	ctx := context.Background()
-	timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
-	builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
-
-	tests := map[string]struct {
-		input struct {
-			tokenType entities.TokenType
-			user      *entities.User
-		}
-		advance     time.Duration
-		expectedErr error
-	}{
-		"verify and invalidate valid secure token": {
-			input: struct {
-				tokenType entities.TokenType
-				user      *entities.User
-			}{
-				tokenType: entities.EmailVerificationToken,
-				user:      &entities.User{ID: entities.UserID(uuid.New())},
-			},
-			advance:     0,
-			expectedErr: nil,
-		},
-		"verify and invalidate expired secure token": {
-			input: struct {
-				tokenType entities.TokenType
-				user      *entities.User
-			}{
-				tokenType: entities.EmailVerificationToken,
-				user:      &entities.User{ID: entities.UserID(uuid.New())},
-			},
-			advance:     emailVerificationTokenExpirationDuration,
-			expectedErr: domain.ErrInvalidToken,
-		},
-	}
-
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
 			// Act & Assert
-			token, err := builder.TokenService.GenerateOneTimeToken(ctx, tt.input.tokenType, tt.input.user.ID)
-			if err != nil {
-				t.Fatalf("failed to create and cache secure token: %v", err)
-			}
-
-			advanceTime(t, builder.TimeGenerator, tt.advance)
-
-			userID, err := builder.TokenService.VerifyAndConsumeOneTimeToken(ctx, tt.input.tokenType, token)
+			userID, err := builder.TokenService.VerifyAndConsumeOneTimeToken(context.Background(), entities.EmailVerificationToken, token)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
 
-			if err == nil && userID != tt.input.user.ID {
-				t.Errorf("expected user id %s, got %s", tt.input.user.ID, userID)
+			if err == nil && userID != user.ID {
+				t.Errorf("expected user id %s, got %s", user.ID, userID)
 			}
 
-			key := utils.GenerateCacheKey(tt.input.tokenType.String(), tt.input.user.ID.String())
-
-			_, err = builder.CacheService.Get(ctx, key)
+			key := utils.GenerateCacheKey(entities.EmailVerificationToken.String(), user.ID.String(), token)
+			_, err = builder.CacheService.Get(context.Background(), key)
 			if !errors.Is(err, domain.ErrCacheNotFound) {
 				t.Errorf("expected error %v, got %v", domain.ErrCacheNotFound, err)
 			}
