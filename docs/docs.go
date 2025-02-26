@@ -58,12 +58,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
                     "422": {
                         "description": "Validation error",
                         "schema": {
@@ -110,12 +104,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -158,12 +146,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad request error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden error",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }

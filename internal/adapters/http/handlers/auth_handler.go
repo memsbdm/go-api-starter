@@ -41,7 +41,6 @@ type loginRequest struct {
 //	@Success		200	{object}	responses.Response[responses.LoginResponse]	"Login response"
 //	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized / credentials error"
-//	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
 //	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/auth/login [post]
@@ -82,7 +81,6 @@ type registerRequest struct {
 //	@Param			registerRequest	body registerRequest true "Register request"
 //	@Success		200	{object}	responses.Response[responses.LoginResponse]	"Created user"
 //	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
-//	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
 //	@Failure		409	{object}	responses.ErrorResponse	"Duplication error"
 //	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
@@ -128,7 +126,6 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Success		200	{object}	responses.EmptyResponse	"Success"
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
-//	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/auth/logout [delete]
 //	@Security		BearerAuth

@@ -196,10 +196,6 @@ paths:
           description: Unauthorized / credentials error
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "403":
-          description: Forbidden error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "422":
           description: Validation error
           schema:
@@ -225,10 +221,6 @@ paths:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
         "401":
           description: Unauthorized error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "403":
-          description: Forbidden error
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
@@ -261,10 +253,6 @@ paths:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse'
         "400":
           description: Bad request error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "403":
-          description: Forbidden error
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "409":
