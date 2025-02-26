@@ -42,39 +42,29 @@ func NewAuthService(
 // Login authenticates a user.
 // Returns auth tokens upon successful authentication,
 // or an error if the login fails (e.g., due to incorrect credentials).
-func (as *AuthService) Login(ctx context.Context, username, password string) (*entities.User, *entities.AuthTokens, error) {
+func (as *AuthService) Login(ctx context.Context, username, password string) (*entities.User, string, error) {
 	if strings.TrimSpace(username) == "" {
-		return nil, nil, domain.ErrUsernameRequired
+		return nil, "", domain.ErrUsernameRequired
 	}
 	user, err := as.userSvc.GetByUsername(ctx, username)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
-			return nil, nil, domain.ErrInvalidCredentials
+			return nil, "", domain.ErrInvalidCredentials
 		}
-		return nil, nil, domain.ErrInternal
+		return nil, "", domain.ErrInternal
 	}
 
 	err = utils.ComparePassword(password, user.Password)
 	if err != nil {
-		return nil, nil, domain.ErrInvalidCredentials
+		return nil, "", domain.ErrInvalidCredentials
 	}
 
-	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
+	accessToken, err := as.tokenSvc.GenerateAuthToken(ctx, user.ID)
 	if err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
 
-	refreshToken, err := as.tokenSvc.GenerateRefreshToken(ctx, user.ID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	authTokens := &entities.AuthTokens{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return user, authTokens, nil
+	return user, accessToken, nil
 }
 
 // Register registers a new user in the system.
@@ -103,48 +93,8 @@ func (as *AuthService) Register(ctx context.Context, user *entities.User) (*enti
 	return createdUser, nil
 }
 
-// Refresh generates new access and refresh tokens using the previous refresh token.
-// Returns the new auth tokens, and an error if the refresh fails
-// (e.g., if the previous refresh token is invalid or expired).
-func (as *AuthService) Refresh(ctx context.Context, previousRefreshToken string) (*entities.AuthTokens, error) {
-	if previousRefreshToken == "" {
-		return nil, domain.ErrRefreshTokenRequired
-	}
-	claims, err := as.tokenSvc.VerifyAndParseRefreshToken(ctx, previousRefreshToken)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := as.userSvc.GetByID(ctx, claims.Subject)
-	if err != nil {
-		return nil, err
-	}
-
-	accessToken, err := as.tokenSvc.GenerateAccessToken(user)
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, err := as.tokenSvc.GenerateRefreshToken(ctx, user.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = as.tokenSvc.RevokeRefreshToken(ctx, previousRefreshToken)
-	if err != nil {
-		return nil, err
-	}
-
-	authTokens := &entities.AuthTokens{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}
-
-	return authTokens, nil
-}
-
-// Logout invalidates the specified refresh token, effectively logging the user out.
-// Returns an error if the logout operation fails (e.g., if the refresh token is not found).
-func (as *AuthService) Logout(ctx context.Context, refreshToken string) error {
-	return as.tokenSvc.RevokeRefreshToken(ctx, refreshToken)
+// Logout logs out a user from the system.
+// Returns an error if the logout fails.
+func (as *AuthService) Logout(ctx context.Context, accessToken string) error {
+	return as.tokenSvc.RevokeAuthToken(ctx, accessToken)
 }

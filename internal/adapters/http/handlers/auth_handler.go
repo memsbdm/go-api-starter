@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"go-starter/internal/adapters/http/helpers"
 	"go-starter/internal/adapters/http/responses"
 	"go-starter/internal/adapters/validator"
 	"go-starter/internal/domain/entities"
@@ -37,7 +38,7 @@ type loginRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			loginRequest	body loginRequest true "Login request"
-//	@Success		200	{object}	responses.Response[responses.LoginResponse]	"Access and refresh tokens"
+//	@Success		200	{object}	responses.Response[responses.LoginResponse]	"Login response"
 //	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized / credentials error"
 //	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
@@ -53,13 +54,13 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload.Username = strings.TrimSpace(payload.Username)
-	user, authTokens, err := ah.svc.Login(ctx, payload.Username, payload.Password)
+	user, accessToken, err := ah.svc.Login(ctx, payload.Username, payload.Password)
 	if err != nil {
 		responses.HandleError(w, err)
 		return
 	}
 
-	response := responses.NewLoginResponse(authTokens, user)
+	response := responses.NewLoginResponse(accessToken, user)
 	responses.HandleSuccess(w, http.StatusOK, response)
 }
 
@@ -118,45 +119,6 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	responses.HandleSuccess(w, http.StatusCreated, response)
 }
 
-// refreshTokenRequest represents the structure of the request body used for refreshing token or revoke existing one.
-type refreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token" validate:"required,jwt" example:"eyJhbGci..."`
-}
-
-// Refresh godoc
-//
-//	@Summary		Generate a new access token and refresh token
-//	@Description	Generate a new access token and refresh token
-//	@Tags			Auth
-//	@Accept			json
-//	@Produce		json
-//	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
-//	@Success		200	{object}	responses.Response[responses.RefreshTokenResponse]	"Refresh token response"
-//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
-//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
-//	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
-//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
-//	@Router			/v1/auth/refresh [post]
-//	@Security		BearerAuth
-func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	var payload refreshTokenRequest
-
-	if err := validator.ValidateRequest(w, r, &payload); err != nil {
-		responses.HandleValidationError(w, err)
-		return
-	}
-
-	authTokens, err := ah.svc.Refresh(ctx, payload.RefreshToken)
-	if err != nil {
-		responses.HandleError(w, err)
-		return
-	}
-
-	response := responses.NewRefreshTokenResponse(authTokens)
-	responses.HandleSuccess(w, http.StatusOK, response)
-}
-
 // Logout godoc
 //
 //	@Summary		Logout an authenticated user
@@ -164,25 +126,22 @@ func (ah *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			refreshTokenRequest	body refreshTokenRequest true "Refresh token request"
 //	@Success		200	{object}	responses.EmptyResponse	"Success"
-//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
-//	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
+//	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/auth/logout [delete]
 //	@Security		BearerAuth
 func (ah *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var payload refreshTokenRequest
-
-	if err := validator.ValidateRequest(w, r, &payload); err != nil {
-		responses.HandleValidationError(w, err)
+	accessToken, err := helpers.ExtractTokenFromHeader(r)
+	if err != nil {
+		responses.HandleError(w, err)
 		return
 	}
 
-	err := ah.svc.Logout(ctx, payload.RefreshToken)
+	err = ah.svc.Logout(ctx, accessToken)
 	if err != nil {
 		responses.HandleError(w, err)
 		return

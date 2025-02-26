@@ -31,6 +31,4 @@ var (
 var (
 	// ErrCacheNotFound represents an error for an empty cache value for a given key.
 	ErrCacheNotFound = errors.New("cache not found")
-	// ErrTokenClaimsNotFound represents an error for a missing authorization token payload. Maybe missing auth middleware.
-	ErrTokenClaimsNotFound = errors.New("token payload not found")
 )

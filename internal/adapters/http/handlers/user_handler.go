@@ -37,13 +37,13 @@ func NewUserHandler(svc ports.UserService, errTracker ports.ErrTrackerAdapter) *
 func (uh *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	claims, err := helpers.ExtractAccessTokenClaims(ctx)
+	userID, err := helpers.GetUserIDFromContext(ctx, uh.errTracker)
 	if err != nil {
 		responses.HandleError(w, err)
 		return
 	}
 
-	user, err := uh.svc.GetByID(ctx, claims.Subject)
+	user, err := uh.svc.GetByID(ctx, userID)
 	if err != nil {
 		responses.HandleError(w, err)
 		return
@@ -122,14 +122,14 @@ func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		PasswordConfirmation: &payload.PasswordConfirmation,
 	}
 
-	claims, err := helpers.ExtractAccessTokenClaims(ctx)
+	userID, err := helpers.GetUserIDFromContext(ctx, uh.errTracker)
 	if err != nil {
 		uh.errTracker.CaptureException(err)
 		responses.HandleError(w, err)
 		return
 	}
 
-	err = uh.svc.UpdatePassword(ctx, claims.Subject, updateUserParams)
+	err = uh.svc.UpdatePassword(ctx, userID, updateUserParams)
 	if err != nil {
 		responses.HandleError(w, err)
 		return

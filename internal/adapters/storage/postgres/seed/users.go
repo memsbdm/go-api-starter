@@ -52,7 +52,6 @@ func SeedUsers(ctx context.Context, db *sql.DB) error {
 		Token: &config.Token{
 			TokenSignature:                 []byte("seed"),
 			AccessTokenDuration:            0,
-			RefreshTokenDuration:           0,
 			EmailVerificationTokenDuration: 0,
 		},
 	}

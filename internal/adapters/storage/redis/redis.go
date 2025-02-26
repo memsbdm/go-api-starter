@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"go-starter/config"
@@ -24,9 +23,9 @@ func New(ctx context.Context, redisCfg *config.Redis) (ports.CacheRepository, er
 		Addr:     redisCfg.Addr,
 		Password: redisCfg.Password,
 		DB:       redisCfg.DB,
-		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-		},
+		// TLSConfig: &tls.Config{
+		// 	MinVersion: tls.VersionTLS12, // TODO: Uncomment this when we have a valid certificate
+		// },
 	})
 
 	_, err := client.Ping(ctx).Result()

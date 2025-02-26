@@ -1,19 +1,4 @@
 definitions:
-  go-starter_internal_adapters_http_responses.AuthTokensResponse:
-    properties:
-      access_token:
-        example: eyJhbGciOi...
-        type: string
-      access_token_expired_in_ms:
-        example: 50000
-        type: integer
-      refresh_token:
-        example: eyJhbGciOi...
-        type: string
-      refresh_token_expired_in_ms:
-        example: 890000
-        type: integer
-    type: object
   go-starter_internal_adapters_http_responses.EmptyResponse:
     properties:
       success:
@@ -77,15 +62,10 @@ definitions:
     type: object
   go-starter_internal_adapters_http_responses.LoginResponse:
     properties:
-      tokens:
-        $ref: '#/definitions/go-starter_internal_adapters_http_responses.AuthTokensResponse'
+      access_token:
+        type: string
       user:
         $ref: '#/definitions/go-starter_internal_adapters_http_responses.UserResponse'
-    type: object
-  go-starter_internal_adapters_http_responses.RefreshTokenResponse:
-    properties:
-      tokens:
-        $ref: '#/definitions/go-starter_internal_adapters_http_responses.AuthTokensResponse'
     type: object
   go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_GetUserByIDResponse:
     properties:
@@ -98,13 +78,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/go-starter_internal_adapters_http_responses.LoginResponse'
-      success:
-        type: boolean
-    type: object
-  go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse:
-    properties:
-      data:
-        $ref: '#/definitions/go-starter_internal_adapters_http_responses.RefreshTokenResponse'
       success:
         type: boolean
     type: object
@@ -150,14 +123,6 @@ definitions:
     required:
     - password
     - username
-    type: object
-  internal_adapters_http_handlers.refreshTokenRequest:
-    properties:
-      refresh_token:
-        example: eyJhbGci...
-        type: string
-    required:
-    - refresh_token
     type: object
   internal_adapters_http_handlers.registerRequest:
     properties:
@@ -220,7 +185,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Access and refresh tokens
+          description: Login response
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse'
         "400":
@@ -251,13 +216,6 @@ paths:
       consumes:
       - application/json
       description: Logout an authenticated user
-      parameters:
-      - description: Refresh token request
-        in: body
-        name: refreshTokenRequest
-        required: true
-        schema:
-          $ref: '#/definitions/internal_adapters_http_handlers.refreshTokenRequest'
       produces:
       - application/json
       responses:
@@ -265,16 +223,12 @@ paths:
           description: Success
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
-        "400":
-          description: Bad request error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "401":
           description: Unauthorized error
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "422":
-          description: Validation error
+        "403":
+          description: Forbidden error
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
@@ -284,46 +238,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Logout an authenticated user
-      tags:
-      - Auth
-  /v1/auth/refresh:
-    post:
-      consumes:
-      - application/json
-      description: Generate a new access token and refresh token
-      parameters:
-      - description: Refresh token request
-        in: body
-        name: refreshTokenRequest
-        required: true
-        schema:
-          $ref: '#/definitions/internal_adapters_http_handlers.refreshTokenRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Refresh token response
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse'
-        "400":
-          description: Bad request error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "401":
-          description: Unauthorized error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "422":
-          description: Validation error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Generate a new access token and refresh token
       tags:
       - Auth
   /v1/auth/register:

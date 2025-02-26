@@ -17,8 +17,6 @@ const (
 var (
 	// Required
 
-	// ErrRefreshTokenRequired represents an error when the refresh token is required but not provided.
-	ErrRefreshTokenRequired = errors.New("refresh token is required")
 	// ErrUsernameRequired represents an error when the username is required but not provided.
 	ErrUsernameRequired = errors.New("username is required")
 	// ErrPasswordRequired represents an error when the password is required but not provided.

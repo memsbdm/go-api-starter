@@ -79,7 +79,6 @@ func setConfig() *config.Container {
 
 	tokenConfig := &config.Token{
 		AccessTokenDuration:            accessTokenExpirationDuration,
-		RefreshTokenDuration:           refreshTokenExpirationDuration,
 		EmailVerificationTokenDuration: emailVerificationTokenExpirationDuration,
 		TokenSignature:                 []byte("token"),
 	}

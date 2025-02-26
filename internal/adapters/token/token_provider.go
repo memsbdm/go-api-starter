@@ -6,17 +6,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
 // Provider implements the ports.TokenProvider interface, providing access to functionalities for token management.
-// It handles both JWT tokens for authentication and secure tokens for email verification, password reset etc.
+// It manages one-time and authentication tokens.
 type Provider struct {
 	errTracker    ports.ErrTrackerAdapter
 	timeGenerator ports.TimeGenerator
@@ -32,146 +30,17 @@ func NewTokenProvider(timeGenerator ports.TimeGenerator, errTracker ports.ErrTra
 	}
 }
 
-// GenerateAccessToken creates a new JWT access token for a user.
-// Returns the signed token string or an error if generation fails.
-func (p *Provider) GenerateAccessToken(user *entities.User, duration time.Duration, signature []byte) (string, error) {
-	tokenID := uuid.New()
-	claims := jwt.MapClaims{
-		"id":   tokenID.String(),
-		"sub":  user.ID.String(),
-		"iat":  p.timeGenerator.Now().Unix(),
-		"exp":  p.timeGenerator.Now().Add(duration).Unix(),
-		"type": entities.AccessToken,
-	}
-	token := jwt.NewWithClaims(p.signingMethod, claims)
-	signedToken, err := token.SignedString(signature)
-	if err != nil {
-		p.errTracker.CaptureException(fmt.Errorf("failed to sign access token: %w", err))
+// GenerateRandomToken creates a cryptographically secure random token.
+// The token is encoded as a base64 string.
+// Returns:
+// - token: the secure token to be sent to the user
+// - error: any error that occurred during generation
+func (p *Provider) GenerateRandomToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
 		return "", err
 	}
-	return signedToken, nil
-}
-
-// GenerateRefreshToken creates a new JWT refresh token for a user.
-// Returns the signed token string or an error if generation fails.
-func (p *Provider) GenerateRefreshToken(userID uuid.UUID, duration time.Duration, signature []byte) (uuid.UUID, string, error) {
-	tokenID := uuid.New()
-	claims := jwt.MapClaims{
-		"id":   tokenID.String(),
-		"sub":  userID.String(),
-		"iat":  p.timeGenerator.Now().Unix(),
-		"exp":  p.timeGenerator.Now().Add(duration).Unix(),
-		"type": entities.RefreshToken,
-	}
-	token := jwt.NewWithClaims(p.signingMethod, claims)
-	signedToken, err := token.SignedString(signature)
-	if err != nil {
-		p.errTracker.CaptureException(fmt.Errorf("failed to sign access token: %w", err))
-		return uuid.Nil, "", err
-	}
-	return tokenID, signedToken, nil
-}
-
-// VerifyAndParseAccessToken verifies and parses a JWT access token.
-// Returns the parsed token claims or an error if validation fails.
-func (p *Provider) VerifyAndParseAccessToken(accessToken string, signature []byte) (*entities.AccessTokenClaims, error) {
-	parser := jwt.NewParser(
-		jwt.WithTimeFunc(p.timeGenerator.Now),
-		jwt.WithValidMethods([]string{p.signingMethod.Alg()}),
-	)
-
-	parsedToken, err := parser.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
-		return signature, nil
-	})
-	if err != nil {
-		return nil, domain.ErrInvalidToken
-	}
-
-	claimsList, ok := parsedToken.Claims.(jwt.MapClaims)
-	if !ok || !parsedToken.Valid {
-		return nil, domain.ErrInvalidToken
-	}
-
-	id, ok := claimsList["id"].(string)
-	if !ok {
-		return nil, domain.ErrInvalidToken
-	}
-	tokenUUID, err := uuid.Parse(id)
-	if err != nil {
-		return nil, domain.ErrInvalidToken
-	}
-
-	sub, ok := claimsList["sub"].(string)
-	if !ok {
-		return nil, domain.ErrInvalidToken
-	}
-
-	userID, err := entities.ParseUserID(sub)
-	if err != nil {
-		return nil, domain.ErrInvalidToken
-	}
-
-	parsedType, ok := claimsList["type"].(string)
-	if !ok || entities.TokenType(parsedType) != entities.AccessToken {
-		return nil, domain.ErrInvalidToken
-	}
-
-	return &entities.AccessTokenClaims{
-		ID:      tokenUUID,
-		Subject: userID,
-		Type:    entities.AccessToken,
-	}, nil
-}
-
-// VerifyAndParseRefreshToken verifies and parses a JWT refresh token.
-// Returns the parsed token claims or an error if validation fails.
-func (p *Provider) VerifyAndParseRefreshToken(refreshToken string, signature []byte) (*entities.RefreshTokenClaims, error) {
-	parser := jwt.NewParser(
-		jwt.WithTimeFunc(p.timeGenerator.Now),
-		jwt.WithValidMethods([]string{p.signingMethod.Alg()}),
-	)
-
-	parsedToken, err := parser.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
-		return signature, nil
-	})
-	if err != nil {
-		return nil, domain.ErrInvalidToken
-	}
-
-	claimsList, ok := parsedToken.Claims.(jwt.MapClaims)
-	if !ok || !parsedToken.Valid {
-		return nil, domain.ErrInvalidToken
-	}
-
-	id, ok := claimsList["id"].(string)
-	if !ok {
-		return nil, domain.ErrInvalidToken
-	}
-	tokenUUID, err := uuid.Parse(id)
-	if err != nil {
-		return nil, domain.ErrInvalidToken
-	}
-
-	sub, ok := claimsList["sub"].(string)
-	if !ok {
-		return nil, domain.ErrInvalidToken
-	}
-
-	userID, err := entities.ParseUserID(sub)
-	if err != nil {
-		return nil, domain.ErrInvalidToken
-	}
-
-	parsedType, ok := claimsList["type"].(string)
-	if !ok || entities.TokenType(parsedType) != entities.RefreshToken {
-		return nil, domain.ErrInvalidToken
-	}
-
-	return &entities.RefreshTokenClaims{
-		ID:      tokenUUID,
-		Subject: userID,
-		Type:    entities.RefreshToken,
-	}, nil
+	return base64.URLEncoding.EncodeToString(bytes), nil
 }
 
 // GenerateOneTimeToken creates a cryptographically secure random token.

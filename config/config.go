@@ -54,7 +54,6 @@ type (
 	Token struct {
 		TokenSignature                 []byte
 		AccessTokenDuration            time.Duration
-		RefreshTokenDuration           time.Duration
 		EmailVerificationTokenDuration time.Duration
 	}
 
@@ -95,13 +94,12 @@ func New() *Container {
 	redis := &Redis{
 		Addr:     env.GetString("REDIS_ADDR"),
 		Password: env.GetOptionalString("REDIS_PASSWORD"),
-		DB:       env.GetInt("REDIS_DB"),
+		DB:       env.GetOptionalInt("REDIS_DB"),
 	}
 
 	token := &Token{
 		TokenSignature:                 []byte(env.GetString("TOKEN_SIGNATURE")),
 		AccessTokenDuration:            env.GetOptionalDuration("ACCESS_TOKEN_DURATION"),
-		RefreshTokenDuration:           env.GetOptionalDuration("REFRESH_TOKEN_DURATION"),
 		EmailVerificationTokenDuration: env.GetOptionalDuration("EMAIL_VERIFICATION_TOKEN_DURATION"),
 	}
 
@@ -155,12 +153,14 @@ func (c *Container) setDefaultValues() {
 		c.HTTP.Port = 8080
 	}
 
+	// Redis
+	if c.Redis.DB == 0 {
+		c.Redis.DB = 0
+	}
+
 	// Token
 	if c.Token.AccessTokenDuration == 0 {
 		c.Token.AccessTokenDuration = 15 * time.Minute
-	}
-	if c.Token.RefreshTokenDuration == 0 {
-		c.Token.RefreshTokenDuration = 1 * time.Hour
 	}
 	if c.Token.EmailVerificationTokenDuration == 0 {
 		c.Token.EmailVerificationTokenDuration = 24 * time.Hour
@@ -204,14 +204,6 @@ func (c *Container) validate() error {
 	// Token
 	if c.Token.AccessTokenDuration < 0 {
 		return fmt.Errorf("invalid environment variable: %s", "ACCESS_TOKEN_DURATION")
-	}
-
-	if c.Token.RefreshTokenDuration < 0 {
-		return fmt.Errorf("invalid environment variable: %s", "REFRESH_TOKEN_DURATION")
-	}
-
-	if c.Token.AccessTokenDuration > c.Token.RefreshTokenDuration {
-		return fmt.Errorf("invalid environment variables: %s should be less than or equal to %s", "ACCESS_TOKEN_DURATION", "REFRESH_TOKEN_DURATION")
 	}
 
 	// ErrTracker

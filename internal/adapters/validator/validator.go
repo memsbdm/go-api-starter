@@ -35,20 +35,18 @@ var ErrInvalidJSON = errors.New("invalid json")
 // validationMessages holds custom error messages for specific validation failures.
 var validationMessages = map[string]error{
 	// Auth
-	"loginRequest.Username.required":            domain.ErrUsernameRequired,
-	"loginRequest.Password.required":            domain.ErrPasswordRequired,
-	"refreshTokenRequest.RefreshToken.required": domain.ErrRefreshTokenRequired,
-	"refreshTokenRequest.RefreshToken.jwt":      domain.ErrInvalidToken,
-	"registerRequest.Name.required":             domain.ErrNameRequired,
-	"registerRequest.Name.min":                  domain.ErrNameRequired,
-	"registerRequest.Name.max":                  domain.ErrNameTooLong,
-	"registerRequest.Username.required":         domain.ErrUsernameRequired,
-	"registerRequest.Username.min":              domain.ErrUsernameTooShort,
-	"registerRequest.Username.max":              domain.ErrUsernameTooLong,
-	"registerRequest.Password.required":         domain.ErrPasswordRequired,
-	"registerRequest.Password.min":              domain.ErrPasswordTooShort,
-	"registerRequest.Email.required":            domain.ErrEmailRequired,
-	"registerRequest.Email.email":               domain.ErrEmailInvalid,
+	"loginRequest.Username.required":    domain.ErrUsernameRequired,
+	"loginRequest.Password.required":    domain.ErrPasswordRequired,
+	"registerRequest.Name.required":     domain.ErrNameRequired,
+	"registerRequest.Name.min":          domain.ErrNameRequired,
+	"registerRequest.Name.max":          domain.ErrNameTooLong,
+	"registerRequest.Username.required": domain.ErrUsernameRequired,
+	"registerRequest.Username.min":      domain.ErrUsernameTooShort,
+	"registerRequest.Username.max":      domain.ErrUsernameTooLong,
+	"registerRequest.Password.required": domain.ErrPasswordRequired,
+	"registerRequest.Password.min":      domain.ErrPasswordTooShort,
+	"registerRequest.Email.required":    domain.ErrEmailRequired,
+	"registerRequest.Email.email":       domain.ErrEmailInvalid,
 
 	// Users
 	"updatePasswordRequest.Password.required":             domain.ErrPasswordRequired,

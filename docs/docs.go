@@ -41,7 +41,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Access and refresh tokens",
+                        "description": "Login response",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse"
                         }
@@ -97,17 +97,6 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Logout an authenticated user",
-                "parameters": [
-                    {
-                        "description": "Refresh token request",
-                        "name": "refreshTokenRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_adapters_http_handlers.refreshTokenRequest"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -115,83 +104,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
                         }
                     },
-                    "400": {
-                        "description": "Bad request error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
                     "401": {
                         "description": "Unauthorized error",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
-                    "422": {
-                        "description": "Validation error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/auth/refresh": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Generate a new access token and refresh token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Generate a new access token and refresh token",
-                "parameters": [
-                    {
-                        "description": "Refresh token request",
-                        "name": "refreshTokenRequest",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_adapters_http_handlers.refreshTokenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Refresh token response",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
+                    "403": {
+                        "description": "Forbidden error",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
@@ -526,27 +446,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "go-starter_internal_adapters_http_responses.AuthTokensResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOi..."
-                },
-                "access_token_expired_in_ms": {
-                    "type": "integer",
-                    "example": 50000
-                },
-                "refresh_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOi..."
-                },
-                "refresh_token_expired_in_ms": {
-                    "type": "integer",
-                    "example": 890000
-                }
-            }
-        },
         "go-starter_internal_adapters_http_responses.EmptyResponse": {
             "type": "object",
             "properties": {
@@ -636,19 +535,11 @@ const docTemplate = `{
         "go-starter_internal_adapters_http_responses.LoginResponse": {
             "type": "object",
             "properties": {
-                "tokens": {
-                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.AuthTokensResponse"
+                "access_token": {
+                    "type": "string"
                 },
                 "user": {
                     "$ref": "#/definitions/go-starter_internal_adapters_http_responses.UserResponse"
-                }
-            }
-        },
-        "go-starter_internal_adapters_http_responses.RefreshTokenResponse": {
-            "type": "object",
-            "properties": {
-                "tokens": {
-                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.AuthTokensResponse"
                 }
             }
         },
@@ -668,17 +559,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/go-starter_internal_adapters_http_responses.LoginResponse"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_RefreshTokenResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.RefreshTokenResponse"
                 },
                 "success": {
                     "type": "boolean"
@@ -743,18 +623,6 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "john"
-                }
-            }
-        },
-        "internal_adapters_http_handlers.refreshTokenRequest": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string",
-                    "example": "eyJhbGci..."
                 }
             }
         },
