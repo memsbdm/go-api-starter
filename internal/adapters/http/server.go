@@ -52,7 +52,6 @@ func New(
 
 func (s *Server) setupRoutes(tokenSvc ports.TokenService) {
 	auth := m.AuthMiddleware(tokenSvc, s.errTracker)
-	guest := m.GuestMiddleware(tokenSvc)
 
 	// Global routes
 	s.mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
@@ -60,8 +59,8 @@ func (s *Server) setupRoutes(tokenSvc ports.TokenService) {
 	s.mux.HandleFunc("GET /v1/mailer", s.handlers.MailerHandler.SendEmail)
 
 	// Auth routes
-	s.mux.HandleFunc("POST /v1/auth/login", m.Chain(s.handlers.AuthHandler.Login, guest))
-	s.mux.HandleFunc("POST /v1/auth/register", m.Chain(s.handlers.AuthHandler.Register, guest))
+	s.mux.HandleFunc("POST /v1/auth/login", s.handlers.AuthHandler.Login)
+	s.mux.HandleFunc("POST /v1/auth/register", s.handlers.AuthHandler.Register)
 	s.mux.HandleFunc("DELETE /v1/auth/logout", m.Chain(s.handlers.AuthHandler.Logout, auth))
 
 	// User routes
