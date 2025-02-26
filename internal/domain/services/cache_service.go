@@ -27,6 +27,7 @@ func NewCacheService(repo ports.CacheRepository, errTracker ports.ErrTrackerAdap
 func (cs *CacheService) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
 	err := cs.repo.Set(ctx, key, value, ttl)
 	if err != nil {
+		cs.errTracker.CaptureException(err)
 		return domain.ErrInternal
 	}
 	return nil
@@ -41,6 +42,7 @@ func (cs *CacheService) Get(ctx context.Context, key string) ([]byte, error) {
 		if errors.Is(err, domain.ErrCacheNotFound) {
 			return nil, domain.ErrCacheNotFound
 		}
+		cs.errTracker.CaptureException(err)
 		return nil, domain.ErrInternal
 	}
 	return value, nil
@@ -51,6 +53,7 @@ func (cs *CacheService) Get(ctx context.Context, key string) ([]byte, error) {
 func (cs *CacheService) Delete(ctx context.Context, key string) error {
 	err := cs.repo.Delete(ctx, key)
 	if err != nil {
+		cs.errTracker.CaptureException(err)
 		return domain.ErrInternal
 	}
 	return nil
@@ -61,6 +64,7 @@ func (cs *CacheService) Delete(ctx context.Context, key string) error {
 func (cs *CacheService) DeleteByPrefix(ctx context.Context, prefix string) error {
 	err := cs.repo.DeleteByPrefix(ctx, prefix)
 	if err != nil {
+		cs.errTracker.CaptureException(err)
 		return domain.ErrInternal
 	}
 	return nil
@@ -71,6 +75,7 @@ func (cs *CacheService) DeleteByPrefix(ctx context.Context, prefix string) error
 func (cs *CacheService) Close() error {
 	err := cs.repo.Close()
 	if err != nil {
+		cs.errTracker.CaptureException(err)
 		return domain.ErrInternal
 	}
 	return nil

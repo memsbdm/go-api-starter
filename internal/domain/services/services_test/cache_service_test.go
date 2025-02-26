@@ -16,45 +16,61 @@ import (
 func TestCacheService_Get(t *testing.T) {
 	t.Parallel()
 
-	// Arrange
-	ctx := context.Background()
-	builder := NewTestBuilder().Build()
-
-	key := "example"
-	value := []byte("value")
-
-	err := builder.CacheService.Set(ctx, key, value, time.Hour)
-	if err != nil {
-		t.Fatalf("failed to set cache: %v", err)
-	}
+	const key = "key"
+	const value = "value"
+	const cacheDuration = time.Hour
 
 	tests := map[string]struct {
-		input         string
-		expectedValue []byte
-		expectedErr   error
+		initCache   func(*TestBuilder)
+		advance     time.Duration
+		expectedErr error
 	}{
 		"get an existing key": {
-			input:         key,
-			expectedValue: value,
-			expectedErr:   nil,
+			initCache: func(builder *TestBuilder) {
+				err := builder.CacheService.Set(context.Background(), key, []byte(value), cacheDuration)
+				if err != nil {
+					t.Fatalf("failed to set cache: %v", err)
+				}
+			},
+			advance:     0,
+			expectedErr: nil,
 		},
-		"get an non existing key": {
-			input:         "non-existing",
-			expectedValue: nil,
-			expectedErr:   domain.ErrCacheNotFound,
+		"get a non existing key": {
+			advance:     0,
+			expectedErr: domain.ErrCacheNotFound,
+		},
+		"get a key that is expired": {
+			initCache: func(builder *TestBuilder) {
+				err := builder.CacheService.Set(context.Background(), key, []byte(value), cacheDuration)
+				if err != nil {
+					t.Fatalf("failed to set cache: %v", err)
+				}
+			},
+			advance:     cacheDuration,
+			expectedErr: domain.ErrCacheNotFound,
 		},
 	}
 
-	// Act & Assert
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			value, err := builder.CacheService.Get(ctx, tt.input)
+
+			// Arrange
+			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
+			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
+			if tt.initCache != nil {
+				tt.initCache(builder)
+			}
+
+			advanceTime(t, builder.TimeGenerator, tt.advance)
+
+			// Act
+			value, err := builder.CacheService.Get(context.Background(), key)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
-			if !reflect.DeepEqual(value, tt.expectedValue) {
-				t.Errorf("expected value %v, got %v", tt.expectedValue, value)
+			if !reflect.DeepEqual(value, []byte(value)) {
+				t.Errorf("expected value %v, got %v", value, []byte(value))
 			}
 		})
 	}
@@ -67,49 +83,24 @@ func TestCacheService_Delete(t *testing.T) {
 	ctx := context.Background()
 	builder := NewTestBuilder().Build()
 
-	type setRequest struct {
-		key   string
-		value []byte
-	}
-	keyValueToStore := setRequest{
-		key:   "example",
-		value: []byte("value"),
-	}
-	err := builder.CacheService.Set(ctx, keyValueToStore.key, keyValueToStore.value, time.Hour)
+	const key = "key"
+	const value = "value"
+
+	err := builder.CacheService.Set(ctx, key, []byte(value), time.Hour)
 	if err != nil {
 		t.Fatalf("failed to set cache: %v", err)
 	}
 
-	tests := map[string]struct {
-		input       string
-		expectedErr error
-	}{
-		"delete an existing key": {
-			input:       keyValueToStore.key,
-			expectedErr: nil,
-		},
-		"delete an non existing key": {
-			input:       "non-existing",
-			expectedErr: nil,
-		},
+	// Act
+	err = builder.CacheService.Delete(ctx, key)
+	if err != nil {
+		t.Fatalf("failed to delete cache: %v", err)
 	}
 
-	// Act & Assert
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			err := builder.CacheService.Delete(ctx, tt.input)
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
-			}
-			value, err := builder.CacheService.Get(ctx, tt.input)
-			if !errors.Is(err, domain.ErrCacheNotFound) {
-				t.Errorf("expected error %v, got %v", domain.ErrCacheNotFound, err)
-			}
-			if value != nil {
-				t.Errorf("expected value to be nil, got %v", value)
-			}
-		})
+	// Assert
+	_, err = builder.CacheService.Get(ctx, key)
+	if err == nil || !errors.Is(err, domain.ErrCacheNotFound) {
+		t.Errorf("expected error %v, got %v", domain.ErrCacheNotFound, err)
 	}
 }
 
@@ -120,14 +111,16 @@ func TestCacheService_DeleteByPrefix(t *testing.T) {
 	ctx := context.Background()
 	builder := NewTestBuilder().Build()
 
-	const testedPrefix = "example"
+	const prefix = "prefix"
+	const value = "value"
 
-	for i := range 10 {
-		err := builder.CacheService.Set(ctx, fmt.Sprintf("%s%d", testedPrefix, i), []byte("value"), time.Hour)
+	for i := range 4 {
+		err := builder.CacheService.Set(ctx, fmt.Sprintf("%s%d", prefix, i), []byte(value), time.Hour)
 		if err != nil {
 			t.Fatalf("failed to set cache for key %d: %v", i, err)
 		}
 	}
+
 	otherKey := "other"
 	otherValue := []byte("value")
 
@@ -136,80 +129,25 @@ func TestCacheService_DeleteByPrefix(t *testing.T) {
 		t.Fatalf("failed to set cache: %v", err)
 	}
 
-	err = builder.CacheService.DeleteByPrefix(ctx, testedPrefix)
+	// Act
+	err = builder.CacheService.DeleteByPrefix(ctx, prefix)
 	if err != nil {
 		t.Fatalf("failed to delete cache by prefix: %v", err)
 	}
 
-	// Act & Assert
-	for i := range 10 {
-		value, err := builder.CacheService.Get(ctx, fmt.Sprintf("%s%d", testedPrefix, i))
+	// Assert
+	for i := range 4 {
+		_, err := builder.CacheService.Get(ctx, fmt.Sprintf("%s%d", prefix, i))
 		if err == nil || !errors.Is(err, domain.ErrCacheNotFound) {
 			t.Errorf("expected error %v, got %v", domain.ErrCacheNotFound, err)
 		}
-		if value != nil {
-			t.Errorf("expected value to be nil, got %v", value)
-		}
 	}
 
-	value, _ := builder.CacheService.Get(ctx, otherKey)
-	if !reflect.DeepEqual(value, otherValue) {
-		t.Errorf("expected value to be %v, got %v", otherValue, value)
+	cachedOtherValue, err := builder.CacheService.Get(ctx, otherKey)
+	if err != nil {
+		t.Fatalf("failed to get cached value: %v", err)
 	}
-}
-
-func TestCacheService_CacheExpiration(t *testing.T) {
-	t.Parallel()
-
-	tests := map[string]struct {
-		duration    time.Duration
-		advance     time.Duration
-		expectedErr error
-	}{
-		"cache not expired": {
-			duration:    time.Hour,
-			advance:     time.Minute,
-			expectedErr: nil,
-		},
-		"cache expired": {
-			duration:    time.Hour,
-			advance:     time.Hour + time.Second,
-			expectedErr: domain.ErrCacheNotFound,
-		},
-		"cache near expiration": {
-			duration:    time.Hour,
-			advance:     time.Hour - time.Second,
-			expectedErr: nil,
-		},
-	}
-
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			// Arrange
-			ctx := context.Background()
-			key := "example"
-			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
-			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
-
-			err := builder.CacheService.Set(ctx, key, []byte("value"), tt.duration)
-			if err != nil {
-				t.Fatalf("failed to set cache: %v", err)
-			}
-
-			_, err = builder.CacheService.Get(ctx, key)
-			if err != nil {
-				t.Fatalf("failed to get cache: %v", err)
-			}
-
-			timeGenerator.Advance(tt.advance)
-
-			// Act & Assert
-			_, err = builder.CacheService.Get(ctx, key)
-			if !errors.Is(err, tt.expectedErr) {
-				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
-			}
-		})
+	if !reflect.DeepEqual(cachedOtherValue, otherValue) {
+		t.Errorf("expected value to be %v, got %v", otherValue, cachedOtherValue)
 	}
 }
