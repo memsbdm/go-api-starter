@@ -2,13 +2,15 @@ package redis
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/redis/go-redis/v9"
 	"go-starter/config"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/ports"
 	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 // Redis implements the ports.CacheRepository interface and provides access to the Redis library.
@@ -21,7 +23,10 @@ func New(ctx context.Context, redisCfg *config.Redis) (ports.CacheRepository, er
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisCfg.Addr,
 		Password: redisCfg.Password,
-		DB:       0,
+		DB:       redisCfg.DB,
+		TLSConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
 	})
 
 	_, err := client.Ping(ctx).Result()

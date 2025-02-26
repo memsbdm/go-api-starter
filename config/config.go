@@ -47,6 +47,7 @@ type (
 	Redis struct {
 		Addr     string
 		Password string
+		DB       int
 	}
 
 	// Token contains all the environment variables for the token service.
@@ -94,6 +95,7 @@ func New() *Container {
 	redis := &Redis{
 		Addr:     env.GetString("REDIS_ADDR"),
 		Password: env.GetOptionalString("REDIS_PASSWORD"),
+		DB:       env.GetInt("REDIS_DB"),
 	}
 
 	token := &Token{

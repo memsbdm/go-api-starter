@@ -66,6 +66,9 @@ func (cm *CacheRepositoryMock) Delete(_ context.Context, key string) error {
 // DeleteByPrefix removes all values from the cache that match the given prefix.
 // Returns an error if the operation fails (e.g., if there are issues accessing the cache).
 func (cm *CacheRepositoryMock) DeleteByPrefix(_ context.Context, prefix string) error {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
 	for key := range cm.data {
 		if strings.HasPrefix(key, prefix) {
 			delete(cm.data, key)

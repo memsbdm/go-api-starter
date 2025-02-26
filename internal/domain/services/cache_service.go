@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/ports"
 	"time"
@@ -37,7 +38,10 @@ func (cs *CacheService) Set(ctx context.Context, key string, value []byte, ttl t
 func (cs *CacheService) Get(ctx context.Context, key string) ([]byte, error) {
 	value, err := cs.repo.Get(ctx, key)
 	if err != nil {
-		return nil, domain.ErrCacheNotFound
+		if errors.Is(err, domain.ErrCacheNotFound) {
+			return nil, domain.ErrCacheNotFound
+		}
+		return nil, domain.ErrInternal
 	}
 	return value, nil
 }
@@ -65,5 +69,9 @@ func (cs *CacheService) DeleteByPrefix(ctx context.Context, prefix string) error
 // Close closes the connection to the cache server, ensuring that all resources are freed.
 // Returns an error if the operation fails (e.g., if there are issues closing the connection).
 func (cs *CacheService) Close() error {
-	return cs.repo.Close()
+	err := cs.repo.Close()
+	if err != nil {
+		return domain.ErrInternal
+	}
+	return nil
 }
