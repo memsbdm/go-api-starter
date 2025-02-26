@@ -36,15 +36,12 @@ type TokenProvider interface {
 	// Returns the token or an error if the operation fails.
 	GenerateRandomToken() (string, error)
 
-	// GenerateOneTimeToken creates a new secure random token associated with a user ID.
-	// Returns the token, its hash for storage, and any error that occurred.
-	GenerateOneTimeToken(userID uuid.UUID) (token string, hash string, err error)
+	// GenerateOneTimeToken creates a cryptographically secure random token.
+	// The token is associated with a user ID and encoded as a base64 string.
+	// Returns an error if the token generation fails.
+	GenerateOneTimeToken(userID uuid.UUID) (token string, err error)
 
-	// ParseOneTimeToken decodes and validates the structure of a one-time token.
-	// Returns the parsed token data or an error if the token is invalid.
-	ParseOneTimeToken(token string) (*entities.OneTimeToken, error)
-
-	// HashToken creates a secure hash of the given token for storage and validation.
-	// Returns the base64-encoded hash string.
-	HashToken(token string) string
+	// ParseOneTimeToken parses a one-time token and returns the user ID.
+	// Returns an error if the token is invalid.
+	ParseOneTimeToken(token string) (uuid.UUID, error)
 }

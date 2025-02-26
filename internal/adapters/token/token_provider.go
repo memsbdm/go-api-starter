@@ -2,14 +2,11 @@ package token
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
-	"fmt"
-	"go-starter/internal/domain/entities"
+	"errors"
 	"go-starter/internal/domain/ports"
+	"strings"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -18,14 +15,12 @@ import (
 type Provider struct {
 	errTracker    ports.ErrTrackerAdapter
 	timeGenerator ports.TimeGenerator
-	signingMethod jwt.SigningMethod
 }
 
 // NewTokenProvider creates a new instance of Provider.
 func NewTokenProvider(timeGenerator ports.TimeGenerator, errTracker ports.ErrTrackerAdapter) *Provider {
 	return &Provider{
 		timeGenerator: timeGenerator,
-		signingMethod: jwt.SigningMethodHS256,
 		errTracker:    errTracker,
 	}
 }
@@ -45,58 +40,36 @@ func (p *Provider) GenerateRandomToken() (string, error) {
 
 // GenerateOneTimeToken creates a cryptographically secure random token.
 // The token is associated with a user ID and encoded as a base64 string.
-// Returns:
-// - token: the secure token to be sent to the user
-// - hash: the hashed version of the token for storage
-// - error: any error that occurred during generation
-func (p *Provider) GenerateOneTimeToken(userID uuid.UUID) (token string, hash string, err error) {
-	// Generate 32 bytes of random data (256 bits)
-	randomBytes := make([]byte, 32)
+// Returns an error if the token generation fails.
+func (p *Provider) GenerateOneTimeToken(userID uuid.UUID) (token string, err error) {
+	randomBytes := make([]byte, 16)
 	if _, err := rand.Read(randomBytes); err != nil {
-		p.errTracker.CaptureException(fmt.Errorf("failed to generate secure token: %w", err))
-		return "", "", err
+		return "", err
 	}
+	randomPart := base64.URLEncoding.EncodeToString(randomBytes)
+	composite := userID.String() + "." + randomPart
 
-	oneTimeToken := &entities.OneTimeToken{
-		UserID: entities.UserID(userID),
-		Token:  base64.RawURLEncoding.EncodeToString(randomBytes),
-	}
-
-	tokenJSON, err := json.Marshal(oneTimeToken)
-	if err != nil {
-		p.errTracker.CaptureException(fmt.Errorf("failed to marshal secure token: %w", err))
-		return "", "", err
-	}
-
-	token = base64.RawURLEncoding.EncodeToString(tokenJSON)
-	hash = p.HashToken(token)
-
-	return token, hash, nil
+	return base64.URLEncoding.EncodeToString([]byte(composite)), nil
 }
 
-// ParseOneTimeToken decodes and validates the structure of a one-time token.
-// Returns the parsed token data or an error if the token is invalid.
-func (p *Provider) ParseOneTimeToken(token string) (*entities.OneTimeToken, error) {
-	tokenJSON, err := base64.RawURLEncoding.DecodeString(token)
+// ParseOneTimeToken parses a one-time token and returns the user ID.
+// Returns an error if the token is invalid.
+func (p *Provider) ParseOneTimeToken(token string) (uuid.UUID, error) {
+	decodedBytes, err := base64.URLEncoding.DecodeString(token)
 	if err != nil {
-		err = fmt.Errorf("invalid token encoding: %w", err)
-		p.errTracker.CaptureException(err)
-		return nil, err
+		return uuid.Nil, err
 	}
 
-	var oneTimeToken entities.OneTimeToken
-	if err := json.Unmarshal(tokenJSON, &oneTimeToken); err != nil {
-		err = fmt.Errorf("invalid token format: %w", err)
-		p.errTracker.CaptureException(err)
-		return nil, err
+	decoded := string(decodedBytes)
+	parts := strings.Split(decoded, ".")
+	if len(parts) != 2 {
+		return uuid.Nil, errors.New("invalid one-time token format")
 	}
 
-	return &oneTimeToken, nil
-}
+	userID, err := uuid.Parse(parts[0])
+	if err != nil {
+		return uuid.Nil, err
+	}
 
-// HashToken creates a secure hash of the given token for storage and validation.
-// Returns the base64-encoded hash string.
-func (p *Provider) HashToken(token string) string {
-	h := sha256.Sum256([]byte(token))
-	return base64.RawURLEncoding.EncodeToString(h[:])
+	return userID, nil
 }

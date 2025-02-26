@@ -93,13 +93,13 @@ func (ts *TokenService) RevokeAuthToken(ctx context.Context, token string) error
 // GenerateOneTimeToken generates a new one-time token for a user.
 // Returns the token string or an error if generation fails.
 func (ts *TokenService) GenerateOneTimeToken(ctx context.Context, tokenType entities.TokenType, userID entities.UserID) (string, error) {
-	token, hash, err := ts.provider.GenerateOneTimeToken(userID.UUID())
+	token, err := ts.provider.GenerateOneTimeToken(userID.UUID())
 	if err != nil {
 		return "", domain.ErrInternal
 	}
 
 	key := utils.GenerateCacheKey(tokenType.String(), userID.String())
-	err = ts.cacheSvc.Set(ctx, key, []byte(hash), ts.getTokenTypeDuration(tokenType))
+	err = ts.cacheSvc.Set(ctx, key, []byte(token), ts.getTokenTypeDuration(tokenType))
 	if err != nil {
 		return "", err
 	}
@@ -108,23 +108,23 @@ func (ts *TokenService) GenerateOneTimeToken(ctx context.Context, tokenType enti
 }
 
 // VerifyAndConsumeOneTimeToken verifies and consumes a one-time token.
-// Returns the user ID or an error if the token is not found or if the token is invalid.
+// Returns the user ID or an error if the token is not found in cache or if the token is invalid.
 func (ts *TokenService) VerifyAndConsumeOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) (entities.UserID, error) {
 	nilUserID := entities.UserID(uuid.Nil)
-	parsedToken, err := ts.provider.ParseOneTimeToken(token)
+	userID, err := ts.provider.ParseOneTimeToken(token)
 	if err != nil {
 		return nilUserID, domain.ErrInvalidToken
 	}
 
-	key := utils.GenerateCacheKey(tokenType.String(), parsedToken.UserID.String())
-	dbHashedToken, err := ts.cacheSvc.Get(ctx, key)
+	key := utils.GenerateCacheKey(tokenType.String(), userID.String())
+	dbToken, err := ts.cacheSvc.Get(ctx, key)
 	if err != nil && errors.Is(err, domain.ErrCacheNotFound) {
 		return nilUserID, domain.ErrInvalidToken
 	} else if err != nil {
 		return nilUserID, err
 	}
 
-	if ts.provider.HashToken(token) != string(dbHashedToken) {
+	if string(dbToken) != token {
 		return nilUserID, domain.ErrInvalidToken
 	}
 
@@ -133,7 +133,7 @@ func (ts *TokenService) VerifyAndConsumeOneTimeToken(ctx context.Context, tokenT
 		return nilUserID, err
 	}
 
-	return parsedToken.UserID, nil
+	return entities.UserID(userID), nil
 }
 
 // initTokenTypeDuration initializes a new tokenTypeDuration structure with predefined durations.
