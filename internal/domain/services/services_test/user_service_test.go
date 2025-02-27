@@ -67,22 +67,6 @@ func TestUserService_Register(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
-		"register user without username": {
-			input: &entities.User{
-				Name:     userToCreate.Name,
-				Password: userToCreate.Password,
-				Email:    userToCreate.Email,
-			},
-			expectedErr: domain.ErrUsernameRequired,
-		},
-		"register user without password": {
-			input: &entities.User{
-				Name:     userToCreate.Name,
-				Username: createdUser.Username,
-				Email:    userToCreate.Email,
-			},
-			expectedErr: domain.ErrPasswordRequired,
-		},
 		"register user with short password": {
 			input: &entities.User{
 				Name:     userToCreate.Name,
@@ -118,14 +102,6 @@ func TestUserService_Register(t *testing.T) {
 				Email:    userToCreate.Email,
 			},
 			expectedErr: domain.ErrUsernameInvalid,
-		},
-		"register user without name": {
-			input: &entities.User{
-				Username: userToCreate.Username,
-				Password: userToCreate.Password,
-				Email:    userToCreate.Email,
-			},
-			expectedErr: domain.ErrNameRequired,
 		},
 		"register user with long name": {
 			input: &entities.User{

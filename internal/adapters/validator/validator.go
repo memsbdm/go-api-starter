@@ -7,6 +7,7 @@ import (
 	"go-starter/internal/domain"
 	"log/slog"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
@@ -26,7 +27,15 @@ var (
 func init() {
 	once.Do(func() {
 		Validate = validator.New(validator.WithRequiredStructEnabled())
+		if err := Validate.RegisterValidation("notblank", notBlank); err != nil {
+			slog.Error("failed to register notblank validation", "error", err)
+		}
 	})
+}
+
+// notBlank validates that the string length is greater than 0 after trimming whitespace.
+func notBlank(fl validator.FieldLevel) bool {
+	return len(strings.TrimSpace(fl.Field().String())) > 0
 }
 
 // ErrInvalidJSON is returned when the JSON payload is invalid.
@@ -35,12 +44,11 @@ var ErrInvalidJSON = errors.New("invalid json")
 // validationMessages holds custom error messages for specific validation failures.
 var validationMessages = map[string]error{
 	// Auth
-	"loginRequest.Username.required":    domain.ErrUsernameRequired,
+	"loginRequest.Username.notblank":    domain.ErrUsernameRequired,
 	"loginRequest.Password.required":    domain.ErrPasswordRequired,
-	"registerRequest.Name.required":     domain.ErrNameRequired,
-	"registerRequest.Name.min":          domain.ErrNameRequired,
+	"registerRequest.Name.notblank":     domain.ErrNameRequired,
 	"registerRequest.Name.max":          domain.ErrNameTooLong,
-	"registerRequest.Username.required": domain.ErrUsernameRequired,
+	"registerRequest.Username.notblank": domain.ErrUsernameRequired,
 	"registerRequest.Username.min":      domain.ErrUsernameTooShort,
 	"registerRequest.Username.max":      domain.ErrUsernameTooLong,
 	"registerRequest.Password.required": domain.ErrPasswordRequired,

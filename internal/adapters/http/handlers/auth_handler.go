@@ -26,7 +26,7 @@ func NewAuthHandler(svc ports.AuthService) *AuthHandler {
 
 // loginRequest represents the structure of the request body used for logging in a user.
 type loginRequest struct {
-	Username string `json:"username" validate:"required" example:"john"`
+	Username string `json:"username" validate:"notblank" example:"john"`
 	Password string `json:"password" validate:"required" example:"secret123"`
 }
 
@@ -65,8 +65,8 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 // registerRequest represents the structure of the request body used for registering a new user.
 type registerRequest struct {
-	Name     string `json:"name" validate:"required,min=1,max=50" example:"John Doe"`
-	Username string `json:"username" validate:"required,min=4,max=15" example:"john"`
+	Name     string `json:"name" validate:"notblank,max=50" example:"John Doe"`
+	Username string `json:"username" validate:"notblank,min=4,max=15" example:"john"`
 	Password string `json:"password" validate:"required,min=8" example:"secret123"`
 	Email    string `json:"email" validate:"required,email" example:"john@example.com"`
 }
@@ -93,6 +93,9 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		responses.HandleValidationError(w, err)
 		return
 	}
+
+	payload.Name = strings.TrimSpace(payload.Name)
+	payload.Username = strings.TrimSpace(payload.Username)
 
 	user := &entities.User{
 		Name:     payload.Name,

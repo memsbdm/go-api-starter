@@ -154,21 +154,17 @@ func (us *UserService) UpdatePassword(ctx context.Context, userID entities.UserI
 	return nil
 }
 
-// validateAndFormatUsername checks if the provided username meets the required criteria.
+// validateUsername checks if the provided username meets the required criteria.
 // Returns an error if any validation fails.
-func validateAndFormatUsername(user *entities.User) error {
-	user.Username = strings.TrimSpace(user.Username)
-	if user.Username == "" {
-		return domain.ErrUsernameRequired
-	}
-	if len(user.Username) < domain.UsernameMinLength {
+func validateUsername(username string) error {
+	if len(username) < domain.UsernameMinLength {
 		return domain.ErrUsernameTooShort
 	}
-	if len(user.Username) > domain.UsernameMaxLength {
+	if len(username) > domain.UsernameMaxLength {
 		return domain.ErrUsernameTooLong
 	}
 	usernameRegex := regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
-	if !usernameRegex.MatchString(user.Username) {
+	if !usernameRegex.MatchString(username) {
 		return domain.ErrUsernameInvalid
 	}
 	return nil
@@ -177,9 +173,6 @@ func validateAndFormatUsername(user *entities.User) error {
 // validatePassword checks if the provided password meets the required criteria.
 // Returns an error if any validation fails.
 func validatePassword(password string) error {
-	if password == "" {
-		return domain.ErrPasswordRequired
-	}
 	if len(password) < domain.PasswordMinLength {
 		return domain.ErrPasswordTooShort
 	}
@@ -189,10 +182,6 @@ func validatePassword(password string) error {
 // validateAndFormatName checks if the provided name meets the required criteria and formats it.
 // Returns an error if any validation fails.
 func validateAndFormatName(user *entities.User) error {
-	user.Name = strings.TrimSpace(user.Name)
-	if user.Name == "" {
-		return domain.ErrNameRequired
-	}
 	if len(user.Name) > domain.NameMaxLength {
 		return domain.ErrNameTooLong
 	}
@@ -208,15 +197,10 @@ func validateAndFormatName(user *entities.User) error {
 	return nil
 }
 
-// validateAndFormatEmail validates and formats a user email.
-// Returns an error if any validation fails.
-func validateAndFormatEmail(user *entities.User) error {
-	user.Email = strings.TrimSpace(user.Email)
-	if user.Email == "" {
-		return domain.ErrEmailRequired
-	}
-
-	ok := helpers.IsValidEmail(user.Email)
+// validateEmail validates an email address.
+// Returns an error if the email is invalid.
+func validateEmail(email string) error {
+	ok := helpers.IsValidEmail(email)
 	if !ok {
 		return domain.ErrEmailInvalid
 	}
@@ -230,13 +214,13 @@ func validateRegisterRequest(user *entities.User) error {
 	if err := validateAndFormatName(user); err != nil {
 		return err
 	}
-	if err := validateAndFormatUsername(user); err != nil {
+	if err := validateUsername(user.Username); err != nil {
 		return err
 	}
 	if err := validatePassword(user.Password); err != nil {
 		return err
 	}
-	if err := validateAndFormatEmail(user); err != nil {
+	if err := validateEmail(user.Email); err != nil {
 		return err
 	}
 	return nil
