@@ -37,7 +37,7 @@ func (cs *CacheService) Get(ctx context.Context, key string) ([]byte, error) {
 	value, err := cs.repo.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, domain.ErrCacheNotFound) {
-			return nil, domain.ErrCacheNotFound
+			return nil, err
 		}
 		return nil, domain.ErrInternal
 	}

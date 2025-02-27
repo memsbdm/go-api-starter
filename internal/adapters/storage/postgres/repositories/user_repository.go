@@ -107,7 +107,7 @@ func (ur *UserRepository) CheckEmailAvailability(ctx context.Context, email stri
 	}
 
 	if exists {
-		return domain.ErrEmailAlreadyTaken
+		return domain.ErrEmailConflict
 	}
 
 	return nil
@@ -148,7 +148,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 			switch pqErr.Code {
 			case "23505": // Code unique_violation
 				if pqErr.Constraint == "users_username_key" {
-					return nil, domain.ErrUsernameAlreadyTaken
+					return nil, domain.ErrUsernameConflict
 				}
 			}
 		}

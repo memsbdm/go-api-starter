@@ -82,8 +82,8 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 	}
 
 	if err := us.repo.CheckEmailAvailability(ctx, user.Email); err != nil {
-		if errors.Is(err, domain.ErrEmailAlreadyTaken) {
-			return nil, domain.ErrEmailAlreadyTaken
+		if errors.Is(err, domain.ErrEmailConflict) {
+			return nil, err
 		}
 		return nil, domain.ErrInternal
 	}
@@ -101,7 +101,7 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 
 	created, err := us.repo.Create(ctx, userToCreate)
 	if err != nil {
-		if errors.Is(err, domain.ErrUsernameAlreadyTaken) {
+		if errors.Is(err, domain.ErrUsernameConflict) {
 			return nil, err
 		}
 		return nil, domain.ErrInternal

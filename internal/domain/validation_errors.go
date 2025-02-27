@@ -36,8 +36,8 @@ var (
 	ErrPasswordTooShort = fmt.Errorf("password is too short, it should be at least %d characters", PasswordMinLength)
 	// ErrUsernameTooShort represents an error when the username is too short, less than the minimum required length.
 	ErrUsernameTooShort = fmt.Errorf("username is too short, it should be at least %d characters", UsernameMinLength)
-	// ErrUsernameAlreadyTaken represents a conflict error when trying to create a user with an existing username.
-	ErrUsernameAlreadyTaken = errors.New("username already taken")
+	// ErrUsernameConflict represents a conflict error when trying to create a user with an existing username.
+	ErrUsernameConflict = errors.New("username already taken")
 	// ErrUsernameTooLong represents an error when the username is too long, greater than the minimum required length.
 	ErrUsernameTooLong = fmt.Errorf("username is too long, it should be at most %d characters", UsernameMaxLength)
 	// ErrUsernameInvalid represents an error when the username is invalid, not respecting the regex pattern.
@@ -46,6 +46,6 @@ var (
 	ErrNameTooLong = fmt.Errorf("name is too long, it should be at most %d characters", NameMaxLength)
 	// ErrEmailInvalid represents an error when the email is invalid.
 	ErrEmailInvalid = errors.New("email is invalid")
-	// ErrEmailAlreadyTaken represents a conflict error when trying to create a user with an existing email.
-	ErrEmailAlreadyTaken = errors.New("email already taken")
+	// ErrEmailConflict represents a conflict error when trying to create a user with an existing email.
+	ErrEmailConflict = errors.New("email already taken")
 )

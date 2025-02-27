@@ -74,7 +74,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 
 	for _, v := range ur.db.data {
 		if v.Username == user.Username {
-			return nil, domain.ErrUsernameAlreadyTaken
+			return nil, domain.ErrUsernameConflict
 		}
 	}
 
@@ -128,7 +128,7 @@ func (ur *UserRepository) CheckEmailAvailability(ctx context.Context, email stri
 
 	for _, v := range ur.db.data {
 		if v.Email == email && v.IsEmailVerified {
-			return domain.ErrEmailAlreadyTaken
+			return domain.ErrEmailConflict
 		}
 	}
 

@@ -56,7 +56,7 @@ func TestUserService_Register(t *testing.T) {
 				Password: userToCreate.Password,
 				Email:    userToCreate.Email,
 			},
-			expectedErr: domain.ErrUsernameAlreadyTaken,
+			expectedErr: domain.ErrUsernameConflict,
 		},
 		"register user with conflicting not verified email": {
 			input: &entities.User{
@@ -165,8 +165,8 @@ func TestUserService_Register_EmailVerification(t *testing.T) {
 
 	// Act & Assert
 	newUser, err := builder.UserService.Register(ctx, testedUser)
-	if !errors.Is(err, domain.ErrEmailAlreadyTaken) {
-		t.Errorf("expected error %v, got %v", domain.ErrEmailAlreadyTaken, err)
+	if !errors.Is(err, domain.ErrEmailConflict) {
+		t.Errorf("expected error %v, got %v", domain.ErrEmailConflict, err)
 	}
 	if newUser != nil {
 		t.Errorf("expected user to be nil, got %v", newUser)
