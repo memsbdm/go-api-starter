@@ -2,10 +2,8 @@ package helpers
 
 import (
 	"context"
-	"fmt"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
-	"go-starter/internal/domain/ports"
 	"net/http"
 	"strings"
 
@@ -43,18 +41,16 @@ func ExtractTokenFromHeader(r *http.Request) (string, error) {
 
 // GetUserIDFromContext retrieves the user ID from the context of the HTTP request.
 // Returns the user ID or an error if the user ID is not found or if the user ID is invalid.
-func GetUserIDFromContext(ctx context.Context, errTracker ports.ErrTrackerAdapter) (entities.UserID, error) {
+func GetUserIDFromContext(ctx context.Context) (entities.UserID, error) {
 	id, ok := ctx.Value(AuthorizationPayloadKey).(string)
 	if !ok {
-		errTracker.CaptureException(fmt.Errorf("failed to extract user id from context"))
 		return entities.UserID(uuid.Nil), domain.ErrInternal
 	}
 
-	userID, err := uuid.Parse(id)
+	userID, err := entities.ParseUserID(id)
 	if err != nil {
-		errTracker.CaptureException(fmt.Errorf("failed to parse user id to uuid from context"))
-		return entities.UserID(uuid.Nil), domain.ErrInternal
+		return userID, domain.ErrInternal
 	}
 
-	return entities.UserID(userID), nil
+	return userID, nil
 }

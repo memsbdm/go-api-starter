@@ -9,15 +9,13 @@ import (
 
 // MailerHandler is responsible for sending a test email.
 type MailerHandler struct {
-	errTracker ports.ErrTrackerAdapter
-	mailerSvc  ports.MailerService
+	mailerSvc ports.MailerService
 }
 
 // NewMailerHandler initializes and returns a new instance of MailerHandler.
-func NewMailerHandler(errTracker ports.ErrTrackerAdapter, mailerSvc ports.MailerService) *MailerHandler {
+func NewMailerHandler(mailerSvc ports.MailerService) *MailerHandler {
 	return &MailerHandler{
-		errTracker: errTracker,
-		mailerSvc:  mailerSvc,
+		mailerSvc: mailerSvc,
 	}
 }
 

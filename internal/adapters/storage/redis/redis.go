@@ -14,11 +14,12 @@ import (
 
 // Redis implements the ports.CacheRepository interface and provides access to the Redis library.
 type Redis struct {
-	client *redis.Client
+	client     *redis.Client
+	errTracker ports.ErrTrackerAdapter
 }
 
 // New creates a new instance of Redis.
-func New(ctx context.Context, redisCfg *config.Redis) (ports.CacheRepository, error) {
+func New(ctx context.Context, redisCfg *config.Redis, errTracker ports.ErrTrackerAdapter) (ports.CacheRepository, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisCfg.Addr,
 		Password: redisCfg.Password,
@@ -30,16 +31,22 @@ func New(ctx context.Context, redisCfg *config.Redis) (ports.CacheRepository, er
 
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
+		errTracker.CaptureException(fmt.Errorf("failed to ping redis: %w", err))
 		return nil, err
 	}
 
-	return &Redis{client}, nil
+	return &Redis{client: client, errTracker: errTracker}, nil
 }
 
 // Set stores the value in the cache with a specified key and time-to-live (TTL).
 // Returns an error if the operation fails (e.g., if the cache is unreachable).
 func (r *Redis) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
-	return r.client.Set(ctx, key, value, ttl).Err()
+	err := r.client.Set(ctx, key, value, ttl).Err()
+	if err != nil {
+		r.errTracker.CaptureException(fmt.Errorf("failed to set value in redis: %w", err))
+		return err
+	}
+	return nil
 }
 
 // Get retrieves the value associated with the specified key from the cache.
@@ -51,6 +58,7 @@ func (r *Redis) Get(ctx context.Context, key string) ([]byte, error) {
 		if errors.Is(err, redis.Nil) {
 			return nil, domain.ErrCacheNotFound
 		}
+		r.errTracker.CaptureException(fmt.Errorf("failed to get value from redis: %w", err))
 		return nil, err
 	}
 	return []byte(res), nil
@@ -59,7 +67,12 @@ func (r *Redis) Get(ctx context.Context, key string) ([]byte, error) {
 // Delete removes the value associated with the specified key from the cache.
 // Returns an error if the operation fails (e.g., if there are issues accessing the cache).
 func (r *Redis) Delete(ctx context.Context, key string) error {
-	return r.client.Del(ctx, key).Err()
+	err := r.client.Del(ctx, key).Err()
+	if err != nil {
+		r.errTracker.CaptureException(fmt.Errorf("failed to delete value from redis: %w", err))
+		return err
+	}
+	return nil
 }
 
 // DeleteByPrefix removes all values from the cache that match the given prefix.
@@ -71,13 +84,15 @@ func (r *Redis) DeleteByPrefix(ctx context.Context, prefix string) error {
 		var err error
 		keys, cursor, err := r.client.Scan(ctx, cursor, prefix, 100).Result()
 		if err != nil {
-			return fmt.Errorf("scan error: %w", err)
+			r.errTracker.CaptureException(fmt.Errorf("failed to scan values from redis: %w", err))
+			return err
 		}
 
 		for _, key := range keys {
 			err := r.client.Del(ctx, key).Err()
 			if err != nil {
-				return fmt.Errorf("delete error: %w", err)
+				r.errTracker.CaptureException(fmt.Errorf("failed to delete value from redis: %w", err))
+				return err
 			}
 		}
 
@@ -92,5 +107,10 @@ func (r *Redis) DeleteByPrefix(ctx context.Context, prefix string) error {
 // Close closes the connection to the cache server, ensuring that all resources are freed.
 // Returns an error if the operation fails (e.g., if there are issues closing the connection).
 func (r *Redis) Close() error {
-	return r.client.Close()
+	err := r.client.Close()
+	if err != nil {
+		r.errTracker.CaptureException(fmt.Errorf("failed to close redis connection: %w", err))
+		return err
+	}
+	return nil
 }

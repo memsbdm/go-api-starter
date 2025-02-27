@@ -52,7 +52,6 @@ type (
 
 	// Token contains all the environment variables for the token service.
 	Token struct {
-		TokenSignature                 []byte
 		AccessTokenDuration            time.Duration
 		EmailVerificationTokenDuration time.Duration
 	}
@@ -98,7 +97,6 @@ func New() *Container {
 	}
 
 	token := &Token{
-		TokenSignature:                 []byte(env.GetString("TOKEN_SIGNATURE")),
 		AccessTokenDuration:            env.GetOptionalDuration("ACCESS_TOKEN_DURATION"),
 		EmailVerificationTokenDuration: env.GetOptionalDuration("EMAIL_VERIFICATION_TOKEN_DURATION"),
 	}

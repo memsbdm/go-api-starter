@@ -50,7 +50,6 @@ func newUserGenerator(svc *services.UserService) *userGenerator {
 func SeedUsers(ctx context.Context, db *sql.DB) error {
 	cfg := &config.Container{
 		Token: &config.Token{
-			TokenSignature:                 []byte("seed"),
 			AccessTokenDuration:            0,
 			EmailVerificationTokenDuration: 0,
 		},

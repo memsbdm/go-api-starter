@@ -14,11 +14,10 @@ import (
 
 // AuthService implements ports.AuthService interface.
 type AuthService struct {
-	appCfg     *config.App
-	userSvc    ports.UserService
-	tokenSvc   ports.TokenService
-	errTracker ports.ErrTrackerAdapter
-	mailerSvc  ports.MailerService
+	appCfg    *config.App
+	userSvc   ports.UserService
+	tokenSvc  ports.TokenService
+	mailerSvc ports.MailerService
 }
 
 // NewAuthService creates a new instance of AuthService.
@@ -26,16 +25,14 @@ func NewAuthService(
 	appCfg *config.App,
 	userSvc ports.UserService,
 	tokenSvc ports.TokenService,
-	errTracker ports.ErrTrackerAdapter,
 	mailerSvc ports.MailerService,
 ) *AuthService {
 
 	return &AuthService{
-		appCfg:     appCfg,
-		userSvc:    userSvc,
-		tokenSvc:   tokenSvc,
-		errTracker: errTracker,
-		mailerSvc:  mailerSvc,
+		appCfg:    appCfg,
+		userSvc:   userSvc,
+		tokenSvc:  tokenSvc,
+		mailerSvc: mailerSvc,
 	}
 }
 

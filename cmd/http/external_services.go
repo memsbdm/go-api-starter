@@ -68,10 +68,8 @@ func initializeErrTracker(cfg *config.Container) ports.ErrTrackerAdapter {
 }
 
 func initializeDatabase(ctx context.Context, cfg *config.Container, errTracker ports.ErrTrackerAdapter) (*sql.DB, error) {
-	db, err := postgres.New(ctx, cfg.DB)
+	db, err := postgres.New(ctx, cfg.DB, errTracker)
 	if err != nil {
-		err = fmt.Errorf("failed to connect to database: %w", err)
-		errTracker.CaptureException(err)
 		return nil, err
 	}
 	slog.Info("Successfully connected to the database")
@@ -79,20 +77,18 @@ func initializeDatabase(ctx context.Context, cfg *config.Container, errTracker p
 }
 
 func initializeCache(ctx context.Context, cfg *config.Container, errTracker ports.ErrTrackerAdapter) (ports.CacheRepository, error) {
-	cache, err := redis.New(ctx, cfg.Redis)
+	cache, err := redis.New(ctx, cfg.Redis, errTracker)
 	if err != nil {
-		errTracker.CaptureException(err)
-		return nil, fmt.Errorf("failed to connect to cache service: %w", err)
+		return nil, err
 	}
 	slog.Info("Successfully connected to the cache service")
 	return cache, nil
 }
 
 func initializeMailer(cfg *config.Container, errTracker ports.ErrTrackerAdapter) (ports.MailerAdapter, error) {
-	adapter, err := mailer.NewSESAdapter(cfg.Mailer)
+	adapter, err := mailer.NewSESAdapter(cfg.Mailer, errTracker)
 	if err != nil {
-		errTracker.CaptureException(err)
-		return nil, fmt.Errorf("failed to initialize mailer: %w", err)
+		return nil, err
 	}
 	return adapter, nil
 }
@@ -105,8 +101,6 @@ func createCleanupFunction(db *sql.DB, cache ports.CacheRepository, errTracker p
 			slog.Error(err.Error())
 		}
 		if err := cache.Close(); err != nil {
-			err = fmt.Errorf("failed to close cache connection: %w", err)
-			errTracker.CaptureException(err)
 			slog.Error(err.Error())
 		}
 	}

@@ -14,24 +14,27 @@ import (
 
 // SESAdapter is an adapter for the SES service.
 type SESAdapter struct {
-	session   *ses.SES
-	mailerCfg *config.Mailer
+	session    *ses.SES
+	mailerCfg  *config.Mailer
+	errTracker ports.ErrTrackerAdapter
 }
 
 // NewSESAdapter creates a new SESAdapter instance.
-func NewSESAdapter(mailerCfg *config.Mailer) (*SESAdapter, error) {
+func NewSESAdapter(mailerCfg *config.Mailer, errTracker ports.ErrTrackerAdapter) (*SESAdapter, error) {
 	awsSession, err := session.NewSession(&aws.Config{
 		Region:      aws.String(mailerCfg.Region),
 		Credentials: credentials.NewStaticCredentials(mailerCfg.AccessKey, mailerCfg.SecretKey, ""),
 	})
 
 	if err != nil {
+		errTracker.CaptureException(fmt.Errorf("failed to create SES session: %w", err))
 		return nil, err
 	}
 
 	return &SESAdapter{
-		session:   ses.New(awsSession),
-		mailerCfg: mailerCfg,
+		session:    ses.New(awsSession),
+		mailerCfg:  mailerCfg,
+		errTracker: errTracker,
 	}, nil
 }
 
@@ -63,7 +66,8 @@ func (a *SESAdapter) Send(msg ports.EmailMessage) error {
 
 	msgID, err := a.session.SendEmail(sesInput)
 	if err != nil {
-		return fmt.Errorf("failed to send email: %w", err)
+		a.errTracker.CaptureException(fmt.Errorf("failed to send email: %w", err))
+		return err
 	}
 
 	slog.Info("email sent with message ID", "msgID", *msgID)

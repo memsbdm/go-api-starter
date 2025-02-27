@@ -74,13 +74,12 @@ func (ts *TokenService) VerifyAuthToken(ctx context.Context, token string) (enti
 		return entities.UserID(uuid.Nil), err
 	}
 
-	userIDStr := string(userIDBytes)
-	userID, err := uuid.Parse(userIDStr)
+	userID, err := entities.ParseUserID(string(userIDBytes))
 	if err != nil {
-		return entities.UserID(uuid.Nil), domain.ErrInternal
+		return userID, domain.ErrInternal
 	}
 
-	return entities.UserID(userID), nil
+	return userID, nil
 }
 
 // RevokeAuthToken revokes an access token.

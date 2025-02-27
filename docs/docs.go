@@ -171,7 +171,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/health": {
+        "/v1/health/postgres": {
             "get": {
                 "description": "Get database health information",
                 "consumes": [
@@ -186,7 +186,7 @@ const docTemplate = `{
                 "summary": "Get database health information",
                 "responses": {
                     "200": {
-                        "description": "DB information",
+                        "description": "Postgres health information",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.HealthResponse"
                         }

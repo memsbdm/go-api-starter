@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-starter/config"
+	"go-starter/internal/domain/ports"
 	"log"
 	"strconv"
 	"time"
@@ -17,14 +18,15 @@ var (
 )
 
 // New creates a postgres database instance.
-func New(ctx context.Context, dbCfg *config.DB) (*sql.DB, error) {
+func New(ctx context.Context, dbCfg *config.DB, errTracker ports.ErrTrackerAdapter) (*sql.DB, error) {
 	if dbInstance != nil {
 		return dbInstance, nil
 	}
 
-	db, err := createConnection(ctx, dbCfg)
+	db, err := createConnection(ctx, dbCfg, errTracker)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create database connection: %w", err)
+		errTracker.CaptureException(fmt.Errorf("failed to create database connection: %w", err))
+		return nil, err
 	}
 
 	dbInstance = db
@@ -32,9 +34,10 @@ func New(ctx context.Context, dbCfg *config.DB) (*sql.DB, error) {
 }
 
 // createConnection establishes a new database connection with the given configuration.
-func createConnection(c context.Context, dbCfg *config.DB) (*sql.DB, error) {
+func createConnection(c context.Context, dbCfg *config.DB, errTracker ports.ErrTrackerAdapter) (*sql.DB, error) {
 	db, err := sql.Open("postgres", dbCfg.Addr)
 	if err != nil {
+		errTracker.CaptureException(fmt.Errorf("failed to create database connection: %w", err))
 		return nil, err
 	}
 	db.SetMaxOpenConns(dbCfg.MaxOpenConns)
@@ -44,7 +47,8 @@ func createConnection(c context.Context, dbCfg *config.DB) (*sql.DB, error) {
 	ctx, cancel := context.WithTimeout(c, 5*time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		errTracker.CaptureException(fmt.Errorf("failed to ping database: %w", err))
+		return nil, err
 	}
 	return db, nil
 }

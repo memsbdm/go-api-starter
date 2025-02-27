@@ -33,6 +33,7 @@ func NewTokenProvider(timeGenerator ports.TimeGenerator, errTracker ports.ErrTra
 func (p *Provider) GenerateRandomToken() (string, error) {
 	bytes := make([]byte, 32)
 	if _, err := rand.Read(bytes); err != nil {
+		p.errTracker.CaptureException(err)
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
@@ -44,6 +45,7 @@ func (p *Provider) GenerateRandomToken() (string, error) {
 func (p *Provider) GenerateOneTimeToken(userID uuid.UUID) (token string, err error) {
 	randomBytes := make([]byte, 16)
 	if _, err := rand.Read(randomBytes); err != nil {
+		p.errTracker.CaptureException(err)
 		return "", err
 	}
 	randomPart := base64.URLEncoding.EncodeToString(randomBytes)

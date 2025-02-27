@@ -59,11 +59,11 @@ func (tb *TestBuilder) WithTimeGenerator(tg ports.TimeGenerator) *TestBuilder {
 }
 
 func (tb *TestBuilder) Build() *TestBuilder {
-	tb.MailerService = services.NewMailerService(tb.Config, tb.MailerAdapter, tb.ErrTrackerAdapter)
-	tb.CacheService = services.NewCacheService(tb.CacheRepo, tb.ErrTrackerAdapter)
+	tb.MailerService = services.NewMailerService(tb.Config, tb.MailerAdapter)
+	tb.CacheService = services.NewCacheService(tb.CacheRepo)
 	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService, tb.TokenService)
 	tb.TokenService = services.NewTokenService(tb.Config.Token, tb.TokenProvider, tb.CacheService)
-	tb.AuthService = services.NewAuthService(tb.Config.Application, tb.UserService, tb.TokenService, tb.ErrTrackerAdapter, tb.MailerService)
+	tb.AuthService = services.NewAuthService(tb.Config.Application, tb.UserService, tb.TokenService, tb.MailerService)
 	return tb
 }
 
@@ -80,7 +80,6 @@ func setConfig() *config.Container {
 	tokenConfig := &config.Token{
 		AccessTokenDuration:            accessTokenExpirationDuration,
 		EmailVerificationTokenDuration: emailVerificationTokenExpirationDuration,
-		TokenSignature:                 []byte("token"),
 	}
 
 	mailerConfig := &config.Mailer{

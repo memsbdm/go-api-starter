@@ -55,7 +55,7 @@ func (s *Server) setupRoutes(tokenSvc ports.TokenService) {
 
 	// Global routes
 	s.mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
-	s.mux.HandleFunc("GET /v1/health", s.handlers.HealthHandler.Health)
+	s.mux.HandleFunc("GET /v1/health/postgres", s.handlers.HealthHandler.PostgresHealth)
 	s.mux.HandleFunc("GET /v1/mailer", s.handlers.MailerHandler.SendEmail)
 
 	// Auth routes

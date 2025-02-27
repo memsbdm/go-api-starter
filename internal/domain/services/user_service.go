@@ -3,9 +3,9 @@ package services
 import (
 	"context"
 	"errors"
-	"go-starter/internal/adapters/http/helpers"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
+	"go-starter/internal/domain/helpers"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
 	"regexp"
