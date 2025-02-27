@@ -110,6 +110,8 @@ func (us *UserService) Register(ctx context.Context, user *entities.User) (*enti
 	return created, nil
 }
 
+// VerifyEmail verifies a user email.
+// Returns an error if the verification of the token fails or the email is already verified by another user.
 func (us *UserService) VerifyEmail(ctx context.Context, token string) error {
 	userID, err := us.tokenSvc.VerifyAndConsumeOneTimeToken(ctx, entities.EmailVerificationToken, token)
 	if err != nil {
@@ -118,6 +120,9 @@ func (us *UserService) VerifyEmail(ctx context.Context, token string) error {
 
 	user, err := us.repo.VerifyEmail(ctx, userID.UUID())
 	if err != nil {
+		if errors.Is(err, domain.ErrEmailConflict) {
+			return err
+		}
 		return domain.ErrInternal
 	}
 

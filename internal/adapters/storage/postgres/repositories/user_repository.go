@@ -16,29 +16,46 @@ import (
 
 // UserRepository implements the ports.UserRepository interface and provides access to the database.
 type UserRepository struct {
-	db         *sql.DB
+	executor   QueryExecutor
 	errTracker ports.ErrTrackerAdapter
 }
 
 // NewUserRepository creates and returns a new UserRepository instance.
 func NewUserRepository(db *sql.DB, errTracker ports.ErrTrackerAdapter) *UserRepository {
 	return &UserRepository{
-		db:         db,
+		executor:   db,
 		errTracker: errTracker,
 	}
 }
 
+// NewUserRepositoryWithExecutor creates and returns a new UserRepository instance with a custom executor.
+func NewUserRepositoryWithExecutor(executor QueryExecutor, errTracker ports.ErrTrackerAdapter) *UserRepository {
+	return &UserRepository{
+		executor:   executor,
+		errTracker: errTracker,
+	}
+}
+
+// UserRepository queries
+const (
+	getByIDQuery                = `SELECT id, created_at, updated_at, name, username, email, is_email_verified FROM users WHERE id = $1`
+	getByUsernameQuery          = `SELECT id, created_at, updated_at, name, username, email, is_email_verified FROM users WHERE username = $1`
+	checkEmailAvailabilityQuery = `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 AND is_email_verified = true)`
+	createUserQuery             = `INSERT INTO users (name, username, password, email) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at, name, username, email, is_email_verified`
+	updatePasswordQuery         = `UPDATE users SET password = $1 WHERE id = $2 `
+	verifyEmailQuery            = `UPDATE users SET is_email_verified = true WHERE id = $1 `
+)
+
 // GetByID selects a user by their unique identifier from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
 func (ur *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.User, error) {
-	const query = `SELECT id, created_at, updated_at, name, username, email, is_email_verified FROM users WHERE id = $1`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 	var (
 		uuidStr string
 		user    entities.User
 	)
-	err := ur.db.QueryRowContext(ctx, query, id.String()).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Email, &user.IsEmailVerified)
+	err := ur.executor.QueryRowContext(ctx, getByIDQuery, id.String()).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Email, &user.IsEmailVerified)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -64,12 +81,11 @@ func (ur *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.
 // GetByUsername selects a user by their username from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
 func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
-	query := `SELECT id, created_at, updated_at, name, username, password, email, is_email_verified FROM users WHERE username = $1`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 	user := &entities.User{}
 	var uuidStr string
-	err := ur.db.QueryRowContext(ctx, query, username).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Password, &user.Email, &user.IsEmailVerified)
+	err := ur.executor.QueryRowContext(ctx, getByUsernameQuery, username).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Email, &user.IsEmailVerified)
 
 	if err != nil {
 		switch {
@@ -96,11 +112,10 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 // CheckEmailAvailability checks if an email is available for registration.
 // Returns an error if the email is already taken.
 func (ur *UserRepository) CheckEmailAvailability(ctx context.Context, email string) error {
-	const query = `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 AND is_email_verified = true)`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 	var exists bool
-	if err := ur.db.QueryRowContext(ctx, query, email).Scan(&exists); err != nil {
+	if err := ur.executor.QueryRowContext(ctx, checkEmailAvailabilityQuery, email).Scan(&exists); err != nil {
 		err = fmt.Errorf("failed to check email verification status: %w", err)
 		ur.errTracker.CaptureException(err)
 		return err
@@ -116,7 +131,6 @@ func (ur *UserRepository) CheckEmailAvailability(ctx context.Context, email stri
 // Create inserts a new user into the database.
 // Returns the created user or an error if the operation fails (e.g., due to a database constraint violation).
 func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
-	const query = `INSERT INTO users (name, username, password, email) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at, name, username, email, is_email_verified`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
@@ -125,9 +139,9 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 		createdUser = *user
 	)
 
-	err := ur.db.QueryRowContext(
+	err := ur.executor.QueryRowContext(
 		ctx,
-		query,
+		createUserQuery,
 		user.Name,
 		user.Username,
 		user.Password,
@@ -171,11 +185,10 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 // UpdatePassword updates a user password.
 // Returns an error if the update fails.
 func (ur *UserRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, newPassword string) error {
-	const query = `UPDATE users SET password = $1 WHERE id = $2 `
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	_, err := ur.db.ExecContext(ctx, query, newPassword, userID.String())
+	_, err := ur.executor.ExecContext(ctx, updatePasswordQuery, newPassword, userID.String())
 	if err != nil {
 		err = fmt.Errorf("failed to update user password for user %s: %w", userID.String(), err)
 		ur.errTracker.CaptureException(err)
@@ -187,16 +200,29 @@ func (ur *UserRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, 
 
 // VerifyEmail updates the email verification status of a user.
 func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error) {
-	const query = `UPDATE users SET is_email_verified = true WHERE id = $1 `
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
-	defer cancel()
+	var returnedUser *entities.User
+	return returnedUser, withTx(ur.executor.(*sql.DB), ctx, ur.errTracker, func(tx *sql.Tx) error {
+		txRepo := NewUserRepositoryWithExecutor(tx, ur.errTracker)
 
-	_, err := ur.db.ExecContext(ctx, query, userID.String())
-	if err != nil {
-		err = fmt.Errorf("failed to update users email verification status for user %s: %w", userID.String(), err)
-		ur.errTracker.CaptureException(err)
-		return nil, err
-	}
+		user, err := txRepo.GetByID(ctx, userID)
+		if err != nil {
+			return err
+		}
 
-	return ur.GetByID(ctx, userID)
+		err = txRepo.CheckEmailAvailability(ctx, user.Email)
+		if err != nil {
+			return domain.ErrEmailConflict
+		}
+
+		_, err = tx.ExecContext(ctx, verifyEmailQuery, userID.String())
+		if err != nil {
+			err = fmt.Errorf("failed to update email verification status: %w", err)
+			ur.errTracker.CaptureException(err)
+			return err
+		}
+
+		user.IsEmailVerified = true
+		returnedUser = user
+		return nil
+	})
 }
