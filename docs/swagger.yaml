@@ -122,7 +122,6 @@ definitions:
         type: string
     required:
     - password
-    - username
     type: object
   internal_adapters_http_handlers.registerRequest:
     properties:
@@ -132,7 +131,6 @@ definitions:
       name:
         example: John Doe
         maxLength: 50
-        minLength: 1
         type: string
       password:
         example: secret123
@@ -145,9 +143,7 @@ definitions:
         type: string
     required:
     - email
-    - name
     - password
-    - username
     type: object
   internal_adapters_http_handlers.updatePasswordRequest:
     properties:
@@ -425,6 +421,10 @@ paths:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
         "401":
           description: Unauthorized error / invalid token
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "409":
+          description: Conflict error / already verified by another user
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":

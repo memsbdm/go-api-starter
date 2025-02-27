@@ -361,6 +361,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
                     },
+                    "409": {
+                        "description": "Conflict error / already verified by another user",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -594,8 +600,7 @@ const docTemplate = `{
         "internal_adapters_http_handlers.loginRequest": {
             "type": "object",
             "required": [
-                "password",
-                "username"
+                "password"
             ],
             "properties": {
                 "password": {
@@ -612,9 +617,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "name",
-                "password",
-                "username"
+                "password"
             ],
             "properties": {
                 "email": {
@@ -624,7 +627,6 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "maxLength": 50,
-                    "minLength": 1,
                     "example": "John Doe"
                 },
                 "password": {
