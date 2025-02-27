@@ -18,6 +18,7 @@ var DomainHttpErrMap = map[error]int{
 	domain.ErrInvalidUserId:    http.StatusBadRequest,
 	domain.ErrUserNotFound:     http.StatusNotFound,
 	domain.ErrUsernameConflict: http.StatusConflict,
+	domain.ErrEmailConflict:    http.StatusConflict,
 
 	// Validation errors
 
