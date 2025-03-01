@@ -110,6 +110,11 @@ func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*e
 	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
 	defer cancel()
 
+	err := ur.CheckEmailAvailability(ctx, ur.db.data[userID].Email)
+	if err != nil {
+		return nil, domain.ErrEmailAlreadyVerified
+	}
+
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 

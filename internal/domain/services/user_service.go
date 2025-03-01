@@ -126,7 +126,7 @@ func (us *UserService) VerifyEmail(ctx context.Context, token string) error {
 
 	user, err := us.repo.VerifyEmail(ctx, userID.UUID())
 	if err != nil {
-		if errors.Is(err, domain.ErrEmailConflict) {
+		if errors.Is(err, domain.ErrEmailAlreadyVerified) {
 			return err
 		}
 		return domain.ErrInternal

@@ -210,7 +210,7 @@ func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*e
 
 		err = txRepo.CheckEmailAvailability(ctx, user.Email)
 		if err != nil {
-			return domain.ErrEmailConflict
+			return domain.ErrEmailAlreadyVerified
 		}
 
 		_, err = tx.ExecContext(ctx, verifyEmailQuery, userID.String())

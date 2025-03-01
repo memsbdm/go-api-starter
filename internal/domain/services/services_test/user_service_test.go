@@ -291,6 +291,99 @@ func TestUserService_GetByUsername(t *testing.T) {
 	}
 }
 
+func TestUserService_VerifyEmail(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+
+	tests := map[string]struct {
+		prepare     func() (*TestBuilder, string, entities.UserID)
+		expectedErr error
+	}{
+		"verify email successfully": {
+			prepare: func() (*TestBuilder, string, entities.UserID) {
+				builder := NewTestBuilder().Build()
+				user, err := builder.UserService.Register(ctx, newValidUserToCreate())
+				if err != nil {
+					t.Fatalf("error while registering user: %v", err)
+				}
+				token, err := builder.TokenService.GenerateOneTimeToken(ctx, entities.EmailVerificationToken, user.ID)
+				if err != nil {
+					t.Fatalf("error while generating token: %v", err)
+				}
+				return builder, token, user.ID
+			},
+			expectedErr: nil,
+		},
+		"verify email should fail for an already verified email": {
+			prepare: func() (*TestBuilder, string, entities.UserID) {
+				userToCreate := newValidUserToCreate()
+				builder := NewTestBuilder().Build()
+				user, err := builder.UserService.Register(ctx, userToCreate)
+				if err != nil {
+					t.Fatalf("error while registering user: %v", err)
+				}
+
+				user2, err := builder.UserService.Register(ctx, &entities.User{
+					Username: "conflict",
+					Email:    user.Email, // Same email as the first user
+					Password: user.Password,
+					Name:     user.Name,
+				})
+				if err != nil {
+					t.Fatalf("error while registering user: %v", err)
+				}
+
+				token, err := builder.TokenService.GenerateOneTimeToken(ctx, entities.EmailVerificationToken, user.ID)
+				if err != nil {
+					t.Fatalf("error while generating token: %v", err)
+				}
+
+				token2, err := builder.TokenService.GenerateOneTimeToken(ctx, entities.EmailVerificationToken, user2.ID)
+				if err != nil {
+					t.Fatalf("error while generating token: %v", err)
+				}
+
+				// Verify the email of the first user, the second still have a verification email with a token
+				err = builder.UserService.VerifyEmail(ctx, token)
+				if err != nil {
+					t.Fatalf("error while verifying email: %v", err)
+				}
+				return builder, token2, user2.ID
+			},
+			expectedErr: domain.ErrEmailAlreadyVerified,
+		},
+	}
+
+	// Act & Assert
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			builder, token, userID := tt.prepare()
+			err := builder.UserService.VerifyEmail(ctx, token)
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+			if tt.expectedErr == nil {
+				user, err := builder.CacheService.Get(ctx, utils.GenerateCacheKey(services.UserCachePrefix, userID))
+				if err != nil {
+					t.Errorf("error while getting user from cache: %v", err)
+				}
+
+				var deserializedUser entities.User
+				err = utils.Deserialize(user, &deserializedUser)
+				if err != nil {
+					t.Errorf("error while deserializing user: %v", err)
+				}
+
+				if !deserializedUser.IsEmailVerified {
+					t.Errorf("expected user to be verified in cache, got %v", deserializedUser.IsEmailVerified)
+				}
+			}
+		})
+	}
+}
 func TestUserService_ResendEmailVerification(t *testing.T) {
 	t.Parallel()
 
