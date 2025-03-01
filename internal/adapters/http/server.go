@@ -65,10 +65,11 @@ func (s *Server) setupRoutes(tokenSvc ports.TokenService) {
 
 	// User routes
 	s.mux.HandleFunc("GET /v1/users/me", m.Chain(s.handlers.UserHandler.Me, auth))
-	s.mux.HandleFunc("GET /v1/users/verify-email/{token}", s.handlers.UserHandler.VerifyEmail)
+	s.mux.HandleFunc("PATCH /v1/users/me/password", m.Chain(s.handlers.UserHandler.UpdatePassword, auth))
+	s.mux.HandleFunc("GET /v1/users/me/email/verify/{token}", s.handlers.UserHandler.VerifyEmail)
+	s.mux.HandleFunc("POST /v1/users/me/email/verify/resend", m.Chain(s.handlers.UserHandler.ResendEmailVerification, auth))
 	s.mux.HandleFunc("GET /v1/users/{uuid}", s.handlers.UserHandler.GetByID)
-	s.mux.HandleFunc("PATCH /v1/users/password", m.Chain(s.handlers.UserHandler.UpdatePassword, auth))
-	s.mux.HandleFunc("POST /v1/users/verify-email/resend", m.Chain(s.handlers.UserHandler.ResendEmailVerification, auth))
+
 }
 
 func (s *Server) setupMiddleware() http.Handler {

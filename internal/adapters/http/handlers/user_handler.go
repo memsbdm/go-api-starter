@@ -104,7 +104,7 @@ type updatePasswordRequest struct {
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
 //	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
-//	@Router			/v1/users/password [patch]
+//	@Router			/v1/users/me/password [patch]
 //	@Security		BearerAuth
 func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -147,7 +147,7 @@ func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error / invalid token"
 //	@Failure		409	{object}	responses.ErrorResponse	"Conflict error / already verified by another user"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
-//	@Router			/v1/users/verify-email/{token} [get]
+//	@Router			/v1/users/me/email/verify/{token} [get]
 func (uh *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -171,7 +171,7 @@ func (uh *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
 //	@Failure		409	{object}	responses.ErrorResponse	"Conflict error / already verified"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
-//	@Router			/v1/users/verify-email/resend [post]
+//	@Router			/v1/users/me/email/verify/resend [post]
 //	@Security		BearerAuth
 func (uh *UserHandler) ResendEmailVerification(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

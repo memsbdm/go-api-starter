@@ -361,7 +361,67 @@ paths:
       summary: Get authenticated user information
       tags:
       - Users
-  /v1/users/password:
+  /v1/users/me/email/verify/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Verify user email
+      parameters:
+      - description: Verification token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User displayed
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "401":
+          description: Unauthorized error / invalid token
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "409":
+          description: Conflict error / already verified by another user
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      summary: Verify user email
+      tags:
+      - Users
+  /v1/users/me/email/verify/resend:
+    post:
+      description: Resend user email verification
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "409":
+          description: Conflict error / already verified
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Resend user email verification
+      tags:
+      - Users
+  /v1/users/me/password:
     patch:
       consumes:
       - application/json
@@ -399,66 +459,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user password
-      tags:
-      - Users
-  /v1/users/verify-email/{token}:
-    get:
-      consumes:
-      - application/json
-      description: Verify user email
-      parameters:
-      - description: Verification token
-        in: path
-        name: token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User displayed
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
-        "401":
-          description: Unauthorized error / invalid token
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "409":
-          description: Conflict error / already verified by another user
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-      summary: Verify user email
-      tags:
-      - Users
-  /v1/users/verify-email/resend:
-    post:
-      description: Resend user email verification
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
-        "401":
-          description: Unauthorized error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "409":
-          description: Conflict error / already verified
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Resend user email verification
       tags:
       - Users
 securityDefinitions:
