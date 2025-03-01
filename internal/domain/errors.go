@@ -25,6 +25,8 @@ var (
 	ErrInvalidUserId = errors.New("invalid user id")
 	// ErrUserNotFound represents an error when a user is not found.
 	ErrUserNotFound = errors.New("user not found")
+	// ErrEmailAlreadyVerified represents an error when a user's email is already verified.
+	ErrEmailAlreadyVerified = errors.New("email already verified")
 )
 
 // Errors not returned in responses.

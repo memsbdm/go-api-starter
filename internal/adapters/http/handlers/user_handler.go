@@ -160,3 +160,33 @@ func (uh *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 
 	responses.HandleSuccess(w, http.StatusOK, nil)
 }
+
+// ResendEmailVerification godoc
+//
+//	@Summary		Resend user email verification
+//	@Description	Resend user email verification
+//	@Tags			Users
+//	@Produce		json
+//	@Success		200	{object}	responses.EmptyResponse	"Success"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
+//	@Failure		409	{object}	responses.ErrorResponse	"Conflict error / already verified"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
+//	@Router			/v1/users/verify-email/resend [post]
+//	@Security		BearerAuth
+func (uh *UserHandler) ResendEmailVerification(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userID, err := helpers.GetUserIDFromContext(ctx)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	err = uh.svc.ResendEmailVerification(ctx, userID)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	responses.HandleSuccess(w, http.StatusOK, nil)
+}

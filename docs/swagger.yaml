@@ -434,6 +434,33 @@ paths:
       summary: Verify user email
       tags:
       - Users
+  /v1/users/verify-email/resend:
+    post:
+      description: Resend user email verification
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "409":
+          description: Conflict error / already verified
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Resend user email verification
+      tags:
+      - Users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and the access token.

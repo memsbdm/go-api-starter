@@ -15,10 +15,11 @@ var DomainHttpErrMap = map[error]int{
 	domain.ErrInvalidToken:       http.StatusUnauthorized,
 	domain.ErrInvalidCredentials: http.StatusUnauthorized,
 
-	domain.ErrInvalidUserId:    http.StatusBadRequest,
-	domain.ErrUserNotFound:     http.StatusNotFound,
-	domain.ErrUsernameConflict: http.StatusConflict,
-	domain.ErrEmailConflict:    http.StatusConflict,
+	domain.ErrInvalidUserId:        http.StatusBadRequest,
+	domain.ErrUserNotFound:         http.StatusNotFound,
+	domain.ErrUsernameConflict:     http.StatusConflict,
+	domain.ErrEmailConflict:        http.StatusConflict,
+	domain.ErrEmailAlreadyVerified: http.StatusConflict,
 
 	// Validation errors
 

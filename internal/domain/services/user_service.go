@@ -3,9 +3,11 @@ package services
 import (
 	"context"
 	"errors"
+	"go-starter/config"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/helpers"
+	"go-starter/internal/domain/mailtemplates"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
 	"regexp"
@@ -18,17 +20,21 @@ import (
 
 // UserService implements ports.UserService interface and provides access to the user repository.
 type UserService struct {
-	repo     ports.UserRepository
-	cacheSvc ports.CacheService
-	tokenSvc ports.TokenService
+	repo      ports.UserRepository
+	cacheSvc  ports.CacheService
+	tokenSvc  ports.TokenService
+	mailerSvc ports.MailerService
+	appCfg    *config.App
 }
 
 // NewUserService creates a new instance of UserService.
-func NewUserService(repo ports.UserRepository, cacheSvc ports.CacheService, tokenSvc ports.TokenService) *UserService {
+func NewUserService(appCfg *config.App, repo ports.UserRepository, cacheSvc ports.CacheService, tokenSvc ports.TokenService, mailerSvc ports.MailerService) *UserService {
 	return &UserService{
-		repo:     repo,
-		cacheSvc: cacheSvc,
-		tokenSvc: tokenSvc,
+		repo:      repo,
+		cacheSvc:  cacheSvc,
+		tokenSvc:  tokenSvc,
+		mailerSvc: mailerSvc,
+		appCfg:    appCfg,
 	}
 }
 
@@ -130,6 +136,35 @@ func (us *UserService) VerifyEmail(ctx context.Context, token string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// ResendEmailVerification resends a user email verification email.
+// Returns an error if the resend fails.
+func (us *UserService) ResendEmailVerification(ctx context.Context, userID entities.UserID) error {
+	user, err := us.GetByID(ctx, userID)
+	if err != nil {
+		return domain.ErrInternal
+	}
+
+	if user.IsEmailVerified {
+		return domain.ErrEmailAlreadyVerified
+	}
+
+	token, err := us.tokenSvc.GenerateOneTimeToken(ctx, entities.EmailVerificationToken, userID)
+	if err != nil {
+		return err
+	}
+
+	err = us.mailerSvc.Send(&ports.EmailMessage{
+		To:      []string{user.Email},
+		Subject: "Verify your email!",
+		Body:    mailtemplates.VerifyEmail(us.appCfg.BaseURL, token),
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

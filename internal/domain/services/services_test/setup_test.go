@@ -61,8 +61,8 @@ func (tb *TestBuilder) WithTimeGenerator(tg ports.TimeGenerator) *TestBuilder {
 func (tb *TestBuilder) Build() *TestBuilder {
 	tb.MailerService = services.NewMailerService(tb.Config, tb.MailerAdapter)
 	tb.CacheService = services.NewCacheService(tb.CacheRepo)
-	tb.UserService = services.NewUserService(tb.UserRepo, tb.CacheService, tb.TokenService)
 	tb.TokenService = services.NewTokenService(tb.Config.Token, tb.TokenProvider, tb.CacheService)
+	tb.UserService = services.NewUserService(tb.Config.Application, tb.UserRepo, tb.CacheService, tb.TokenService, tb.MailerService)
 	tb.AuthService = services.NewAuthService(tb.Config.Application, tb.UserService, tb.TokenService, tb.MailerService)
 	return tb
 }

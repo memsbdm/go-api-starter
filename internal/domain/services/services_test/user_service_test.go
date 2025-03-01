@@ -291,6 +291,60 @@ func TestUserService_GetByUsername(t *testing.T) {
 	}
 }
 
+func TestUserService_ResendEmailVerification(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+
+	tests := map[string]struct {
+		prepare     func(t *testing.T) (entities.UserID, *TestBuilder)
+		expectedErr error
+	}{
+		"resend email verification successfully": {
+			prepare: func(t *testing.T) (entities.UserID, *TestBuilder) {
+				builder := NewTestBuilder().Build()
+				user, err := builder.UserService.Register(ctx, newValidUserToCreate())
+				if err != nil {
+					t.Fatalf("error while registering user: %v", err)
+				}
+				return user.ID, builder
+			},
+			expectedErr: nil,
+		},
+		"resend email verification should fail for an already verified user": {
+			prepare: func(t *testing.T) (entities.UserID, *TestBuilder) {
+				builder := NewTestBuilder().Build()
+				user, err := builder.UserService.Register(ctx, newValidUserToCreate())
+				if err != nil {
+					t.Fatalf("error while registering user: %v", err)
+				}
+
+				_, err = builder.UserRepo.VerifyEmail(ctx, user.ID.UUID())
+				if err != nil {
+					t.Fatalf("error while verifying email: %v", err)
+				}
+				return user.ID, builder
+			},
+			expectedErr: domain.ErrEmailAlreadyVerified,
+		},
+	}
+
+	// Act & Assert
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			userID, builder := tt.prepare(t)
+			err := builder.UserService.ResendEmailVerification(ctx, userID)
+
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+		})
+	}
+}
+
 func TestUserService_UpdatePassword(t *testing.T) {
 	t.Parallel()
 

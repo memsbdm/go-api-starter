@@ -19,8 +19,8 @@ type Services struct {
 func New(cfg *config.Container, a *adapters.Adapters) *Services {
 	cacheSvc := NewCacheService(a.CacheRepository)
 	tokenSvc := NewTokenService(cfg.Token, a.TokenRepository, cacheSvc)
-	userSvc := NewUserService(a.UserRepository, cacheSvc, tokenSvc)
 	mailerSvc := NewMailerService(cfg, a.MailerAdapter)
+	userSvc := NewUserService(cfg.Application, a.UserRepository, cacheSvc, tokenSvc, mailerSvc)
 	authSvc := NewAuthService(cfg.Application, userSvc, tokenSvc, mailerSvc)
 	return &Services{
 		CacheService:  cacheSvc,

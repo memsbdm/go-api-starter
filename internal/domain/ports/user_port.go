@@ -28,6 +28,10 @@ type UserService interface {
 	// VerifyEmail verifies a user email.
 	// Returns an error if the verification fails.
 	VerifyEmail(ctx context.Context, token string) error
+
+	// ResendEmailVerification resends a user email verification email.
+	// Returns an error if the resend fails.
+	ResendEmailVerification(ctx context.Context, userID entities.UserID) error
 }
 
 // UserRepository is an interface for interacting with user-related data.
