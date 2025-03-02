@@ -10,8 +10,6 @@ import (
 	"go-starter/internal/domain/utils"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // TokenService implements ports.TokenService interface.
@@ -64,19 +62,19 @@ func (ts *TokenService) VerifyAuthToken(ctx context.Context, token string) (enti
 	userIDBytes, err := ts.cacheSvc.Get(ctx, key)
 	if err != nil {
 		if errors.Is(err, domain.ErrCacheNotFound) {
-			return entities.UserID(uuid.Nil), domain.ErrInvalidToken
+			return entities.NilUserID, domain.ErrInvalidToken
 		}
-		return entities.UserID(uuid.Nil), err
+		return entities.NilUserID, err
 	}
 
 	err = ts.cacheSvc.Set(ctx, key, userIDBytes, ts.getTokenTypeDuration(entities.AccessToken))
 	if err != nil {
-		return entities.UserID(uuid.Nil), err
+		return entities.NilUserID, err
 	}
 
 	userID, err := entities.ParseUserID(string(userIDBytes))
 	if err != nil {
-		return userID, domain.ErrInternal
+		return entities.NilUserID, domain.ErrInternal
 	}
 
 	return userID, nil
@@ -111,7 +109,7 @@ func (ts *TokenService) GenerateOneTimeToken(ctx context.Context, tokenType enti
 func (ts *TokenService) VerifyAndConsumeOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) (entities.UserID, error) {
 	userID, err := ts.VerifyOneTimeToken(ctx, tokenType, token)
 	if err != nil {
-		return entities.UserID(uuid.Nil), err
+		return entities.NilUserID, err
 	}
 
 	return userID, ts.ConsumeOneTimeToken(ctx, tokenType, token)
@@ -120,22 +118,21 @@ func (ts *TokenService) VerifyAndConsumeOneTimeToken(ctx context.Context, tokenT
 // VerifyOneTimeToken verifies a one-time token.
 // Returns the user ID or an error if the token is not found in cache or if the token is invalid.
 func (ts *TokenService) VerifyOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) (entities.UserID, error) {
-	nilUserID := entities.UserID(uuid.Nil)
 	userID, err := ts.provider.ParseOneTimeToken(token)
 	if err != nil {
-		return nilUserID, domain.ErrInvalidToken
+		return entities.NilUserID, domain.ErrInvalidToken
 	}
 
 	key := utils.GenerateCacheKey(tokenType.String(), userID.String())
 	dbToken, err := ts.cacheSvc.Get(ctx, key)
 	if err != nil && errors.Is(err, domain.ErrCacheNotFound) {
-		return nilUserID, domain.ErrInvalidToken
+		return entities.NilUserID, domain.ErrInvalidToken
 	} else if err != nil {
-		return nilUserID, err
+		return entities.NilUserID, err
 	}
 
 	if string(dbToken) != token {
-		return nilUserID, domain.ErrInvalidToken
+		return entities.NilUserID, domain.ErrInvalidToken
 	}
 
 	return entities.UserID(userID), nil

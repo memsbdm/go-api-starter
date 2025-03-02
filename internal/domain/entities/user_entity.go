@@ -1,9 +1,10 @@
 package entities
 
 import (
-	"github.com/google/uuid"
 	"go-starter/internal/domain"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // UserID is a type that represents a unique identifier for a user, based on UUID.
@@ -20,6 +21,9 @@ type User struct {
 	Email           string
 	IsEmailVerified bool
 }
+
+// NilUserID is the nil UserID.
+var NilUserID = UserID(uuid.Nil)
 
 // UUID converts the UserID to an uuid.UUID type.
 func (id UserID) UUID() uuid.UUID {

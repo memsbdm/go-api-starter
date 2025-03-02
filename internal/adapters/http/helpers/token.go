@@ -6,8 +6,6 @@ import (
 	"go-starter/internal/domain/entities"
 	"net/http"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 const (
@@ -44,7 +42,7 @@ func ExtractTokenFromHeader(r *http.Request) (string, error) {
 func GetUserIDFromContext(ctx context.Context) (entities.UserID, error) {
 	id, ok := ctx.Value(AuthorizationPayloadKey).(string)
 	if !ok {
-		return entities.UserID(uuid.Nil), domain.ErrInternal
+		return entities.NilUserID, domain.ErrInternal
 	}
 
 	userID, err := entities.ParseUserID(id)
