@@ -9,8 +9,6 @@ import (
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 
-	"github.com/google/uuid"
-
 	"github.com/lib/pq"
 )
 
@@ -49,7 +47,7 @@ const (
 
 // GetByID selects a user by their unique identifier from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
-func (ur *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.User, error) {
+func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 	var (
@@ -111,7 +109,7 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 
 // GetByVerifiedEmail returns the user ID for a verified email.
 // Returns an error if the user is not found or any other issue occurs.
-func (ur *UserRepository) GetIDByVerifiedEmail(ctx context.Context, email string) (uuid.UUID, error) {
+func (ur *UserRepository) GetIDByVerifiedEmail(ctx context.Context, email string) (entities.UserID, error) {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 	var uuidStr string
@@ -119,19 +117,19 @@ func (ur *UserRepository) GetIDByVerifiedEmail(ctx context.Context, email string
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return uuid.Nil, domain.ErrUserNotFound
+			return entities.NilUserID, domain.ErrUserNotFound
 		default:
 			err = fmt.Errorf("failed to get user %s: %w", email, err)
 			ur.errTracker.CaptureException(err)
-			return uuid.Nil, err
+			return entities.NilUserID, err
 		}
 	}
 
-	parsedID, err := uuid.Parse(uuidStr)
+	parsedID, err := entities.ParseUserID(uuidStr)
 	if err != nil {
 		err = fmt.Errorf("failed to parse user id %s: %w", uuidStr, err)
 		ur.errTracker.CaptureException(err)
-		return uuid.Nil, err
+		return entities.NilUserID, err
 	}
 
 	return parsedID, nil
@@ -212,7 +210,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 
 // UpdatePassword updates a user password.
 // Returns an error if the update fails.
-func (ur *UserRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, newPassword string) error {
+func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.UserID, newPassword string) error {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
@@ -227,7 +225,7 @@ func (ur *UserRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, 
 }
 
 // VerifyEmail updates the email verification status of a user.
-func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error) {
+func (ur *UserRepository) VerifyEmail(ctx context.Context, userID entities.UserID) (*entities.User, error) {
 	var returnedUser *entities.User
 	return returnedUser, withTx(ur.executor.(*sql.DB), ctx, ur.errTracker, func(tx *sql.Tx) error {
 		txRepo := NewUserRepositoryWithExecutor(tx, ur.errTracker)

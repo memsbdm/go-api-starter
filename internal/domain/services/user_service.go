@@ -49,7 +49,7 @@ func (us *UserService) GetByID(ctx context.Context, id entities.UserID) (*entiti
 		return cacheUser, nil
 	}
 
-	user, err := us.repo.GetByID(ctx, id.UUID())
+	user, err := us.repo.GetByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return nil, err
@@ -138,7 +138,7 @@ func (us *UserService) VerifyEmail(ctx context.Context, token string) error {
 		return err
 	}
 
-	user, err := us.repo.VerifyEmail(ctx, userID.UUID())
+	user, err := us.repo.VerifyEmail(ctx, userID)
 	if err != nil {
 		if errors.Is(err, domain.ErrEmailAlreadyVerified) {
 			return err
@@ -201,7 +201,7 @@ func (us *UserService) UpdatePassword(ctx context.Context, userID entities.UserI
 	if err != nil {
 		return domain.ErrInternal
 	}
-	err = us.repo.UpdatePassword(ctx, userID.UUID(), hashedPassword)
+	err = us.repo.UpdatePassword(ctx, userID, hashedPassword)
 	if err != nil {
 		return domain.ErrInternal
 	}

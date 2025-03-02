@@ -11,7 +11,7 @@ import (
 )
 
 type db struct {
-	data map[uuid.UUID]*entities.User
+	data map[entities.UserID]*entities.User
 	mu   sync.RWMutex
 }
 
@@ -24,7 +24,7 @@ type UserRepository struct {
 func NewUserRepositoryMock() *UserRepository {
 	return &UserRepository{
 		db: db{
-			data: map[uuid.UUID]*entities.User{},
+			data: map[entities.UserID]*entities.User{},
 			mu:   sync.RWMutex{},
 		},
 	}
@@ -32,7 +32,7 @@ func NewUserRepositoryMock() *UserRepository {
 
 // GetByID selects a user by their unique identifier from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
-func (ur *UserRepository) GetByID(_ context.Context, id uuid.UUID) (*entities.User, error) {
+func (ur *UserRepository) GetByID(_ context.Context, id entities.UserID) (*entities.User, error) {
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 
@@ -59,15 +59,15 @@ func (ur *UserRepository) GetByUsername(_ context.Context, username string) (*en
 
 // GetIDByVerifiedEmail retrieves a user ID by their verified email.
 // Returns the user ID if found or an error if not found or any other issue occurs.
-func (ur *UserRepository) GetIDByVerifiedEmail(_ context.Context, email string) (uuid.UUID, error) {
+func (ur *UserRepository) GetIDByVerifiedEmail(_ context.Context, email string) (entities.UserID, error) {
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 	for _, v := range ur.db.data {
 		if v.Email == email && v.IsEmailVerified {
-			return v.ID.UUID(), nil
+			return v.ID, nil
 		}
 	}
-	return uuid.Nil, domain.ErrUserNotFound
+	return entities.NilUserID, domain.ErrUserNotFound
 }
 
 // Create inserts a new user into the database.
@@ -90,14 +90,14 @@ func (ur *UserRepository) Create(_ context.Context, user *entities.User) (*entit
 		Email:           user.Email,
 		IsEmailVerified: false,
 	}
-	ur.db.data[newUser.ID.UUID()] = newUser
+	ur.db.data[newUser.ID] = newUser
 
 	return newUser, nil
 }
 
 // UpdatePassword updates a user password.
 // Returns an error if the update fails (e.g., due to validation issues).
-func (ur *UserRepository) UpdatePassword(_ context.Context, userID uuid.UUID, newPassword string) error {
+func (ur *UserRepository) UpdatePassword(_ context.Context, userID entities.UserID, newPassword string) error {
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 
@@ -107,7 +107,7 @@ func (ur *UserRepository) UpdatePassword(_ context.Context, userID uuid.UUID, ne
 
 // VerifyEmail updates the email verification status of a user.
 // Returns the updated user or an error if the verification fails.
-func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error) {
+func (ur *UserRepository) VerifyEmail(ctx context.Context, userID entities.UserID) (*entities.User, error) {
 	err := ur.CheckEmailAvailability(ctx, ur.db.data[userID].Email)
 	if err != nil {
 		return nil, domain.ErrEmailAlreadyVerified

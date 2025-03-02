@@ -208,7 +208,7 @@ func setupVerifiedUserWithResetToken(t *testing.T, ctx context.Context, builder 
 		t.Fatalf("error while registering user: %v", err)
 	}
 
-	_, err = builder.UserRepo.VerifyEmail(ctx, user.ID.UUID())
+	_, err = builder.UserRepo.VerifyEmail(ctx, user.ID)
 	if err != nil {
 		t.Fatalf("error while verifying email: %v", err)
 	}

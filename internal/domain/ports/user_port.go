@@ -3,8 +3,6 @@ package ports
 import (
 	"context"
 	"go-starter/internal/domain/entities"
-
-	"github.com/google/uuid"
 )
 
 // UserService is an interface for interacting with user-related business logic.
@@ -42,7 +40,7 @@ type UserService interface {
 type UserRepository interface {
 	// GetByID selects a user by their unique identifier from the database.
 	// Returns the user entity if found or an error if not found or any other issue occurs.
-	GetByID(ctx context.Context, id uuid.UUID) (*entities.User, error)
+	GetByID(ctx context.Context, id entities.UserID) (*entities.User, error)
 
 	// GetByUsername selects a user by their username from the database.
 	// Returns the user entity if found or an error if not found or any other issue occurs.
@@ -50,7 +48,7 @@ type UserRepository interface {
 
 	// GetIDByVerifiedEmail returns the user ID for a verified email.
 	// Returns an error if the user is not found or any other issue occurs.
-	GetIDByVerifiedEmail(ctx context.Context, email string) (uuid.UUID, error)
+	GetIDByVerifiedEmail(ctx context.Context, email string) (entities.UserID, error)
 
 	// CheckEmailAvailability checks if an email is available for registration.
 	// Returns an error if the email is already taken.
@@ -62,9 +60,9 @@ type UserRepository interface {
 
 	// UpdatePassword updates a user password.
 	// Returns an error if the update fails (e.g., due to validation issues).
-	UpdatePassword(ctx context.Context, userID uuid.UUID, newPassword string) error
+	UpdatePassword(ctx context.Context, userID entities.UserID, newPassword string) error
 
 	// VerifyEmail updates the email verification status of a user.
 	// Returns the updated user or an error if the verification fails.
-	VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error)
+	VerifyEmail(ctx context.Context, userID entities.UserID) (*entities.User, error)
 }

@@ -3,8 +3,6 @@ package ports
 import (
 	"context"
 	"go-starter/internal/domain/entities"
-
-	"github.com/google/uuid"
 )
 
 // TokenService is an interface for interacting with token-related business logic.
@@ -47,9 +45,9 @@ type TokenProvider interface {
 	// GenerateOneTimeToken creates a cryptographically secure random token.
 	// The token is associated with a user ID and encoded as a base64 string.
 	// Returns an error if the token generation fails.
-	GenerateOneTimeToken(userID uuid.UUID) (token string, err error)
+	GenerateOneTimeToken(userID entities.UserID) (token string, err error)
 
 	// ParseOneTimeToken parses a one-time token and returns the user ID.
 	// Returns an error if the token is invalid.
-	ParseOneTimeToken(token string) (uuid.UUID, error)
+	ParseOneTimeToken(token string) (entities.UserID, error)
 }

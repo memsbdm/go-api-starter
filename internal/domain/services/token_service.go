@@ -90,7 +90,7 @@ func (ts *TokenService) RevokeAuthToken(ctx context.Context, token string) error
 // GenerateOneTimeToken generates a new one-time token for a user.
 // Returns the token string or an error if generation fails.
 func (ts *TokenService) GenerateOneTimeToken(ctx context.Context, tokenType entities.TokenType, userID entities.UserID) (string, error) {
-	token, err := ts.provider.GenerateOneTimeToken(userID.UUID())
+	token, err := ts.provider.GenerateOneTimeToken(userID)
 	if err != nil {
 		return "", domain.ErrInternal
 	}

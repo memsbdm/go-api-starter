@@ -151,7 +151,7 @@ func TestUserService_Register_EmailVerification(t *testing.T) {
 		t.Fatalf("error while registering user: %v", err)
 	}
 
-	_, err = builder.UserRepo.VerifyEmail(ctx, createdUser.ID.UUID())
+	_, err = builder.UserRepo.VerifyEmail(ctx, createdUser.ID)
 	if err != nil {
 		t.Fatalf("error while verifying email: %v", err)
 	}
@@ -413,7 +413,7 @@ func TestUserService_ResendEmailVerification(t *testing.T) {
 					t.Fatalf("error while registering user: %v", err)
 				}
 
-				_, err = builder.UserRepo.VerifyEmail(ctx, user.ID.UUID())
+				_, err = builder.UserRepo.VerifyEmail(ctx, user.ID)
 				if err != nil {
 					t.Fatalf("error while verifying email: %v", err)
 				}

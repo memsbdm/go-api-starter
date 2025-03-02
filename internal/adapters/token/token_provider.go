@@ -4,10 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 // Provider implements the ports.TokenProvider interface, providing access to functionalities for token management.
@@ -42,7 +41,7 @@ func (p *Provider) GenerateRandomToken() (string, error) {
 // GenerateOneTimeToken creates a cryptographically secure random token.
 // The token is associated with a user ID and encoded as a base64 string.
 // Returns an error if the token generation fails.
-func (p *Provider) GenerateOneTimeToken(userID uuid.UUID) (token string, err error) {
+func (p *Provider) GenerateOneTimeToken(userID entities.UserID) (token string, err error) {
 	randomBytes := make([]byte, 16)
 	if _, err := rand.Read(randomBytes); err != nil {
 		p.errTracker.CaptureException(err)
@@ -56,21 +55,21 @@ func (p *Provider) GenerateOneTimeToken(userID uuid.UUID) (token string, err err
 
 // ParseOneTimeToken parses a one-time token and returns the user ID.
 // Returns an error if the token is invalid.
-func (p *Provider) ParseOneTimeToken(token string) (uuid.UUID, error) {
+func (p *Provider) ParseOneTimeToken(token string) (entities.UserID, error) {
 	decodedBytes, err := base64.URLEncoding.DecodeString(token)
 	if err != nil {
-		return uuid.Nil, err
+		return entities.NilUserID, err
 	}
 
 	decoded := string(decodedBytes)
 	parts := strings.Split(decoded, ".")
 	if len(parts) != 2 {
-		return uuid.Nil, errors.New("invalid one-time token format")
+		return entities.NilUserID, errors.New("invalid one-time token format")
 	}
 
-	userID, err := uuid.Parse(parts[0])
+	userID, err := entities.ParseUserID(parts[0])
 	if err != nil {
-		return uuid.Nil, err
+		return entities.NilUserID, err
 	}
 
 	return userID, nil
