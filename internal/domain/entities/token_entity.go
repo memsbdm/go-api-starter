@@ -7,6 +7,7 @@ type TokenType string
 const (
 	AccessToken            TokenType = "access_token"
 	EmailVerificationToken TokenType = "email_verification_token"
+	PasswordResetToken     TokenType = "password_reset_token"
 )
 
 // String converts the TokenType to its string representation.

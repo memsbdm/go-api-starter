@@ -91,3 +91,31 @@ func (as *AuthService) Register(ctx context.Context, user *entities.User) (*enti
 func (as *AuthService) Logout(ctx context.Context, accessToken string) error {
 	return as.tokenSvc.RevokeAuthToken(ctx, accessToken)
 }
+
+// SendPasswordResetEmail sends a password reset email to the user.
+// Returns an error if the email fails to send.
+func (as *AuthService) SendPasswordResetEmail(ctx context.Context, email string) error {
+	userID, err := as.userSvc.GetIDByVerifiedEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) {
+			return nil
+		}
+		return err
+	}
+
+	token, err := as.tokenSvc.GenerateOneTimeToken(ctx, entities.PasswordResetToken, userID)
+	if err != nil {
+		return err
+	}
+
+	err = as.mailerSvc.Send(&ports.EmailMessage{
+		To:      []string{email},
+		Subject: "Reset your password!",
+		Body:    mailtemplates.ResetPassword(as.appCfg.BaseURL, token),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

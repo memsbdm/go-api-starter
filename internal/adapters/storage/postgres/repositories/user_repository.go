@@ -40,6 +40,7 @@ func NewUserRepositoryWithExecutor(executor QueryExecutor, errTracker ports.ErrT
 const (
 	getByIDQuery                = `SELECT id, created_at, updated_at, name, username, email, is_email_verified FROM users WHERE id = $1`
 	getByUsernameQuery          = `SELECT id, created_at, updated_at, name, username, password, email, is_email_verified FROM users WHERE username = $1`
+	getIDByVerifiedEmailQuery   = `SELECT id FROM users WHERE email = $1 AND is_email_verified = true`
 	checkEmailAvailabilityQuery = `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 AND is_email_verified = true)`
 	createUserQuery             = `INSERT INTO users (name, username, password, email) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at, name, username, email, is_email_verified`
 	updatePasswordQuery         = `UPDATE users SET password = $1 WHERE id = $2 `
@@ -106,6 +107,34 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 	user.ID = parsedID
 
 	return user, nil
+}
+
+// GetByVerifiedEmail returns the user ID for a verified email.
+// Returns an error if the user is not found or any other issue occurs.
+func (ur *UserRepository) GetIDByVerifiedEmail(ctx context.Context, email string) (uuid.UUID, error) {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+	var uuidStr string
+	err := ur.executor.QueryRowContext(ctx, getIDByVerifiedEmailQuery, email).Scan(&uuidStr)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return uuid.Nil, domain.ErrUserNotFound
+		default:
+			err = fmt.Errorf("failed to get user %s: %w", email, err)
+			ur.errTracker.CaptureException(err)
+			return uuid.Nil, err
+		}
+	}
+
+	parsedID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		err = fmt.Errorf("failed to parse user id %s: %w", uuidStr, err)
+		ur.errTracker.CaptureException(err)
+		return uuid.Nil, err
+	}
+
+	return parsedID, nil
 }
 
 // CheckEmailAvailability checks if an email is available for registration.

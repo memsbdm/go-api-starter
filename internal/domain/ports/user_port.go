@@ -17,6 +17,10 @@ type UserService interface {
 	// Returns the user entity if found or an error if not found or any other issue occurs.
 	GetByUsername(ctx context.Context, username string) (*entities.User, error)
 
+	// GetIDByVerifiedEmail retrieves a user ID by their verified email.
+	// Returns the user ID if found or an error if not found or any other issue occurs.
+	GetIDByVerifiedEmail(ctx context.Context, email string) (entities.UserID, error)
+
 	// Register creates a new user account in the system.
 	// Returns the created user or an error if the registration fails (e.g., due to validation issues).
 	Register(ctx context.Context, user *entities.User) (*entities.User, error)
@@ -43,6 +47,10 @@ type UserRepository interface {
 	// GetByUsername selects a user by their username from the database.
 	// Returns the user entity if found or an error if not found or any other issue occurs.
 	GetByUsername(ctx context.Context, username string) (*entities.User, error)
+
+	// GetIDByVerifiedEmail returns the user ID for a verified email.
+	// Returns an error if the user is not found or any other issue occurs.
+	GetIDByVerifiedEmail(ctx context.Context, email string) (uuid.UUID, error)
 
 	// CheckEmailAvailability checks if an email is available for registration.
 	// Returns an error if the email is already taken.

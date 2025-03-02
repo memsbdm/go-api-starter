@@ -63,6 +63,19 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 	return nil, domain.ErrUserNotFound
 }
 
+// GetIDByVerifiedEmail retrieves a user ID by their verified email.
+// Returns the user ID if found or an error if not found or any other issue occurs.
+func (ur *UserRepository) GetIDByVerifiedEmail(ctx context.Context, email string) (uuid.UUID, error) {
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+	for _, v := range ur.db.data {
+		if v.Email == email && v.IsEmailVerified {
+			return v.ID.UUID(), nil
+		}
+	}
+	return uuid.Nil, domain.ErrUserNotFound
+}
+
 // Create inserts a new user into the database.
 // Returns the created user or an error if the operation fails (e.g., due to a database constraint violation).
 func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {

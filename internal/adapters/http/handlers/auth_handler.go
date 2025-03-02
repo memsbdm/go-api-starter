@@ -4,6 +4,7 @@ import (
 	"go-starter/internal/adapters/http/helpers"
 	"go-starter/internal/adapters/http/responses"
 	"go-starter/internal/adapters/validator"
+	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
@@ -142,6 +143,36 @@ func (ah *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = ah.svc.Logout(ctx, accessToken)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	responses.HandleSuccess(w, http.StatusOK, nil)
+}
+
+// SendPasswordResetEmail godoc
+//
+//	@Summary		Send a password reset email
+//	@Description	Send a password reset email to the user
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			email	query	string	true	"User's email address"
+//	@Success		200	{object}	responses.EmptyResponse	"Success"
+//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
+//	@Router			/v1/auth/password-reset [post]
+func (ah *AuthHandler) SendPasswordResetEmail(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	email := r.URL.Query().Get("email")
+	if email == "" {
+		responses.HandleError(w, domain.ErrBadRequest)
+		return
+	}
+
+	err := ah.svc.SendPasswordResetEmail(ctx, email)
 	if err != nil {
 		responses.HandleError(w, err)
 		return

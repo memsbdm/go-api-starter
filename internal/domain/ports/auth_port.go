@@ -20,4 +20,8 @@ type AuthService interface {
 	// Logout logs out a user from the system.
 	// Returns an error if the logout fails.
 	Logout(ctx context.Context, accessToken string) error
+
+	// SendPasswordResetEmail sends a password reset email to the user.
+	// Returns an error if the email fails to send.
+	SendPasswordResetEmail(ctx context.Context, email string) error
 }

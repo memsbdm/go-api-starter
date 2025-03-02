@@ -54,6 +54,7 @@ type (
 	Token struct {
 		AccessTokenDuration            time.Duration
 		EmailVerificationTokenDuration time.Duration
+		PasswordResetTokenDuration     time.Duration
 	}
 
 	// ErrTracker contains all the environment variables for the error tracking.
@@ -99,6 +100,7 @@ func New() *Container {
 	token := &Token{
 		AccessTokenDuration:            env.GetOptionalDuration("ACCESS_TOKEN_DURATION"),
 		EmailVerificationTokenDuration: env.GetOptionalDuration("EMAIL_VERIFICATION_TOKEN_DURATION"),
+		PasswordResetTokenDuration:     env.GetOptionalDuration("PASSWORD_RESET_TOKEN_DURATION"),
 	}
 
 	errTracker := &ErrTracker{
@@ -162,6 +164,9 @@ func (c *Container) setDefaultValues() {
 	}
 	if c.Token.EmailVerificationTokenDuration == 0 {
 		c.Token.EmailVerificationTokenDuration = 24 * time.Hour
+	}
+	if c.Token.PasswordResetTokenDuration == 0 {
+		c.Token.PasswordResetTokenDuration = 15 * time.Minute
 	}
 
 	// ErrTracker

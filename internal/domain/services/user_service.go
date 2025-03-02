@@ -79,6 +79,20 @@ func (us *UserService) GetByUsername(ctx context.Context, username string) (*ent
 	return user, nil
 }
 
+// GetIDByVerifiedEmail retrieves a user ID by their verified email.
+// Returns the user ID if found or an error if not found or any other issue occurs.
+func (us *UserService) GetIDByVerifiedEmail(ctx context.Context, email string) (entities.UserID, error) {
+	userID, err := us.repo.GetIDByVerifiedEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, domain.ErrUserNotFound) {
+			return entities.UserID{}, err
+		}
+		return entities.UserID{}, domain.ErrInternal
+	}
+
+	return entities.UserID(userID), nil
+}
+
 // Register creates a new user account in the system.
 // Returns the created user or an error if the registration fails (e.g., due to validation issues).
 func (us *UserService) Register(ctx context.Context, user *entities.User) (*entities.User, error) {

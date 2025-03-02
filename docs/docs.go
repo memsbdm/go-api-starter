@@ -113,6 +113,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/auth/password-reset": {
+            "post": {
+                "description": "Send a password reset email to the user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Send a password reset email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User's email address",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/auth/register": {
             "post": {
                 "description": "Create a new user account",
