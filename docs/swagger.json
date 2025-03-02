@@ -106,6 +106,54 @@
             }
         },
         "/v1/auth/password-reset": {
+            "get": {
+                "description": "Verify a password reset token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify a password reset token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Password reset token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error / invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Send a password reset email to the user",
                 "consumes": [

@@ -109,6 +109,17 @@ func (ts *TokenService) GenerateOneTimeToken(ctx context.Context, tokenType enti
 // VerifyAndConsumeOneTimeToken verifies and consumes a one-time token.
 // Returns the user ID or an error if the token is not found in cache or if the token is invalid.
 func (ts *TokenService) VerifyAndConsumeOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) (entities.UserID, error) {
+	userID, err := ts.VerifyOneTimeToken(ctx, tokenType, token)
+	if err != nil {
+		return entities.UserID(uuid.Nil), err
+	}
+
+	return userID, ts.ConsumeOneTimeToken(ctx, tokenType, token)
+}
+
+// VerifyOneTimeToken verifies a one-time token.
+// Returns the user ID or an error if the token is not found in cache or if the token is invalid.
+func (ts *TokenService) VerifyOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) (entities.UserID, error) {
 	nilUserID := entities.UserID(uuid.Nil)
 	userID, err := ts.provider.ParseOneTimeToken(token)
 	if err != nil {
@@ -127,12 +138,19 @@ func (ts *TokenService) VerifyAndConsumeOneTimeToken(ctx context.Context, tokenT
 		return nilUserID, domain.ErrInvalidToken
 	}
 
-	err = ts.cacheSvc.Delete(ctx, key)
+	return entities.UserID(userID), nil
+}
+
+// ConsumeOneTimeToken consumes a one-time token.
+// Returns an error if the consumption fails.
+func (ts *TokenService) ConsumeOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) error {
+	userID, err := ts.VerifyOneTimeToken(ctx, tokenType, token)
 	if err != nil {
-		return nilUserID, err
+		return err
 	}
 
-	return entities.UserID(userID), nil
+	key := utils.GenerateCacheKey(tokenType.String(), userID.String())
+	return ts.cacheSvc.Delete(ctx, key)
 }
 
 // initTokenTypeDuration initializes a new tokenTypeDuration structure with predefined durations.

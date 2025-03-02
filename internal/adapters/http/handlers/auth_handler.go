@@ -180,3 +180,34 @@ func (ah *AuthHandler) SendPasswordResetEmail(w http.ResponseWriter, r *http.Req
 
 	responses.HandleSuccess(w, http.StatusOK, nil)
 }
+
+// VerifyPasswordResetToken godoc
+//
+//	@Summary		Verify a password reset token
+//	@Description	Verify a password reset token
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			token	query	string	true	"Password reset token"
+//	@Success		200	{object}	responses.EmptyResponse	"Success"
+//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error / invalid token"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
+//	@Router			/v1/auth/password-reset [get]
+func (ah *AuthHandler) VerifyPasswordResetToken(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		responses.HandleError(w, domain.ErrBadRequest)
+		return
+	}
+
+	err := ah.svc.VerifyPasswordResetToken(ctx, token)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	responses.HandleSuccess(w, http.StatusOK, nil)
+}

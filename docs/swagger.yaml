@@ -229,6 +229,38 @@ paths:
       tags:
       - Auth
   /v1/auth/password-reset:
+    get:
+      consumes:
+      - application/json
+      description: Verify a password reset token
+      parameters:
+      - description: Password reset token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "401":
+          description: Unauthorized error / invalid token
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      summary: Verify a password reset token
+      tags:
+      - Auth
     post:
       consumes:
       - application/json

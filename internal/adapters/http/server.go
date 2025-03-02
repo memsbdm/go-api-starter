@@ -63,6 +63,7 @@ func (s *Server) setupRoutes(tokenSvc ports.TokenService) {
 	s.mux.HandleFunc("POST /v1/auth/register", s.handlers.AuthHandler.Register)
 	s.mux.HandleFunc("DELETE /v1/auth/logout", m.Chain(s.handlers.AuthHandler.Logout, auth))
 	s.mux.HandleFunc("POST /v1/auth/password-reset", s.handlers.AuthHandler.SendPasswordResetEmail)
+	s.mux.HandleFunc("GET /v1/auth/password-reset", s.handlers.AuthHandler.VerifyPasswordResetToken)
 
 	// User routes
 	s.mux.HandleFunc("GET /v1/users/me", m.Chain(s.handlers.UserHandler.Me, auth))

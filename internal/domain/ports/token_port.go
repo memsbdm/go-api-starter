@@ -28,6 +28,14 @@ type TokenService interface {
 	// VerifyAndConsumeOneTimeToken verifies and consumes a one-time token.
 	// Returns the user ID or an error if the token is not found or if the token is invalid.
 	VerifyAndConsumeOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) (entities.UserID, error)
+
+	// VerifyOneTimeToken verifies a one-time token.
+	// Returns the user ID or an error if the token is not found or if the token is invalid.
+	VerifyOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) (entities.UserID, error)
+
+	// ConsumeOneTimeToken consumes a one-time token.
+	// Returns an error if the consumption fails.
+	ConsumeOneTimeToken(ctx context.Context, tokenType entities.TokenType, token string) error
 }
 
 // TokenProvider is an interface for interacting with token-related data and cryptographic operations.

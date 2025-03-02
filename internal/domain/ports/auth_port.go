@@ -24,4 +24,8 @@ type AuthService interface {
 	// SendPasswordResetEmail sends a password reset email to the user.
 	// Returns an error if the email fails to send.
 	SendPasswordResetEmail(ctx context.Context, email string) error
+
+	// VerifyPasswordResetToken verifies a password reset token.
+	// Returns an error if the token is invalid.
+	VerifyPasswordResetToken(ctx context.Context, token string) error
 }

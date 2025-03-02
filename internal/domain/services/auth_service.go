@@ -119,3 +119,10 @@ func (as *AuthService) SendPasswordResetEmail(ctx context.Context, email string)
 
 	return nil
 }
+
+// VerifyPasswordResetToken verifies a password reset token.
+// Returns an error if the token is invalid.
+func (as *AuthService) VerifyPasswordResetToken(ctx context.Context, token string) error {
+	_, err := as.tokenSvc.VerifyOneTimeToken(ctx, entities.PasswordResetToken, token)
+	return err
+}
