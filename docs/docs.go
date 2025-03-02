@@ -114,54 +114,6 @@ const docTemplate = `{
             }
         },
         "/v1/auth/password-reset": {
-            "get": {
-                "description": "Verify a password reset token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Verify a password reset token",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Password reset token",
-                        "name": "token",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized error / invalid token",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    }
-                }
-            },
             "post": {
                 "description": "Send a password reset email to the user",
                 "consumes": [
@@ -192,6 +144,119 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/password-reset/{token}": {
+            "get": {
+                "description": "Verify a password reset token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify a password reset token",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Password reset token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error / invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Reset a user's password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Reset a user's password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Password reset token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Reset password request",
+                        "name": "resetPasswordRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_adapters_http_handlers.resetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error / invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
@@ -355,99 +420,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/users/me/email/verify/resend": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Resend user email verification",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Resend user email verification",
-                "responses": {
-                    "200": {
-                        "description": "Success",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict error / already verified",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/users/me/email/verify/{token}": {
-            "get": {
-                "description": "Verify user email",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Verify user email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Verification token",
-                        "name": "token",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "User displayed",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized error / invalid token",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict error / already verified by another user",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/users/me/password": {
             "patch": {
                 "security": [
@@ -498,6 +470,99 @@ const docTemplate = `{
                     },
                     "422": {
                         "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/me/verify-email/resend": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Resend user email verification",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Resend user email verification",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict error / already verified",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/users/me/verify-email/{token}": {
+            "get": {
+                "description": "Verify user email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Verify user email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Verification token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User displayed",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error / invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict error / already verified by another user",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
                         }
@@ -774,6 +839,24 @@ const docTemplate = `{
                     "maxLength": 15,
                     "minLength": 4,
                     "example": "john"
+                }
+            }
+        },
+        "internal_adapters_http_handlers.resetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "password_confirmation"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "secret123"
+                },
+                "password_confirmation": {
+                    "type": "string",
+                    "example": "secret123"
                 }
             }
         },

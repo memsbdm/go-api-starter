@@ -188,22 +188,67 @@ func (ah *AuthHandler) SendPasswordResetEmail(w http.ResponseWriter, r *http.Req
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			token	query	string	true	"Password reset token"
+//	@Param			token	path	string	true	"Password reset token"
 //	@Success		200	{object}	responses.EmptyResponse	"Success"
 //	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error / invalid token"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
-//	@Router			/v1/auth/password-reset [get]
+//	@Router			/v1/auth/password-reset/{token} [get]
 func (ah *AuthHandler) VerifyPasswordResetToken(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	token := r.URL.Query().Get("token")
+	token := r.PathValue("token")
 	if token == "" {
 		responses.HandleError(w, domain.ErrBadRequest)
 		return
 	}
 
 	err := ah.svc.VerifyPasswordResetToken(ctx, token)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	responses.HandleSuccess(w, http.StatusOK, nil)
+}
+
+// resetPasswordRequest represents the structure of the request body used for resetting a user password.
+type resetPasswordRequest struct {
+	Password             string `json:"password" validate:"required,min=8,eqfield=PasswordConfirmation" example:"secret123"`
+	PasswordConfirmation string `json:"password_confirmation" validate:"required" example:"secret123"`
+}
+
+// ResetPassword godoc
+//
+//	@Summary		Reset a user's password
+//	@Description	Reset a user's password
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			token		path	string	true	"Password reset token"
+//	@Param			resetPasswordRequest	body resetPasswordRequest true "Reset password request"
+//	@Success		200	{object}	responses.EmptyResponse	"Success"
+//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error / invalid token"
+//	@Failure		422	{object}	responses.ErrorResponse	"Validation error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
+//	@Router			/v1/auth/password-reset/{token} [patch]
+func (ah *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	token := r.PathValue("token")
+	if token == "" {
+		responses.HandleError(w, domain.ErrBadRequest)
+		return
+	}
+
+	var payload resetPasswordRequest
+	if err := validator.ValidateRequest(w, r, &payload); err != nil {
+		responses.HandleValidationError(w, err)
+		return
+	}
+
+	err := ah.svc.ResetPassword(ctx, token, payload.Password, payload.PasswordConfirmation)
 	if err != nil {
 		responses.HandleError(w, err)
 		return

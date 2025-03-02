@@ -28,4 +28,8 @@ type AuthService interface {
 	// VerifyPasswordResetToken verifies a password reset token.
 	// Returns an error if the token is invalid.
 	VerifyPasswordResetToken(ctx context.Context, token string) error
+
+	// ResetPassword resets a user's password.
+	// Returns an error if the password reset fails.
+	ResetPassword(ctx context.Context, token, password, passwordConfirmation string) error
 }

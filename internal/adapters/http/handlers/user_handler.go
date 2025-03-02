@@ -4,6 +4,7 @@ import (
 	"go-starter/internal/adapters/http/helpers"
 	"go-starter/internal/adapters/http/responses"
 	"go-starter/internal/adapters/validator"
+	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"net/http"
@@ -147,11 +148,16 @@ func (uh *UserHandler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error / invalid token"
 //	@Failure		409	{object}	responses.ErrorResponse	"Conflict error / already verified by another user"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
-//	@Router			/v1/users/me/email/verify/{token} [get]
+//	@Router			/v1/users/me/verify-email/{token} [get]
 func (uh *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	token := r.PathValue("token")
+	if token == "" {
+		responses.HandleError(w, domain.ErrBadRequest)
+		return
+	}
+
 	err := uh.svc.VerifyEmail(ctx, token)
 	if err != nil {
 		responses.HandleError(w, err)
@@ -171,7 +177,7 @@ func (uh *UserHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
 //	@Failure		409	{object}	responses.ErrorResponse	"Conflict error / already verified"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
-//	@Router			/v1/users/me/email/verify/resend [post]
+//	@Router			/v1/users/me/verify-email/resend [post]
 //	@Security		BearerAuth
 func (uh *UserHandler) ResendEmailVerification(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()

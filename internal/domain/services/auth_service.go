@@ -126,3 +126,22 @@ func (as *AuthService) VerifyPasswordResetToken(ctx context.Context, token strin
 	_, err := as.tokenSvc.VerifyOneTimeToken(ctx, entities.PasswordResetToken, token)
 	return err
 }
+
+// ResetPassword resets a user's password.
+// Returns an error if the password reset fails.
+func (as *AuthService) ResetPassword(ctx context.Context, token, password, passwordConfirmation string) error {
+	userID, err := as.tokenSvc.VerifyOneTimeToken(ctx, entities.PasswordResetToken, token)
+	if err != nil {
+		return err
+	}
+
+	err = as.userSvc.UpdatePassword(ctx, userID, entities.UpdateUserParams{
+		Password:             &password,
+		PasswordConfirmation: &passwordConfirmation,
+	})
+	if err != nil {
+		return err
+	}
+
+	return as.tokenSvc.ConsumeOneTimeToken(ctx, entities.PasswordResetToken, token)
+}

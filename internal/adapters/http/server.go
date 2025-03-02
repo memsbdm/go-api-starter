@@ -63,13 +63,14 @@ func (s *Server) setupRoutes(tokenSvc ports.TokenService) {
 	s.mux.HandleFunc("POST /v1/auth/register", s.handlers.AuthHandler.Register)
 	s.mux.HandleFunc("DELETE /v1/auth/logout", m.Chain(s.handlers.AuthHandler.Logout, auth))
 	s.mux.HandleFunc("POST /v1/auth/password-reset", s.handlers.AuthHandler.SendPasswordResetEmail)
-	s.mux.HandleFunc("GET /v1/auth/password-reset", s.handlers.AuthHandler.VerifyPasswordResetToken)
+	s.mux.HandleFunc("GET /v1/auth/password-reset/{token}", s.handlers.AuthHandler.VerifyPasswordResetToken)
+	s.mux.HandleFunc("PATCH /v1/auth/password-reset/{token}", s.handlers.AuthHandler.ResetPassword)
 
 	// User routes
 	s.mux.HandleFunc("GET /v1/users/me", m.Chain(s.handlers.UserHandler.Me, auth))
 	s.mux.HandleFunc("PATCH /v1/users/me/password", m.Chain(s.handlers.UserHandler.UpdatePassword, auth))
-	s.mux.HandleFunc("GET /v1/users/me/email/verify/{token}", s.handlers.UserHandler.VerifyEmail)
-	s.mux.HandleFunc("POST /v1/users/me/email/verify/resend", m.Chain(s.handlers.UserHandler.ResendEmailVerification, auth))
+	s.mux.HandleFunc("GET /v1/users/me/verify-email/{token}", s.handlers.UserHandler.VerifyEmail)
+	s.mux.HandleFunc("POST /v1/users/me/verify-email/resend", m.Chain(s.handlers.UserHandler.ResendEmailVerification, auth))
 	s.mux.HandleFunc("GET /v1/users/{uuid}", s.handlers.UserHandler.GetByID)
 }
 

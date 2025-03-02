@@ -44,17 +44,21 @@ var ErrInvalidJSON = errors.New("invalid json")
 // validationMessages holds custom error messages for specific validation failures.
 var validationMessages = map[string]error{
 	// Auth
-	"loginRequest.Username.notblank":    domain.ErrUsernameRequired,
-	"loginRequest.Password.required":    domain.ErrPasswordRequired,
-	"registerRequest.Name.notblank":     domain.ErrNameRequired,
-	"registerRequest.Name.max":          domain.ErrNameTooLong,
-	"registerRequest.Username.notblank": domain.ErrUsernameRequired,
-	"registerRequest.Username.min":      domain.ErrUsernameTooShort,
-	"registerRequest.Username.max":      domain.ErrUsernameTooLong,
-	"registerRequest.Password.required": domain.ErrPasswordRequired,
-	"registerRequest.Password.min":      domain.ErrPasswordTooShort,
-	"registerRequest.Email.required":    domain.ErrEmailRequired,
-	"registerRequest.Email.email":       domain.ErrEmailInvalid,
+	"loginRequest.Username.notblank":                     domain.ErrUsernameRequired,
+	"loginRequest.Password.required":                     domain.ErrPasswordRequired,
+	"registerRequest.Name.notblank":                      domain.ErrNameRequired,
+	"registerRequest.Name.max":                           domain.ErrNameTooLong,
+	"registerRequest.Username.notblank":                  domain.ErrUsernameRequired,
+	"registerRequest.Username.min":                       domain.ErrUsernameTooShort,
+	"registerRequest.Username.max":                       domain.ErrUsernameTooLong,
+	"registerRequest.Password.required":                  domain.ErrPasswordRequired,
+	"registerRequest.Password.min":                       domain.ErrPasswordTooShort,
+	"registerRequest.Email.required":                     domain.ErrEmailRequired,
+	"registerRequest.Email.email":                        domain.ErrEmailInvalid,
+	"resetPasswordRequest.Password.required":             domain.ErrPasswordRequired,
+	"resetPasswordRequest.Password.min":                  domain.ErrPasswordTooShort,
+	"resetPasswordRequest.Password.eqfield":              domain.ErrPasswordsNotMatch,
+	"resetPasswordRequest.PasswordConfirmation.required": domain.ErrPasswordConfirmationRequired,
 
 	// Users
 	"updatePasswordRequest.Password.required":             domain.ErrPasswordRequired,

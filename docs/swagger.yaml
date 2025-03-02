@@ -145,6 +145,19 @@ definitions:
     - email
     - password
     type: object
+  internal_adapters_http_handlers.resetPasswordRequest:
+    properties:
+      password:
+        example: secret123
+        minLength: 8
+        type: string
+      password_confirmation:
+        example: secret123
+        type: string
+    required:
+    - password
+    - password_confirmation
+    type: object
   internal_adapters_http_handlers.updatePasswordRequest:
     properties:
       password:
@@ -229,38 +242,6 @@ paths:
       tags:
       - Auth
   /v1/auth/password-reset:
-    get:
-      consumes:
-      - application/json
-      description: Verify a password reset token
-      parameters:
-      - description: Password reset token
-        in: query
-        name: token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
-        "400":
-          description: Bad request error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "401":
-          description: Unauthorized error / invalid token
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-      summary: Verify a password reset token
-      tags:
-      - Auth
     post:
       consumes:
       - application/json
@@ -287,6 +268,81 @@ paths:
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
       summary: Send a password reset email
+      tags:
+      - Auth
+  /v1/auth/password-reset/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Verify a password reset token
+      parameters:
+      - description: Password reset token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "401":
+          description: Unauthorized error / invalid token
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      summary: Verify a password reset token
+      tags:
+      - Auth
+    patch:
+      consumes:
+      - application/json
+      description: Reset a user's password
+      parameters:
+      - description: Password reset token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Reset password request
+        in: body
+        name: resetPasswordRequest
+        required: true
+        schema:
+          $ref: '#/definitions/internal_adapters_http_handlers.resetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "401":
+          description: Unauthorized error / invalid token
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      summary: Reset a user's password
       tags:
       - Auth
   /v1/auth/register:
@@ -422,66 +478,6 @@ paths:
       summary: Get authenticated user information
       tags:
       - Users
-  /v1/users/me/email/verify/{token}:
-    get:
-      consumes:
-      - application/json
-      description: Verify user email
-      parameters:
-      - description: Verification token
-        in: path
-        name: token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: User displayed
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
-        "401":
-          description: Unauthorized error / invalid token
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "409":
-          description: Conflict error / already verified by another user
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-      summary: Verify user email
-      tags:
-      - Users
-  /v1/users/me/email/verify/resend:
-    post:
-      description: Resend user email verification
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Success
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
-        "401":
-          description: Unauthorized error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "409":
-          description: Conflict error / already verified
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Resend user email verification
-      tags:
-      - Users
   /v1/users/me/password:
     patch:
       consumes:
@@ -520,6 +516,66 @@ paths:
       security:
       - BearerAuth: []
       summary: Update user password
+      tags:
+      - Users
+  /v1/users/me/verify-email/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Verify user email
+      parameters:
+      - description: Verification token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User displayed
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "401":
+          description: Unauthorized error / invalid token
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "409":
+          description: Conflict error / already verified by another user
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      summary: Verify user email
+      tags:
+      - Users
+  /v1/users/me/verify-email/resend:
+    post:
+      description: Resend user email verification
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "409":
+          description: Conflict error / already verified
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Resend user email verification
       tags:
       - Users
 securityDefinitions:
