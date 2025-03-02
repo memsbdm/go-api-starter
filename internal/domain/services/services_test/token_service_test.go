@@ -18,6 +18,7 @@ import (
 const (
 	accessTokenExpirationDuration            = 20 * time.Minute
 	emailVerificationTokenExpirationDuration = 24 * time.Hour
+	passwordResetTokenExpirationDuration     = 15 * time.Minute
 )
 
 func TestTokenService_VerifyAuthToken(t *testing.T) {

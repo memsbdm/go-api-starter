@@ -3,7 +3,6 @@ package mocks
 import (
 	"context"
 	"fmt"
-	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"sync"
@@ -33,10 +32,7 @@ func NewUserRepositoryMock() *UserRepository {
 
 // GetByID selects a user by their unique identifier from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
-func (ur *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
-	defer cancel()
-
+func (ur *UserRepository) GetByID(_ context.Context, id uuid.UUID) (*entities.User, error) {
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 
@@ -50,9 +46,7 @@ func (ur *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*entities.
 
 // GetByUsername selects a user by their username from the database.
 // Returns the user entity if found or an error if not found or any other issue occurs.
-func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*entities.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
-	defer cancel()
+func (ur *UserRepository) GetByUsername(_ context.Context, username string) (*entities.User, error) {
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 	for _, v := range ur.db.data {
@@ -65,7 +59,7 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 
 // GetIDByVerifiedEmail retrieves a user ID by their verified email.
 // Returns the user ID if found or an error if not found or any other issue occurs.
-func (ur *UserRepository) GetIDByVerifiedEmail(ctx context.Context, email string) (uuid.UUID, error) {
+func (ur *UserRepository) GetIDByVerifiedEmail(_ context.Context, email string) (uuid.UUID, error) {
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 	for _, v := range ur.db.data {
@@ -78,10 +72,7 @@ func (ur *UserRepository) GetIDByVerifiedEmail(ctx context.Context, email string
 
 // Create inserts a new user into the database.
 // Returns the created user or an error if the operation fails (e.g., due to a database constraint violation).
-func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*entities.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
-	defer cancel()
-
+func (ur *UserRepository) Create(_ context.Context, user *entities.User) (*entities.User, error) {
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 
@@ -106,23 +97,17 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 
 // UpdatePassword updates a user password.
 // Returns an error if the update fails (e.g., due to validation issues).
-func (ur *UserRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, newPassword string) error {
-	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
-	defer cancel()
-
+func (ur *UserRepository) UpdatePassword(_ context.Context, userID uuid.UUID, newPassword string) error {
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 
-	ur.db.data[userID].Username = newPassword
+	ur.db.data[userID].Password = newPassword
 	return nil
 }
 
 // VerifyEmail updates the email verification status of a user.
 // Returns the updated user or an error if the verification fails.
 func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*entities.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
-	defer cancel()
-
 	err := ur.CheckEmailAvailability(ctx, ur.db.data[userID].Email)
 	if err != nil {
 		return nil, domain.ErrEmailAlreadyVerified
@@ -137,10 +122,7 @@ func (ur *UserRepository) VerifyEmail(ctx context.Context, userID uuid.UUID) (*e
 
 // CheckEmailAvailability checks if an email is available for registration.
 // Returns an error if the email is already taken.
-func (ur *UserRepository) CheckEmailAvailability(ctx context.Context, email string) error {
-	ctx, cancel := context.WithTimeout(ctx, repositories.QueryTimeoutDuration)
-	defer cancel()
-
+func (ur *UserRepository) CheckEmailAvailability(_ context.Context, email string) error {
 	ur.db.mu.Lock()
 	defer ur.db.mu.Unlock()
 

@@ -80,6 +80,7 @@ func setConfig() *config.Container {
 	tokenConfig := &config.Token{
 		AccessTokenDuration:            accessTokenExpirationDuration,
 		EmailVerificationTokenDuration: emailVerificationTokenExpirationDuration,
+		PasswordResetTokenDuration:     passwordResetTokenExpirationDuration,
 	}
 
 	mailerConfig := &config.Mailer{

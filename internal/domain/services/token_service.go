@@ -158,6 +158,7 @@ func initTokenTypeDuration(tokenCfg *config.Token) *tokenTypeDuration {
 	data := map[entities.TokenType]time.Duration{
 		entities.AccessToken:            tokenCfg.AccessTokenDuration,
 		entities.EmailVerificationToken: tokenCfg.EmailVerificationTokenDuration,
+		entities.PasswordResetToken:     tokenCfg.PasswordResetTokenDuration,
 	}
 	return &tokenTypeDuration{
 		data: data,
