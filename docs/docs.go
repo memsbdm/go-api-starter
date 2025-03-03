@@ -295,7 +295,7 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Created user",
                         "schema": {
                             "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_LoginResponse"
@@ -786,6 +786,10 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "John Doe"
+                },
+                "role_id": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "updated_at": {
                     "type": "string",
