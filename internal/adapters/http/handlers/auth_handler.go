@@ -80,7 +80,7 @@ type registerRequest struct {
 //	@Accept			json
 //	@Produce		json
 //	@Param			registerRequest	body registerRequest true "Register request"
-//	@Success		200	{object}	responses.Response[responses.LoginResponse]	"Created user"
+//	@Success		201	{object}	responses.Response[responses.LoginResponse]	"Created user"
 //	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
 //	@Failure		409	{object}	responses.ErrorResponse	"Duplication error"
 //	@Failure		422	{object}	responses.ErrorResponse	"Validation error"

@@ -14,6 +14,7 @@ type UserResponse struct {
 	Username        string    `json:"username" example:"john"`
 	Email           string    `json:"email" example:"john@example.com"`
 	IsEmailVerified bool      `json:"is_email_verified" example:"true"`
+	RoleID          int       `json:"role_id" example:"1"`
 }
 
 // NewUserResponse is a helper function that creates a UserResponse from a user entity.
@@ -26,6 +27,7 @@ func NewUserResponse(user *entities.User) UserResponse {
 		Username:        user.Username,
 		Email:           user.Email,
 		IsEmailVerified: user.IsEmailVerified,
+		RoleID:          user.RoleID.Int(),
 	}
 }
 

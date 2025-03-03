@@ -8,7 +8,9 @@ CREATE TABLE users (
     username VARCHAR(15) UNIQUE NOT NULL,
     password VARCHAR(60) NOT NULL,
     email VARCHAR(254) NOT NULL,
-    is_email_verified BOOLEAN NOT NULL DEFAULT FALSE
+    is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    role_id SMALLINT NOT NULL DEFAULT 1,
+    FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
 CREATE UNIQUE INDEX idx_verified_email

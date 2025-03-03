@@ -20,6 +20,7 @@ type User struct {
 	Password        string
 	Email           string
 	IsEmailVerified bool
+	RoleID          RoleID
 }
 
 // NilUserID is the nil UserID.
@@ -42,6 +43,19 @@ func ParseUserID(s string) (UserID, error) {
 		return UserID{}, domain.ErrInvalidUserId
 	}
 	return UserID(id), nil
+}
+
+// RoleID is a type that represents a role ID for a user, based on int.
+type RoleID int
+
+const (
+	RoleAdmin RoleID = iota
+	RoleUser
+)
+
+// Int returns the integer representation of the RoleID.
+func (r RoleID) Int() int {
+	return int(r)
 }
 
 // UpdateUserParams holds the parameters required for updating a user's information.
