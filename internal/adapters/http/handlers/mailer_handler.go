@@ -27,8 +27,11 @@ func NewMailerHandler(mailerSvc ports.MailerService) *MailerHandler {
 //	@Accept			json
 //	@Produce		json
 //	@Success		200		"Success"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
+//	@Failure		403	{object}	responses.ErrorResponse	"Forbidden error"
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/mailer [get]
+//	@Security		BearerAuth
 func (mh *MailerHandler) SendEmail(w http.ResponseWriter, _ *http.Request) {
 	err := mh.mailerSvc.Send(&ports.EmailMessage{
 		To:      []string{"example@example.com"},

@@ -359,6 +359,11 @@ const docTemplate = `{
         },
         "/v1/mailer": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Send an example email",
                 "consumes": [
                     "application/json"
@@ -373,6 +378,18 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "Success"
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
                     },
                     "500": {
                         "description": "Internal server error",

@@ -6,6 +6,7 @@ import (
 	_ "go-starter/docs"
 	"go-starter/internal/adapters/http/handlers"
 	m "go-starter/internal/adapters/http/middleware"
+	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"log/slog"
 	"net/http"
@@ -27,6 +28,7 @@ func New(
 	httpConfig *config.HTTP,
 	handlers *handlers.Handlers,
 	tokenSvc ports.TokenService,
+	userSvc ports.UserService,
 	errTracker ports.ErrTrackerAdapter,
 ) *Server {
 	server := &Server{
@@ -36,7 +38,7 @@ func New(
 	}
 
 	// Configure routes
-	server.setupRoutes(tokenSvc)
+	server.setupRoutes(tokenSvc, userSvc)
 
 	// Configure server
 	server.Server = &http.Server{
@@ -50,13 +52,16 @@ func New(
 	return server
 }
 
-func (s *Server) setupRoutes(tokenSvc ports.TokenService) {
+func (s *Server) setupRoutes(tokenSvc ports.TokenService, userSvc ports.UserService) {
 	auth := m.AuthMiddleware(tokenSvc, s.errTracker)
+	adminRole := m.RoleMiddleware(userSvc, auth, entities.RoleAdmin)
+	// userRole := m.RoleMiddleware(userSvc, auth, entities.RoleUser)
+	// adminOrUserRole := m.RoleMiddleware(userSvc, auth, entities.RoleAdmin, entities.RoleUser)
 
 	// Global routes
 	s.mux.HandleFunc("GET /v1/swagger/", httpSwagger.WrapHandler)
 	s.mux.HandleFunc("GET /v1/health/postgres", s.handlers.HealthHandler.PostgresHealth)
-	s.mux.HandleFunc("GET /v1/mailer", s.handlers.MailerHandler.SendEmail)
+	s.mux.HandleFunc("GET /v1/mailer", m.Chain(s.handlers.MailerHandler.SendEmail, adminRole))
 
 	// Auth routes
 	s.mux.HandleFunc("POST /v1/auth/login", s.handlers.AuthHandler.Login)

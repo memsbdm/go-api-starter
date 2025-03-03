@@ -415,10 +415,20 @@ paths:
       responses:
         "200":
           description: Success
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "403":
+          description: Forbidden error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
         "500":
           description: Internal server error
           schema:
             $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Send an example email
       tags:
       - Mail

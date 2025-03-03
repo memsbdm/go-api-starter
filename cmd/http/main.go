@@ -59,7 +59,7 @@ func run() error {
 	apiHandlers := handlers.New(apiServices)
 
 	// Init and start server
-	srv := http.New(cfg.HTTP, apiHandlers, apiServices.TokenService, extServices.errTracker)
+	srv := http.New(cfg.HTTP, apiHandlers, apiServices.TokenService, apiServices.UserService, extServices.errTracker)
 
 	done := make(chan bool)
 	go gracefulShutdown(srv, done, extServices.errTracker)
