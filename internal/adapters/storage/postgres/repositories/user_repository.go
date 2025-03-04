@@ -36,13 +36,14 @@ func NewUserRepositoryWithExecutor(executor QueryExecutor, errTracker ports.ErrT
 
 // UserRepository queries
 const (
-	getByIDQuery                = `SELECT id, created_at, updated_at, name, username, email, is_email_verified, role_id FROM users WHERE id = $1`
-	getByUsernameQuery          = `SELECT id, created_at, updated_at, name, username, password, email, is_email_verified, role_id FROM users WHERE username = $1`
+	getByIDQuery                = `SELECT id, created_at, updated_at, name, username, email, is_email_verified, role_id, avatar_url FROM users WHERE id = $1`
+	getByUsernameQuery          = `SELECT id, created_at, updated_at, name, username, password, email, is_email_verified, role_id, avatar_url FROM users WHERE username = $1`
 	getIDByVerifiedEmailQuery   = `SELECT id FROM users WHERE email = $1 AND is_email_verified = true`
 	checkEmailAvailabilityQuery = `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 AND is_email_verified = true)`
-	createUserQuery             = `INSERT INTO users (name, username, password, email) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at, name, username, email, is_email_verified, role_id`
+	createUserQuery             = `INSERT INTO users (name, username, password, email) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at, name, username, email, is_email_verified, role_id, avatar_url`
 	updatePasswordQuery         = `UPDATE users SET password = $1 WHERE id = $2 `
 	verifyEmailQuery            = `UPDATE users SET is_email_verified = true WHERE id = $1 `
+	updateAvatarQuery           = `UPDATE users SET avatar_url = $1 WHERE id = $2 `
 )
 
 // GetByID selects a user by their unique identifier from the database.
@@ -54,7 +55,7 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 		uuidStr string
 		user    entities.User
 	)
-	err := ur.executor.QueryRowContext(ctx, getByIDQuery, id.String()).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Email, &user.IsEmailVerified, &user.RoleID)
+	err := ur.executor.QueryRowContext(ctx, getByIDQuery, id.String()).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Email, &user.IsEmailVerified, &user.RoleID, &user.AvatarURL)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -84,7 +85,7 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 	defer cancel()
 	user := &entities.User{}
 	var uuidStr string
-	err := ur.executor.QueryRowContext(ctx, getByUsernameQuery, username).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Password, &user.Email, &user.IsEmailVerified, &user.RoleID)
+	err := ur.executor.QueryRowContext(ctx, getByUsernameQuery, username).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Password, &user.Email, &user.IsEmailVerified, &user.RoleID, &user.AvatarURL)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -107,7 +108,7 @@ func (ur *UserRepository) GetByUsername(ctx context.Context, username string) (*
 	return user, nil
 }
 
-// GetByVerifiedEmail returns the user ID for a verified email.
+// GetIDByVerifiedEmail returns the user ID for a verified email.
 // Returns an error if the user is not found or any other issue occurs.
 func (ur *UserRepository) GetIDByVerifiedEmail(ctx context.Context, email string) (entities.UserID, error) {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -181,6 +182,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 		&createdUser.Email,
 		&createdUser.IsEmailVerified,
 		&createdUser.RoleID,
+		&createdUser.AvatarURL,
 	)
 
 	if err != nil {
@@ -227,6 +229,9 @@ func (ur *UserRepository) UpdatePassword(ctx context.Context, userID entities.Us
 
 // VerifyEmail updates the email verification status of a user.
 func (ur *UserRepository) VerifyEmail(ctx context.Context, userID entities.UserID) (*entities.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
 	var returnedUser *entities.User
 	return returnedUser, withTx(ur.executor.(*sql.DB), ctx, ur.errTracker, func(tx *sql.Tx) error {
 		txRepo := NewUserRepositoryWithExecutor(tx, ur.errTracker)
@@ -252,4 +257,18 @@ func (ur *UserRepository) VerifyEmail(ctx context.Context, userID entities.UserI
 		returnedUser = user
 		return nil
 	})
+}
+
+// UpdateAvatar updates a user avatar.
+func (ur *UserRepository) UpdateAvatar(ctx context.Context, userID entities.UserID, avatarURL string) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	_, err := ur.executor.ExecContext(ctx, updateAvatarQuery, avatarURL, userID.String())
+	if err != nil {
+		err = fmt.Errorf("failed to update user avatar for user %s: %w", userID.String(), err)
+		ur.errTracker.CaptureException(err)
+		return err
+	}
+	return nil
 }

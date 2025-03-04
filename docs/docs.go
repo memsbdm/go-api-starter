@@ -437,6 +437,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/users/me/avatar": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Upload user avatar",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Upload user avatar",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "User avatar",
+                        "name": "avatar",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_UploadAvatarResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "413": {
+                        "description": "File too large",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/users/me/password": {
             "patch": {
                 "security": [
@@ -682,6 +743,10 @@ const docTemplate = `{
         "go-starter_internal_adapters_http_responses.GetUserByIDResponse": {
             "type": "object",
             "properties": {
+                "avatar_url": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                },
                 "id": {
                     "type": "string",
                     "example": "6b947a32-8919-4974-9ef3-048a556b0b75"
@@ -770,6 +835,17 @@ const docTemplate = `{
                 }
             }
         },
+        "go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_UploadAvatarResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/go-starter_internal_adapters_http_responses.UploadAvatarResponse"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "go-starter_internal_adapters_http_responses.Response-go-starter_internal_adapters_http_responses_UserResponse": {
             "type": "object",
             "properties": {
@@ -781,9 +857,22 @@ const docTemplate = `{
                 }
             }
         },
+        "go-starter_internal_adapters_http_responses.UploadAvatarResponse": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                }
+            }
+        },
         "go-starter_internal_adapters_http_responses.UserResponse": {
             "type": "object",
             "properties": {
+                "avatar_url": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2024-08-15T16:23:33.455225Z"

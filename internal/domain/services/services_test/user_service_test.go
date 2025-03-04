@@ -3,6 +3,7 @@
 package services_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"go-starter/internal/domain"
@@ -500,6 +501,58 @@ func TestUserService_UpdatePassword(t *testing.T) {
 			err := builder.UserService.UpdatePassword(ctx, user.ID, tt.input)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+		})
+	}
+}
+
+func TestUserService_UpdateAvatar_Is_Caching_User(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	builder := NewTestBuilder().Build()
+	user, err := builder.UserService.Register(ctx, newValidUserToCreate())
+	if err != nil {
+		t.Fatalf("error while registering user: %v", err)
+	}
+
+	tests := map[string]struct {
+		input           string
+		expectedURL     string
+		expectCachedURL bool
+	}{
+		"update avatar successfully": {
+			input:           "avatar.jpg",
+			expectedURL:     "https://example.com/avatars/" + user.ID.String() + ".jpg",
+			expectCachedURL: true,
+		},
+	}
+
+	// Act & Assert
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			emptyFile := bytes.NewBuffer([]byte{})
+			_, err := builder.UserService.UpdateAvatar(ctx, user.ID, tt.input, emptyFile)
+			if err != nil {
+				t.Fatalf("error while updating avatar: %v", err)
+			}
+
+			cachedUser, err := builder.CacheService.Get(ctx, utils.GenerateCacheKey(services.UserCachePrefix, user.ID))
+			if err != nil {
+				t.Errorf("error while getting user from cache: %v", err)
+			}
+
+			var deserializedUser entities.User
+			err = utils.Deserialize(cachedUser, &deserializedUser)
+			if err != nil {
+				t.Fatalf("error while deserializing user: %v", err)
+			}
+
+			if tt.expectCachedURL && *deserializedUser.AvatarURL != tt.expectedURL {
+				t.Errorf("expected cached URL to be %s, got %s", tt.expectedURL, *deserializedUser.AvatarURL)
 			}
 		})
 	}

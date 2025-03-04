@@ -3,6 +3,7 @@ package ports
 import (
 	"context"
 	"go-starter/internal/domain/entities"
+	"io"
 )
 
 // UserService is an interface for interacting with user-related business logic.
@@ -34,6 +35,10 @@ type UserService interface {
 	// ResendEmailVerification resends a user email verification email.
 	// Returns an error if the resend fails.
 	ResendEmailVerification(ctx context.Context, userID entities.UserID) error
+
+	// UpdateAvatar updates a user avatar.
+	// Returns an error if the update fails.
+	UpdateAvatar(ctx context.Context, userID entities.UserID, filename string, file io.Reader) (string, error)
 }
 
 // UserRepository is an interface for interacting with user-related data.
@@ -65,4 +70,8 @@ type UserRepository interface {
 	// VerifyEmail updates the email verification status of a user.
 	// Returns the updated user or an error if the verification fails.
 	VerifyEmail(ctx context.Context, userID entities.UserID) (*entities.User, error)
+
+	// UpdateAvatar updates a user avatar.
+	// Returns an error if the update fails.
+	UpdateAvatar(ctx context.Context, userID entities.UserID, avatarURL string) error
 }

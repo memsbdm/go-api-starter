@@ -10,6 +10,7 @@ CREATE TABLE users (
     email VARCHAR(254) NOT NULL,
     is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
     role_id SMALLINT NOT NULL DEFAULT 1,
+    avatar_url VARCHAR(255),
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 

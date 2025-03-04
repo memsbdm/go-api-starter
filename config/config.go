@@ -22,6 +22,7 @@ type (
 		Token       *Token
 		ErrTracker  *ErrTracker
 		Mailer      *Mailer
+		FileUpload  *FileUpload
 	}
 
 	// App contains all the environment variables for the application.
@@ -71,6 +72,14 @@ type (
 		From      string
 		DebugTo   string
 	}
+
+	// FileUpload contains all the environment variables for the file uploader.
+	FileUpload struct {
+		Region    string
+		AccessKey string
+		SecretKey string
+		Bucket    string
+	}
 )
 
 // New creates a new container instance.
@@ -116,6 +125,13 @@ func New() *Container {
 		DebugTo:   env.GetString("SES_DEBUG_TO"),
 	}
 
+	fileUpload := &FileUpload{
+		Region:    env.GetString("S3_REGION"),
+		AccessKey: env.GetString("S3_ACCESS_KEY"),
+		SecretKey: env.GetString("S3_SECRET_KEY"),
+		Bucket:    env.GetString("S3_BUCKET"),
+	}
+
 	c := &Container{
 		Application: app,
 		DB:          db,
@@ -124,6 +140,7 @@ func New() *Container {
 		Token:       token,
 		ErrTracker:  errTracker,
 		Mailer:      mailer,
+		FileUpload:  fileUpload,
 	}
 
 	c.setDefaultValues()

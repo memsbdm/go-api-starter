@@ -15,7 +15,7 @@ import (
 // SentryAdapter implements ports.ErrTrackerAdapter interface and provides integration
 // with Sentry error monitoring service.
 type SentryAdapter struct {
-	Cfg *config.Container
+	cfg *config.Container
 }
 
 // NewSentryAdapter creates a new instance of SentryAdapter.
@@ -28,7 +28,7 @@ func NewSentryAdapter(cfg *config.Container) *SentryAdapter {
 	}
 
 	return &SentryAdapter{
-		Cfg: cfg,
+		cfg: cfg,
 	}
 }
 
@@ -53,7 +53,7 @@ func (sa *SentryAdapter) SetUser(id, ipAddr string) {
 // CaptureException sends an error to Sentry and returns the event ID as a string.
 func (sa *SentryAdapter) CaptureException(err error) string {
 	event := &sentry.Event{
-		Environment: sa.Cfg.Application.Env,
+		Environment: sa.cfg.Application.Env,
 		Exception:   []sentry.Exception{{Value: err.Error()}},
 	}
 

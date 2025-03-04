@@ -65,12 +65,12 @@ func TestCacheService_Get(t *testing.T) {
 			advanceTime(t, builder.TimeGenerator, tt.advance)
 
 			// Act
-			value, err := builder.CacheService.Get(context.Background(), key)
+			val, err := builder.CacheService.Get(context.Background(), key)
 			if !errors.Is(err, tt.expectedErr) {
 				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
 			}
-			if !reflect.DeepEqual(value, []byte(value)) {
-				t.Errorf("expected value %v, got %v", value, []byte(value))
+			if tt.expectedErr == nil && !reflect.DeepEqual(val, []byte(value)) {
+				t.Errorf("expected value %v, got %v", val, []byte(value))
 			}
 		})
 	}

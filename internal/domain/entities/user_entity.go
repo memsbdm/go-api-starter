@@ -21,6 +21,7 @@ type User struct {
 	Email           string
 	IsEmailVerified bool
 	RoleID          RoleID
+	AvatarURL       *string
 }
 
 // NilUserID is the nil UserID.

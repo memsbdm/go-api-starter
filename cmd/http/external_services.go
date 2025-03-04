@@ -8,6 +8,7 @@ import (
 	"go-starter/internal/adapters/errtracker"
 	"go-starter/internal/adapters/mailer"
 	"go-starter/internal/adapters/mocks"
+	"go-starter/internal/adapters/storage/fileupload"
 	"go-starter/internal/adapters/storage/postgres"
 	"go-starter/internal/adapters/storage/redis"
 	"go-starter/internal/domain/ports"
@@ -21,6 +22,7 @@ type externalServices struct {
 	cache      ports.CacheRepository
 	errTracker ports.ErrTrackerAdapter
 	mailer     ports.MailerAdapter
+	fileUpload ports.FileUploadAdapter
 }
 
 // initializeExternalServices sets up connections to all external services .
@@ -48,6 +50,13 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 		return nil, nil, err
 	}
 
+	s3, err := initializeFileUpload(cfg.FileUpload, errTracker)
+	if err != nil {
+		_ = db.Close()
+		_ = cache.Close()
+		return nil, nil, err
+	}
+
 	cleanup := createCleanupFunction(db, cache, errTracker)
 
 	return &externalServices{
@@ -55,6 +64,7 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 		cache:      cache,
 		errTracker: errTracker,
 		mailer:     ses,
+		fileUpload: s3,
 	}, cleanup, nil
 }
 
@@ -87,6 +97,14 @@ func initializeCache(ctx context.Context, cfg *config.Container, errTracker port
 
 func initializeMailer(cfg *config.Container, errTracker ports.ErrTrackerAdapter) (ports.MailerAdapter, error) {
 	adapter, err := mailer.NewSESAdapter(cfg.Mailer, errTracker)
+	if err != nil {
+		return nil, err
+	}
+	return adapter, nil
+}
+
+func initializeFileUpload(fileUploadCfg *config.FileUpload, errTracker ports.ErrTrackerAdapter) (ports.FileUploadAdapter, error) {
+	adapter, err := fileupload.NewS3Adapter(fileUploadCfg, errTracker)
 	if err != nil {
 		return nil, err
 	}

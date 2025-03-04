@@ -156,9 +156,9 @@ func TestTokenService_GenerateOneTimeToken(t *testing.T) {
 			advance:     0,
 			expectedErr: domain.ErrInvalidToken,
 		},
-		"verify and consume overrided token": {
+		"verify and consume overridden token": {
 			tokenFunc: func(builder *TestBuilder, user *entities.User) (string, error) {
-				overridedToken, err := builder.TokenService.GenerateOneTimeToken(context.Background(), entities.EmailVerificationToken, user.ID)
+				overriddenToken, err := builder.TokenService.GenerateOneTimeToken(context.Background(), entities.EmailVerificationToken, user.ID)
 				if err != nil {
 					t.Fatalf("failed to generate token: %v", err)
 				}
@@ -168,7 +168,7 @@ func TestTokenService_GenerateOneTimeToken(t *testing.T) {
 					t.Fatalf("failed to generate token: %v", err)
 				}
 
-				return overridedToken, nil
+				return overriddenToken, nil
 			},
 			advance:     0,
 			expectedErr: domain.ErrInvalidToken,

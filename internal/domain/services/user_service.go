@@ -10,6 +10,7 @@ import (
 	"go-starter/internal/domain/mailtemplates"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/utils"
+	"io"
 	"regexp"
 	"strings"
 	"time"
@@ -20,21 +21,23 @@ import (
 
 // UserService implements ports.UserService interface and provides access to the user repository.
 type UserService struct {
-	repo      ports.UserRepository
-	cacheSvc  ports.CacheService
-	tokenSvc  ports.TokenService
-	mailerSvc ports.MailerService
-	appCfg    *config.App
+	repo          ports.UserRepository
+	cacheSvc      ports.CacheService
+	tokenSvc      ports.TokenService
+	mailerSvc     ports.MailerService
+	fileUploadSvc ports.FileUploadService
+	appCfg        *config.App
 }
 
 // NewUserService creates a new instance of UserService.
-func NewUserService(appCfg *config.App, repo ports.UserRepository, cacheSvc ports.CacheService, tokenSvc ports.TokenService, mailerSvc ports.MailerService) *UserService {
+func NewUserService(appCfg *config.App, repo ports.UserRepository, cacheSvc ports.CacheService, tokenSvc ports.TokenService, mailerSvc ports.MailerService, fileUploadSvc ports.FileUploadService) *UserService {
 	return &UserService{
-		repo:      repo,
-		cacheSvc:  cacheSvc,
-		tokenSvc:  tokenSvc,
-		mailerSvc: mailerSvc,
-		appCfg:    appCfg,
+		repo:          repo,
+		cacheSvc:      cacheSvc,
+		tokenSvc:      tokenSvc,
+		mailerSvc:     mailerSvc,
+		fileUploadSvc: fileUploadSvc,
+		appCfg:        appCfg,
 	}
 }
 
@@ -90,7 +93,7 @@ func (us *UserService) GetIDByVerifiedEmail(ctx context.Context, email string) (
 		return entities.UserID{}, domain.ErrInternal
 	}
 
-	return entities.UserID(userID), nil
+	return userID, nil
 }
 
 // Register creates a new user account in the system.
@@ -206,6 +209,31 @@ func (us *UserService) UpdatePassword(ctx context.Context, userID entities.UserI
 		return domain.ErrInternal
 	}
 	return nil
+}
+
+// UpdateAvatar updates a user avatar.
+// Returns an error if the update fails.
+func (us *UserService) UpdateAvatar(ctx context.Context, userID entities.UserID, filename string, file io.Reader) (string, error) {
+	avatarURL, err := us.fileUploadSvc.UploadAvatar(ctx, userID, filename, file)
+	if err != nil {
+		return "", err
+	}
+
+	err = us.repo.UpdateAvatar(ctx, userID, avatarURL)
+	if err != nil {
+		return "", domain.ErrInternal
+	}
+
+	user, err := us.repo.GetByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+
+	err = us.cacheUser(ctx, user)
+	if err != nil {
+		return "", err
+	}
+	return avatarURL, nil
 }
 
 // validateUsername checks if the provided username meets the required criteria.

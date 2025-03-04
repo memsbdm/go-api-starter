@@ -189,7 +189,7 @@ func TestAuthService_ResetPassword(t *testing.T) {
 			}
 
 			if tt.expectedErr == nil {
-				// Verify the password was actually changed by attempting to login
+				// Verify the password was actually changed by login
 				_, _, err = builder.AuthService.Login(ctx, user.Username, tt.newPassword)
 				if err != nil {
 					t.Errorf("failed to login with new password: %v", err)

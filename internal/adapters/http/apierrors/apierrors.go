@@ -12,8 +12,12 @@ var DomainHttpErrMap = map[error]int{
 	domain.ErrUnauthorized: http.StatusUnauthorized,
 	domain.ErrBadRequest:   http.StatusBadRequest,
 
-	domain.ErrInvalidToken:       http.StatusUnauthorized,
-	domain.ErrInvalidCredentials: http.StatusUnauthorized,
+	domain.ErrInvalidToken:         http.StatusUnauthorized,
+	domain.ErrInvalidCredentials:   http.StatusUnauthorized,
+	domain.ErrFileTooLarge:         http.StatusRequestEntityTooLarge,
+	domain.ErrMissingBoundary:      http.StatusBadRequest,
+	domain.ErrInvalidMultipartForm: http.StatusBadRequest,
+	domain.ErrInvalidFileType:      http.StatusBadRequest,
 
 	domain.ErrInvalidUserId:        http.StatusBadRequest,
 	domain.ErrUserNotFound:         http.StatusNotFound,

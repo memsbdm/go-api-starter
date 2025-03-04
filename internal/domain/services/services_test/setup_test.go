@@ -28,9 +28,12 @@ type TestBuilder struct {
 	ErrTrackerAdapter ports.ErrTrackerAdapter
 	MailerService     ports.MailerService
 	MailerAdapter     ports.MailerAdapter
+	FileUploadAdapter ports.FileUploadAdapter
+	FileUploadService ports.FileUploadService
 }
 
 func NewTestBuilder() *TestBuilder {
+	fileUploadAdapter := mocks.NewFileUploadAdapterMock()
 	mailerAdapter := mocks.NewMailerAdapterMock()
 	errTrackerAdapter := mocks.NewErrTrackerAdapterMock()
 	timeGenerator := timegen.NewTimeGenerator()
@@ -48,6 +51,7 @@ func NewTestBuilder() *TestBuilder {
 		Config:            cfg,
 		ErrTrackerAdapter: errTrackerAdapter,
 		MailerAdapter:     mailerAdapter,
+		FileUploadAdapter: fileUploadAdapter,
 	}
 }
 
@@ -59,10 +63,11 @@ func (tb *TestBuilder) WithTimeGenerator(tg ports.TimeGenerator) *TestBuilder {
 }
 
 func (tb *TestBuilder) Build() *TestBuilder {
+	tb.FileUploadService = services.NewFileUploadService(tb.FileUploadAdapter)
 	tb.MailerService = services.NewMailerService(tb.Config, tb.MailerAdapter)
 	tb.CacheService = services.NewCacheService(tb.CacheRepo)
 	tb.TokenService = services.NewTokenService(tb.Config.Token, tb.TokenProvider, tb.CacheService)
-	tb.UserService = services.NewUserService(tb.Config.Application, tb.UserRepo, tb.CacheService, tb.TokenService, tb.MailerService)
+	tb.UserService = services.NewUserService(tb.Config.Application, tb.UserRepo, tb.CacheService, tb.TokenService, tb.MailerService, tb.FileUploadService)
 	tb.AuthService = services.NewAuthService(tb.Config.Application, tb.UserService, tb.TokenService, tb.MailerService)
 	return tb
 }

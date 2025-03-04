@@ -12,13 +12,15 @@ import (
 
 // UserHandler represents the HTTP handler for user-related requests.
 type UserHandler struct {
-	svc ports.UserService
+	svc        ports.UserService
+	errTracker ports.ErrTrackerAdapter
 }
 
 // NewUserHandler creates and returns a new UserHandler instance.
-func NewUserHandler(svc ports.UserService) *UserHandler {
+func NewUserHandler(svc ports.UserService, errTracker ports.ErrTrackerAdapter) *UserHandler {
 	return &UserHandler{
-		svc: svc,
+		svc:        svc,
+		errTracker: errTracker,
 	}
 }
 
@@ -195,4 +197,56 @@ func (uh *UserHandler) ResendEmailVerification(w http.ResponseWriter, r *http.Re
 	}
 
 	responses.HandleSuccess(w, http.StatusOK, nil)
+}
+
+// UploadAvatar godoc
+//
+//	@Summary		Upload user avatar
+//	@Description	Upload user avatar
+//	@Tags			Users
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			avatar	formData	file		true	"User avatar"
+//	@Success		200	{object}	responses.Response[responses.UploadAvatarResponse]	"Success"
+//	@Failure		400	{object}	responses.ErrorResponse	"Bad request error"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
+//	@Failure		413	{object}	responses.ErrorResponse	"File too large"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
+//	@Router			/v1/users/me/avatar [post]
+//	@Security		BearerAuth
+func (uh *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
+	parser := helpers.NewMultipartFormParser(5<<20, helpers.ImageExtensions)
+	if err := parser.Parse(r); err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	file, header, err := parser.GetFile(r, "avatar", 3<<20)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	defer func() {
+		if err := (*file).Close(); err != nil {
+			uh.errTracker.CaptureException(err)
+		}
+	}()
+
+	ctx := r.Context()
+
+	userID, err := helpers.GetUserIDFromContext(ctx)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	avatarURL, err := uh.svc.UpdateAvatar(ctx, userID, header.Filename, *file)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	response := responses.NewUploadAvatarResponse(avatarURL)
+	responses.HandleSuccess(w, http.StatusOK, response)
 }

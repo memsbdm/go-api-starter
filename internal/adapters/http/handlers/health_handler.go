@@ -17,7 +17,7 @@ func NewHealthHandler() *HealthHandler {
 	return &HealthHandler{}
 }
 
-// Health godoc
+// PostgresHealth godoc
 //
 //	@Summary		Get database health information
 //	@Description	Get database health information

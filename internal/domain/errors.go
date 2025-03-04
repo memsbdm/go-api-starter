@@ -15,7 +15,16 @@ var (
 
 	// ErrMailer represents a mailer error.
 	ErrMailer = errors.New("mailer error")
-
+	// ErrFileUpload represents a file upload error.
+	ErrFileUpload = errors.New("file upload error")
+	// ErrFileTooLarge represents a file too large error.
+	ErrFileTooLarge = errors.New("file too large")
+	// ErrMissingBoundary represents a missing boundary error.
+	ErrMissingBoundary = errors.New("missing boundary")
+	// ErrInvalidMultipartForm represents an invalid multipart form error.
+	ErrInvalidMultipartForm = errors.New("invalid multipart form")
+	// ErrInvalidFileType represents an invalid file type error.
+	ErrInvalidFileType = errors.New("invalid file type")
 	// ErrInvalidToken represents an error for an invalid token.
 	ErrInvalidToken = errors.New("invalid token")
 	// ErrInvalidCredentials represents an error for invalid login credentials.

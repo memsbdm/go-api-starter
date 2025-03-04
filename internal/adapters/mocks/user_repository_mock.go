@@ -145,3 +145,12 @@ func (ur *UserRepository) PrintAllUsers() {
 		fmt.Println(v)
 	}
 }
+
+// UpdateAvatar updates a user avatar.
+func (ur *UserRepository) UpdateAvatar(_ context.Context, userID entities.UserID, avatarURL string) error {
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+
+	ur.db.data[userID].AvatarURL = &avatarURL
+	return nil
+}

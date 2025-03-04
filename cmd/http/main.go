@@ -54,9 +54,9 @@ func run() error {
 
 	timeGenerator := timegen.NewTimeGenerator()
 
-	apiAdapters := adapters.New(extServices.db, timeGenerator, extServices.cache, extServices.errTracker, extServices.mailer)
+	apiAdapters := adapters.New(extServices.db, timeGenerator, extServices.cache, extServices.errTracker, extServices.mailer, extServices.fileUpload)
 	apiServices := services.New(cfg, apiAdapters)
-	apiHandlers := handlers.New(apiServices)
+	apiHandlers := handlers.New(apiServices, apiAdapters.ErrTrackerAdapter)
 
 	// Init and start server
 	srv := http.New(cfg.HTTP, apiHandlers, apiServices.TokenService, apiServices.UserService, extServices.errTracker)

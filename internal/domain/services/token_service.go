@@ -135,7 +135,7 @@ func (ts *TokenService) VerifyOneTimeToken(ctx context.Context, tokenType entiti
 		return entities.NilUserID, domain.ErrInvalidToken
 	}
 
-	return entities.UserID(userID), nil
+	return userID, nil
 }
 
 // ConsumeOneTimeToken consumes a one-time token.

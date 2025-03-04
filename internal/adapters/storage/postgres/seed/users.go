@@ -63,7 +63,9 @@ func SeedUsers(ctx context.Context, db *sql.DB) error {
 	tokenService := services.NewTokenService(cfg.Token, tokenProvider, cacheService)
 	mailerAdapter := mocks.NewMailerAdapterMock()
 	mailerService := services.NewMailerService(cfg, mailerAdapter)
-	userService := services.NewUserService(cfg.Application, userRepo, cacheService, tokenService, mailerService)
+	fileUploadAdapter := mocks.NewFileUploadAdapterMock()
+	fileUploadService := services.NewFileUploadService(fileUploadAdapter)
+	userService := services.NewUserService(cfg.Application, userRepo, cacheService, tokenService, mailerService, fileUploadService)
 
 	// Configure and run user generator
 	slog.Info("Starting user seeding process")
