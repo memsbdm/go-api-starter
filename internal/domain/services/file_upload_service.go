@@ -7,6 +7,7 @@ import (
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
 	"io"
+	"strings"
 )
 
 // FileUploadService is a service that uploads files to a file upload service.
@@ -33,4 +34,16 @@ func (s *FileUploadService) UploadAvatar(ctx context.Context, userID entities.Us
 		return "", domain.ErrFileUpload
 	}
 	return url, nil
+}
+
+// DeleteAvatar deletes a user avatar from the file upload service.
+// Returns an error if the deletion fails.
+func (s *FileUploadService) DeleteAvatar(ctx context.Context, userID entities.UserID, avatarURL string) error {
+	split := strings.Split(avatarURL, ".")
+	key := UserAvatarPath + "/" + userID.String() + "." + split[len(split)-1]
+	err := s.adapter.Delete(ctx, key)
+	if err != nil {
+		return domain.ErrFileUpload
+	}
+	return nil
 }

@@ -44,6 +44,7 @@ const (
 	updatePasswordQuery         = `UPDATE users SET password = $1 WHERE id = $2 `
 	verifyEmailQuery            = `UPDATE users SET is_email_verified = true WHERE id = $1 `
 	updateAvatarQuery           = `UPDATE users SET avatar_url = $1 WHERE id = $2 `
+	deleteAvatarQuery           = `UPDATE users SET avatar_url = NULL WHERE id = $1 `
 )
 
 // GetByID selects a user by their unique identifier from the database.
@@ -267,6 +268,20 @@ func (ur *UserRepository) UpdateAvatar(ctx context.Context, userID entities.User
 	_, err := ur.executor.ExecContext(ctx, updateAvatarQuery, avatarURL, userID.String())
 	if err != nil {
 		err = fmt.Errorf("failed to update user avatar for user %s: %w", userID.String(), err)
+		ur.errTracker.CaptureException(err)
+		return err
+	}
+	return nil
+}
+
+// DeleteAvatar deletes a user avatar.
+func (ur *UserRepository) DeleteAvatar(ctx context.Context, userID entities.UserID) error {
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	_, err := ur.executor.ExecContext(ctx, deleteAvatarQuery, userID.String())
+	if err != nil {
+		err = fmt.Errorf("failed to delete user avatar for user %s: %w", userID.String(), err)
 		ur.errTracker.CaptureException(err)
 		return err
 	}

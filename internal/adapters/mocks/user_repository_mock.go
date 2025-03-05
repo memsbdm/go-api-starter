@@ -135,6 +135,24 @@ func (ur *UserRepository) CheckEmailAvailability(_ context.Context, email string
 	return nil
 }
 
+// UpdateAvatar updates a user avatar.
+func (ur *UserRepository) UpdateAvatar(_ context.Context, userID entities.UserID, avatarURL string) error {
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+
+	ur.db.data[userID].AvatarURL = &avatarURL
+	return nil
+}
+
+// DeleteAvatar deletes a user avatar.
+func (ur *UserRepository) DeleteAvatar(_ context.Context, userID entities.UserID) error {
+	ur.db.mu.Lock()
+	defer ur.db.mu.Unlock()
+
+	ur.db.data[userID].AvatarURL = nil
+	return nil
+}
+
 // PrintAllUsers prints all users in the database.
 // This is only for testing purposes.
 func (ur *UserRepository) PrintAllUsers() {
@@ -144,13 +162,4 @@ func (ur *UserRepository) PrintAllUsers() {
 	for _, v := range ur.db.data {
 		fmt.Println(v)
 	}
-}
-
-// UpdateAvatar updates a user avatar.
-func (ur *UserRepository) UpdateAvatar(_ context.Context, userID entities.UserID, avatarURL string) error {
-	ur.db.mu.Lock()
-	defer ur.db.mu.Unlock()
-
-	ur.db.data[userID].AvatarURL = &avatarURL
-	return nil
 }

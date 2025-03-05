@@ -17,6 +17,7 @@ import (
 
 // S3Adapter is an adapter for the ports.FileUploadAdapter interface.
 type S3Adapter struct {
+	client     *s3.Client
 	uploader   *manager.Uploader
 	errTracker ports.ErrTrackerAdapter
 	cfg        *c.FileUpload
@@ -45,7 +46,7 @@ func NewS3Adapter(fileUploadCfg *c.FileUpload, errTracker ports.ErrTrackerAdapte
 	})
 	uploader := manager.NewUploader(client)
 
-	return &S3Adapter{uploader: uploader, errTracker: errTracker, cfg: fileUploadCfg}, nil
+	return &S3Adapter{client: client, uploader: uploader, errTracker: errTracker, cfg: fileUploadCfg}, nil
 }
 
 // Upload uploads a file to the S3 bucket.
@@ -63,4 +64,19 @@ func (s *S3Adapter) Upload(ctx context.Context, key string, body io.Reader) (str
 	}
 
 	return result.Location, nil
+}
+
+// Delete deletes a file from the S3 bucket.
+// Returns an error if the deletion fails.
+func (s *S3Adapter) Delete(ctx context.Context, key string) error {
+	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(s.cfg.Bucket),
+		Key:    aws.String(key),
+	})
+
+	if err != nil {
+		s.errTracker.CaptureException(err)
+		return err
+	}
+	return nil
 }

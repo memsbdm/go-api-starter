@@ -250,3 +250,32 @@ func (uh *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	response := responses.NewUploadAvatarResponse(avatarURL)
 	responses.HandleSuccess(w, http.StatusOK, response)
 }
+
+// DeleteAvatar godoc
+//
+//	@Summary		Delete user avatar
+//	@Description	Delete user avatar
+//	@Tags			Users
+//	@Produce		json
+//	@Success		200	{object}	responses.EmptyResponse	"Success"
+//	@Failure		401	{object}	responses.ErrorResponse	"Unauthorized error"
+//	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
+//	@Router			/v1/users/me/avatar [delete]
+//	@Security		BearerAuth
+func (uh *UserHandler) DeleteAvatar(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	userID, err := helpers.GetUserIDFromContext(ctx)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	err = uh.svc.DeleteAvatar(ctx, userID)
+	if err != nil {
+		responses.HandleError(w, err)
+		return
+	}
+
+	responses.HandleSuccess(w, http.StatusOK, nil)
+}

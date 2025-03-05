@@ -39,6 +39,10 @@ type UserService interface {
 	// UpdateAvatar updates a user avatar.
 	// Returns an error if the update fails.
 	UpdateAvatar(ctx context.Context, userID entities.UserID, filename string, file io.Reader) (string, error)
+
+	// DeleteAvatar deletes a user avatar.
+	// Returns an error if the deletion fails.
+	DeleteAvatar(ctx context.Context, userID entities.UserID) error
 }
 
 // UserRepository is an interface for interacting with user-related data.
@@ -74,4 +78,8 @@ type UserRepository interface {
 	// UpdateAvatar updates a user avatar.
 	// Returns an error if the update fails.
 	UpdateAvatar(ctx context.Context, userID entities.UserID, avatarURL string) error
+
+	// DeleteAvatar deletes a user avatar.
+	// Returns an error if the deletion fails.
+	DeleteAvatar(ctx context.Context, userID entities.UserID) error
 }

@@ -17,3 +17,8 @@ func NewFileUploadAdapterMock() *FileUploadAdapterMock {
 func (f *FileUploadAdapterMock) Upload(_ context.Context, key string, _ io.Reader) (string, error) {
 	return "https://example.com/" + key, nil
 }
+
+// Delete deletes a file from the file upload service.
+func (f *FileUploadAdapterMock) Delete(_ context.Context, key string) error {
+	return nil
+}

@@ -236,6 +236,36 @@ func (us *UserService) UpdateAvatar(ctx context.Context, userID entities.UserID,
 	return avatarURL, nil
 }
 
+// DeleteAvatar deletes a user avatar.
+// Returns an error if the deletion fails.
+func (us *UserService) DeleteAvatar(ctx context.Context, userID entities.UserID) error {
+	user, err := us.GetByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if user.AvatarURL == nil {
+		return nil
+	}
+
+	err = us.fileUploadSvc.DeleteAvatar(ctx, userID, *user.AvatarURL)
+	if err != nil {
+		return err
+	}
+
+	err = us.repo.DeleteAvatar(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	user.AvatarURL = nil
+	err = us.cacheUser(ctx, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // validateUsername checks if the provided username meets the required criteria.
 // Returns an error if any validation fails.
 func validateUsername(username string) error {

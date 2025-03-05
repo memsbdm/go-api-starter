@@ -557,3 +557,50 @@ func TestUserService_UpdateAvatar_Is_Caching_User(t *testing.T) {
 		})
 	}
 }
+
+func TestUserService_DeleteAvatar_Is_Caching_User(t *testing.T) {
+	t.Parallel()
+
+	// Arrange
+	ctx := context.Background()
+	builder := NewTestBuilder().Build()
+	user, err := builder.UserService.Register(ctx, newValidUserToCreate())
+	if err != nil {
+		t.Fatalf("error while registering user: %v", err)
+	}
+
+	tests := map[string]struct {
+		expectedErr error
+	}{
+		"delete avatar successfully": {
+			expectedErr: nil,
+		},
+	}
+
+	// Act & Assert
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			err := builder.UserService.DeleteAvatar(ctx, user.ID)
+			if !errors.Is(err, tt.expectedErr) {
+				t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+			}
+
+			cachedUser, err := builder.CacheService.Get(ctx, utils.GenerateCacheKey(services.UserCachePrefix, user.ID))
+			if err != nil {
+				t.Errorf("error while getting user from cache: %v", err)
+			}
+
+			var deserializedUser entities.User
+			err = utils.Deserialize(cachedUser, &deserializedUser)
+			if err != nil {
+				t.Fatalf("error while deserializing user: %v", err)
+			}
+
+			if deserializedUser.AvatarURL != nil {
+				t.Errorf("expected avatar URL to be empty, got %s", *deserializedUser.AvatarURL)
+			}
+		})
+	}
+}

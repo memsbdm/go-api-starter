@@ -511,6 +511,28 @@ paths:
       tags:
       - Users
   /v1/users/me/avatar:
+    delete:
+      description: Delete user avatar
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.EmptyResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/go-starter_internal_adapters_http_responses.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete user avatar
+      tags:
+      - Users
     post:
       consumes:
       - multipart/form-data
