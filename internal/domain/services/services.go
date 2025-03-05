@@ -22,8 +22,8 @@ func New(cfg *config.Container, a *adapters.Adapters) *Services {
 	cacheSvc := NewCacheService(a.CacheRepository)
 	tokenSvc := NewTokenService(cfg.Token, a.TokenRepository, cacheSvc)
 	mailerSvc := NewMailerService(cfg, a.MailerAdapter)
-	userSvc := NewUserService(cfg.Application, a.UserRepository, cacheSvc, tokenSvc, mailerSvc, fileUploadSvc)
-	authSvc := NewAuthService(cfg.Application, userSvc, tokenSvc, mailerSvc)
+	userSvc := NewUserService(cfg, a.UserRepository, cacheSvc, tokenSvc, mailerSvc, fileUploadSvc)
+	authSvc := NewAuthService(cfg, userSvc, tokenSvc, mailerSvc)
 	return &Services{
 		CacheService:      cacheSvc,
 		UserService:       userSvc,

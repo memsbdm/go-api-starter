@@ -26,18 +26,18 @@ type UserService struct {
 	tokenSvc      ports.TokenService
 	mailerSvc     ports.MailerService
 	fileUploadSvc ports.FileUploadService
-	appCfg        *config.App
+	cfg           *config.Container
 }
 
 // NewUserService creates a new instance of UserService.
-func NewUserService(appCfg *config.App, repo ports.UserRepository, cacheSvc ports.CacheService, tokenSvc ports.TokenService, mailerSvc ports.MailerService, fileUploadSvc ports.FileUploadService) *UserService {
+func NewUserService(cfg *config.Container, repo ports.UserRepository, cacheSvc ports.CacheService, tokenSvc ports.TokenService, mailerSvc ports.MailerService, fileUploadSvc ports.FileUploadService) *UserService {
 	return &UserService{
 		repo:          repo,
 		cacheSvc:      cacheSvc,
 		tokenSvc:      tokenSvc,
 		mailerSvc:     mailerSvc,
 		fileUploadSvc: fileUploadSvc,
-		appCfg:        appCfg,
+		cfg:           cfg,
 	}
 }
 
@@ -176,7 +176,7 @@ func (us *UserService) ResendEmailVerification(ctx context.Context, userID entit
 	err = us.mailerSvc.Send(&ports.EmailMessage{
 		To:      []string{user.Email},
 		Subject: "Verify your email!",
-		Body:    mailtemplates.VerifyEmail(us.appCfg.BaseURL, token),
+		Body:    mailtemplates.VerifyEmail(us.cfg.Application.BaseURL, token, us.cfg.Token.EmailVerificationTokenDuration),
 	})
 	if err != nil {
 		return err

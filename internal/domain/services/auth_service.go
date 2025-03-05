@@ -13,7 +13,7 @@ import (
 
 // AuthService implements ports.AuthService interface.
 type AuthService struct {
-	appCfg    *config.App
+	cfg       *config.Container
 	userSvc   ports.UserService
 	tokenSvc  ports.TokenService
 	mailerSvc ports.MailerService
@@ -21,14 +21,14 @@ type AuthService struct {
 
 // NewAuthService creates a new instance of AuthService.
 func NewAuthService(
-	appCfg *config.App,
+	cfg *config.Container,
 	userSvc ports.UserService,
 	tokenSvc ports.TokenService,
 	mailerSvc ports.MailerService,
 ) *AuthService {
 
 	return &AuthService{
-		appCfg:    appCfg,
+		cfg:       cfg,
 		userSvc:   userSvc,
 		tokenSvc:  tokenSvc,
 		mailerSvc: mailerSvc,
@@ -77,7 +77,7 @@ func (as *AuthService) Register(ctx context.Context, user *entities.User) (*enti
 	err = as.mailerSvc.Send(&ports.EmailMessage{
 		To:      []string{createdUser.Email},
 		Subject: "Verify your email!",
-		Body:    mailtemplates.VerifyEmail(as.appCfg.BaseURL, token),
+		Body:    mailtemplates.VerifyEmail(as.cfg.Application.BaseURL, token, as.cfg.Token.EmailVerificationTokenDuration),
 	})
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (as *AuthService) SendPasswordResetEmail(ctx context.Context, email string)
 	err = as.mailerSvc.Send(&ports.EmailMessage{
 		To:      []string{email},
 		Subject: "Reset your password!",
-		Body:    mailtemplates.ResetPassword(as.appCfg.BaseURL, token),
+		Body:    mailtemplates.ResetPassword(as.cfg.Application.BaseURL, token, as.cfg.Token.PasswordResetTokenDuration),
 	})
 	if err != nil {
 		return err
