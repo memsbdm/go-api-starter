@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// Validation constants
 const (
 	NameMaxLength     = 50
 	UsernameMinLength = 4
@@ -13,10 +14,8 @@ const (
 	EmailMaxLength    = 254
 )
 
-// Returned validation errors
+// Required validation errors
 var (
-	// Required
-
 	// ErrUsernameRequired represents an error when the username is required but not provided.
 	ErrUsernameRequired = errors.New("username is required")
 	// ErrPasswordRequired represents an error when the password is required but not provided.
@@ -27,9 +26,10 @@ var (
 	ErrNameRequired = errors.New("name is required")
 	// ErrEmailRequired represents an error when email is required but not provided.
 	ErrEmailRequired = errors.New("email is required")
+)
 
-	// Other validation errors
-
+// Other validation errors
+var (
 	// ErrPasswordsNotMatch represents an error when the provided passwords do not match.
 	ErrPasswordsNotMatch = errors.New("passwords does not match")
 	// ErrPasswordTooShort represents an error when the password is too short, less than the minimum required length.

@@ -7,18 +7,23 @@ import (
 
 // DomainHttpErrMap maps domain-specific error types to their corresponding HTTP status codes.
 var DomainHttpErrMap = map[error]int{
+	// Generic errors
 	domain.ErrInternal:     http.StatusInternalServerError,
 	domain.ErrForbidden:    http.StatusForbidden,
 	domain.ErrUnauthorized: http.StatusUnauthorized,
 	domain.ErrBadRequest:   http.StatusBadRequest,
 
-	domain.ErrInvalidToken:         http.StatusUnauthorized,
-	domain.ErrInvalidCredentials:   http.StatusUnauthorized,
+	// Auth errors
+	domain.ErrInvalidToken:       http.StatusUnauthorized,
+	domain.ErrInvalidCredentials: http.StatusUnauthorized,
+
+	// File upload errors
 	domain.ErrFileTooLarge:         http.StatusRequestEntityTooLarge,
 	domain.ErrMissingBoundary:      http.StatusBadRequest,
 	domain.ErrInvalidMultipartForm: http.StatusBadRequest,
 	domain.ErrInvalidFileType:      http.StatusBadRequest,
 
+	// User errors
 	domain.ErrInvalidUserId:        http.StatusBadRequest,
 	domain.ErrUserNotFound:         http.StatusNotFound,
 	domain.ErrUsernameConflict:     http.StatusConflict,

@@ -3,6 +3,8 @@ package domain
 import "errors"
 
 // Errors returned in responses.
+
+// Generic errors.
 var (
 	// ErrInternal represents an internal error.
 	ErrInternal = errors.New("internal error")
@@ -12,9 +14,16 @@ var (
 	ErrUnauthorized = errors.New("unauthorized")
 	// ErrBadRequest represents a bad request error.
 	ErrBadRequest = errors.New("bad request")
+)
 
+// Mailer errors.
+var (
 	// ErrMailer represents a mailer error.
 	ErrMailer = errors.New("mailer error")
+)
+
+// File upload errors.
+var (
 	// ErrFileUpload represents a file upload error.
 	ErrFileUpload = errors.New("file upload error")
 	// ErrFileTooLarge represents a file too large error.
@@ -25,11 +34,18 @@ var (
 	ErrInvalidMultipartForm = errors.New("invalid multipart form")
 	// ErrInvalidFileType represents an invalid file type error.
 	ErrInvalidFileType = errors.New("invalid file type")
+)
+
+// Auth errors.
+var (
 	// ErrInvalidToken represents an error for an invalid token.
 	ErrInvalidToken = errors.New("invalid token")
 	// ErrInvalidCredentials represents an error for invalid login credentials.
 	ErrInvalidCredentials = errors.New("invalid credentials")
+)
 
+// User errors.
+var (
 	// ErrInvalidUserId represents an error for an invalid user ID format.
 	ErrInvalidUserId = errors.New("invalid user id")
 	// ErrUserNotFound represents an error when a user is not found.
