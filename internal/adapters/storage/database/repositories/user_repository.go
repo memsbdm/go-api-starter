@@ -36,11 +36,11 @@ func NewUserRepositoryWithExecutor(executor QueryExecutor, errTracker ports.ErrT
 
 // UserRepository queries
 const (
-	getByIDQuery                = `SELECT id, created_at, updated_at, name, username, email, is_email_verified, role_id, avatar_url FROM users WHERE id = $1`
+	getByIDQuery                = `SELECT created_at, updated_at, name, username, email, is_email_verified, role_id, avatar_url FROM users WHERE id = $1`
 	getByUsernameQuery          = `SELECT id, created_at, updated_at, name, username, password, email, is_email_verified, role_id, avatar_url FROM users WHERE username = $1`
 	getIDByVerifiedEmailQuery   = `SELECT id FROM users WHERE email = $1 AND is_email_verified = true`
 	checkEmailAvailabilityQuery = `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 AND is_email_verified = true)`
-	createUserQuery             = `INSERT INTO users (name, username, password, email) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at, name, username, email, is_email_verified, role_id, avatar_url`
+	createUserQuery             = `INSERT INTO users (name, username, password, email) VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at, is_email_verified, role_id, avatar_url`
 	updatePasswordQuery         = `UPDATE users SET password = $1 WHERE id = $2 `
 	verifyEmailQuery            = `UPDATE users SET is_email_verified = true WHERE id = $1 `
 	updateAvatarQuery           = `UPDATE users SET avatar_url = $1 WHERE id = $2 `
@@ -52,11 +52,9 @@ const (
 func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
-	var (
-		uuidStr string
-		user    entities.User
-	)
-	err := ur.executor.QueryRowContext(ctx, getByIDQuery, id.String()).Scan(&uuidStr, &user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Email, &user.IsEmailVerified, &user.RoleID, &user.AvatarURL)
+	user := &entities.User{}
+
+	err := ur.executor.QueryRowContext(ctx, getByIDQuery, id.String()).Scan(&user.CreatedAt, &user.UpdatedAt, &user.Name, &user.Username, &user.Email, &user.IsEmailVerified, &user.RoleID, &user.AvatarURL)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -67,16 +65,9 @@ func (ur *UserRepository) GetByID(ctx context.Context, id entities.UserID) (*ent
 			return nil, err
 		}
 	}
+	user.ID = id
 
-	userID, err := entities.ParseUserID(uuidStr)
-	if err != nil {
-		err = fmt.Errorf("failed to parse user id %s: %w", uuidStr, err)
-		ur.errTracker.CaptureException(err)
-		return nil, err
-	}
-	user.ID = userID
-
-	return &user, nil
+	return user, nil
 }
 
 // GetByUsername selects a user by their username from the database.
@@ -163,8 +154,7 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 	defer cancel()
 
 	var (
-		uuidStr     string
-		createdUser = *user
+		uuidStr string
 	)
 
 	err := ur.executor.QueryRowContext(
@@ -176,14 +166,11 @@ func (ur *UserRepository) Create(ctx context.Context, user *entities.User) (*ent
 		user.Email,
 	).Scan(
 		&uuidStr,
-		&createdUser.CreatedAt,
-		&createdUser.UpdatedAt,
-		&createdUser.Name,
-		&createdUser.Username,
-		&createdUser.Email,
-		&createdUser.IsEmailVerified,
-		&createdUser.RoleID,
-		&createdUser.AvatarURL,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.IsEmailVerified,
+		&user.RoleID,
+		&user.AvatarURL,
 	)
 
 	if err != nil {
