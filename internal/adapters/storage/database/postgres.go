@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"fmt"
 	"go-starter/config"
 	"go-starter/internal/domain/ports"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/pressly/goose/v3"
 )
 
 var (
@@ -31,6 +33,29 @@ func New(ctx context.Context, dbCfg *config.DB, errTracker ports.ErrTrackerAdapt
 
 	dbInstance = db
 	return dbInstance, nil
+}
+
+// TODO
+func MigrateFS(db *sql.DB, migrationsFS embed.FS, dir string) error {
+	goose.SetBaseFS(migrationsFS)
+	defer goose.SetBaseFS(nil)
+
+	return Migrate(db, dir)
+}
+
+// TODO
+func Migrate(db *sql.DB, dir string) error {
+	err := goose.SetDialect("postgres")
+	if err != nil {
+		return fmt.Errorf("failed to set dialect: %w", err)
+	}
+
+	err = goose.Up(db, dir)
+	if err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
+
+	return nil
 }
 
 // createConnection establishes a new database connection with the given configuration.

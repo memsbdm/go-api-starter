@@ -7,6 +7,7 @@ import (
 	"go-starter/internal/adapters/mailer"
 	"go-starter/internal/adapters/storage/cache"
 	"go-starter/internal/adapters/storage/database"
+	"go-starter/internal/adapters/storage/database/migrations"
 	"go-starter/internal/adapters/storage/database/repositories"
 	"go-starter/internal/adapters/storage/fileupload"
 	"go-starter/internal/adapters/timegen"
@@ -29,7 +30,7 @@ type Adapters struct {
 // New creates and initializes a new Adapters instance with the provided dependencies.
 func New(ctx context.Context, cfg *config.Container, errTracker ports.ErrTrackerAdapter) *Adapters {
 	timeGenerator := timegen.NewTimeGenerator()
-	db := initializeDatabase(ctx, cfg.DB, errTracker)
+	db := initializeDatabaseAndMigrate(ctx, cfg.DB, errTracker)
 
 	return &Adapters{
 		TimeGenerator:     timeGenerator,
@@ -44,12 +45,19 @@ func New(ctx context.Context, cfg *config.Container, errTracker ports.ErrTracker
 }
 
 // TODO
-func initializeDatabase(ctx context.Context, dbCfg *config.DB, errTracker ports.ErrTrackerAdapter) *sql.DB {
+func initializeDatabaseAndMigrate(ctx context.Context, dbCfg *config.DB, errTracker ports.ErrTrackerAdapter) *sql.DB {
 	db, err := database.New(ctx, dbCfg, errTracker)
 	if err != nil {
 		errTracker.CaptureException(err)
 		panic(err)
 	}
+
+	err = database.MigrateFS(db, migrations.FS, ".")
+	if err != nil {
+		errTracker.CaptureException(err)
+		panic(err)
+	}
+
 	return db
 }
 
