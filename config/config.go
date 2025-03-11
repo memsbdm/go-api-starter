@@ -82,7 +82,7 @@ type (
 	}
 )
 
-// New creates a new container instance.
+// New creates a new Container instance.
 func New() *Container {
 	app := &App{
 		Env:     env.GetString("ENVIRONMENT"),
@@ -151,7 +151,7 @@ func New() *Container {
 	return c
 }
 
-// validate validates the container.
+// validate validates the environment variables.
 func (c *Container) validate() error {
 	// Application
 	if c.Application.Env != EnvDevelopment && c.Application.Env != EnvProduction && c.Application.Env != EnvStaging {

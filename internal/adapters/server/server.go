@@ -35,6 +35,6 @@ func New(
 
 // Serve starts the HTTP server and listens for incoming requests.
 func (s *Server) Serve() error {
-	slog.Info("Starting HTTP server")
+	slog.Info("starting HTTP server")
 	return s.ListenAndServe()
 }

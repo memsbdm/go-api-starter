@@ -38,7 +38,7 @@ func run() error {
 	cfg := config.New()
 	logger.New(cfg.Application)
 
-	slog.Info("Starting the application")
+	slog.Info("starting the application")
 
 	ctx := context.Background()
 	app, cleanup := app.New(ctx, cfg)
@@ -58,7 +58,7 @@ func run() error {
 	}
 	app.ErrTracker.Flush(2 * time.Second)
 	<-done
-	slog.Info("Graceful shutdown complete.")
+	slog.Info("graceful shutdown complete")
 	return err
 }
 
@@ -83,7 +83,7 @@ func gracefulShutdown(server *server.Server, done chan bool, errTrackerAdapter p
 		slog.Error(err.Error())
 	}
 
-	slog.Info("Server exiting")
+	slog.Info("server exiting")
 
 	// Notify the main goroutine that the shutdown is complete
 	done <- true

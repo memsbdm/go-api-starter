@@ -35,7 +35,7 @@ func New(ctx context.Context, dbCfg *config.DB, errTracker ports.ErrTrackerAdapt
 	return dbInstance, nil
 }
 
-// TODO
+// MigrateFS migrates the database using the migrations from the given embed.FS.
 func MigrateFS(db *sql.DB, migrationsFS embed.FS, dir string) error {
 	goose.SetBaseFS(migrationsFS)
 	defer goose.SetBaseFS(nil)
@@ -43,7 +43,7 @@ func MigrateFS(db *sql.DB, migrationsFS embed.FS, dir string) error {
 	return Migrate(db, dir)
 }
 
-// TODO
+// Migrate migrates the database using the migrations from the given directory.
 func Migrate(db *sql.DB, dir string) error {
 	err := goose.SetDialect("postgres")
 	if err != nil {

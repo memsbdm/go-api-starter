@@ -11,13 +11,14 @@ import (
 	"log/slog"
 )
 
-// TODO
+// Application is the main application struct.
 type Application struct {
 	ErrTracker ports.ErrTrackerAdapter
 	Handlers   *handlers.Handlers
 	Services   *services.Services
 }
 
+// New creates a new Application instance.
 func New(ctx context.Context, cfg *config.Container) (*Application, func()) {
 	errTracker := errtracker.New(cfg)
 
@@ -36,12 +37,17 @@ func New(ctx context.Context, cfg *config.Container) (*Application, func()) {
 	return app, cleanup
 }
 
-// TODO
+// createCleanupFunction creates a cleanup function for the application.
 func createCleanupFunction(apiAdapters *adapters.Adapters) func() {
 	return func() {
 		slog.Info("cleaning app")
-		apiAdapters.DB.Close()
-		apiAdapters.CacheRepository.Close()
-		// err
+		err := apiAdapters.DB.Close()
+		if err != nil {
+			slog.Error("failed to close database", "error", err)
+		}
+		err = apiAdapters.CacheRepository.Close()
+		if err != nil {
+			slog.Error("failed to close cache repository", "error", err)
+		}
 	}
 }

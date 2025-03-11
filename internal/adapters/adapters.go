@@ -44,7 +44,6 @@ func New(ctx context.Context, cfg *config.Container, errTracker ports.ErrTracker
 	}
 }
 
-// TODO
 func initializeDatabaseAndMigrate(ctx context.Context, dbCfg *config.DB, errTracker ports.ErrTrackerAdapter) *sql.DB {
 	db, err := database.New(ctx, dbCfg, errTracker)
 	if err != nil {
