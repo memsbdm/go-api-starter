@@ -3,8 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"go-starter/internal/adapters/http/responses"
-	_ "go-starter/internal/adapters/http/responses"
-	"go-starter/internal/adapters/storage/postgres"
+	"go-starter/internal/adapters/storage/database"
 	"go-starter/internal/domain"
 	"net/http"
 )
@@ -28,7 +27,7 @@ func NewHealthHandler() *HealthHandler {
 //	@Failure		500	{object}	responses.ErrorResponse	"Internal server error"
 //	@Router			/v1/health/postgres [get]
 func (hh *HealthHandler) PostgresHealth(w http.ResponseWriter, _ *http.Request) {
-	resp, err := json.Marshal(postgres.Health())
+	resp, err := json.Marshal(database.Health())
 	if err != nil {
 		responses.HandleError(w, domain.ErrInternal)
 		return

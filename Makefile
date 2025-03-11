@@ -22,13 +22,13 @@ migration:
 		exit 1; \
 	fi
 	@echo "Creating migration..."
-	@cd internal/adapters/storage/postgres/migrations && goose create $(TABLE_NAME) sql
+	@cd internal/adapters/storage/database/migrations && goose create $(TABLE_NAME) sql
 
 migration-down:
-	@cd internal/adapters/storage/postgres/migrations && goose postgres "$(DB_ADDR)" down
+	@cd internal/adapters/storage/database/migrations && goose postgres "$(DB_ADDR)" down
 
 migration-up:
-	@cd internal/adapters/storage/postgres/migrations && goose postgres "$(DB_ADDR)" up
+	@cd internal/adapters/storage/database/migrations && goose postgres "$(DB_ADDR)" up
 
 test:
 	@echo "Testing..."

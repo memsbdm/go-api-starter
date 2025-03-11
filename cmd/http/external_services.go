@@ -8,8 +8,8 @@ import (
 	"go-starter/internal/adapters/errtracker"
 	"go-starter/internal/adapters/mailer"
 	"go-starter/internal/adapters/storage/cache"
+	"go-starter/internal/adapters/storage/database"
 	"go-starter/internal/adapters/storage/fileupload"
-	"go-starter/internal/adapters/storage/postgres"
 	"go-starter/internal/domain/ports"
 	"log/slog"
 )
@@ -77,7 +77,7 @@ func initializeErrTracker(cfg *config.Container) ports.ErrTrackerAdapter {
 }
 
 func initializeDatabase(ctx context.Context, cfg *config.Container, errTracker ports.ErrTrackerAdapter) (*sql.DB, error) {
-	db, err := postgres.New(ctx, cfg.DB, errTracker)
+	db, err := database.New(ctx, cfg.DB, errTracker)
 	if err != nil {
 		return nil, err
 	}

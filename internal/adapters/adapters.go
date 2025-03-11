@@ -2,7 +2,7 @@ package adapters
 
 import (
 	"database/sql"
-	"go-starter/internal/adapters/storage/postgres/repositories"
+	"go-starter/internal/adapters/storage/database/repositories"
 	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/ports"
 )
