@@ -5,7 +5,7 @@ import (
 	"go-starter/config"
 	"go-starter/internal/adapters"
 	"go-starter/internal/adapters/errtracker"
-	"go-starter/internal/adapters/http/handlers"
+	"go-starter/internal/adapters/server/handlers"
 	"go-starter/internal/domain/ports"
 	"go-starter/internal/domain/services"
 	"log/slog"

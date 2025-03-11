@@ -3,7 +3,7 @@ package responses
 import (
 	"encoding/json"
 	"errors"
-	"go-starter/internal/adapters/http/apierrors"
+	"go-starter/internal/adapters/server/apierrors"
 	"go-starter/internal/adapters/validator"
 	"net/http"
 )

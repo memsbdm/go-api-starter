@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"go-starter/internal/adapters/http/responses"
+	"go-starter/internal/adapters/server/responses"
 	"go-starter/internal/domain/mailtemplates"
 	"go-starter/internal/domain/ports"
 	"net/http"

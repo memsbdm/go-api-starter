@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"go-starter/config"
-	httpx "go-starter/internal/adapters/http"
 	"go-starter/internal/adapters/logger"
+	"go-starter/internal/adapters/server"
 	"go-starter/internal/app"
 	"go-starter/internal/domain/ports"
 	"log/slog"
@@ -44,7 +44,8 @@ func run() error {
 	app, cleanup := app.New(ctx, cfg)
 	defer cleanup()
 
-	srv := httpx.New(cfg.HTTP, app.Handlers, app.Services.TokenService, app.Services.UserService, app.ErrTracker)
+	handler := server.SetupRoutes(app.Handlers, app.Services, app.ErrTracker)
+	srv := server.New(cfg.HTTP, handler)
 
 	done := make(chan bool)
 	go gracefulShutdown(srv, done, app.ErrTracker)
@@ -62,7 +63,7 @@ func run() error {
 }
 
 // gracefulShutdown manages the graceful shutdown process of the HTTP server.
-func gracefulShutdown(server *httpx.Server, done chan bool, errTrackerAdapter ports.ErrTrackerAdapter) {
+func gracefulShutdown(server *server.Server, done chan bool, errTrackerAdapter ports.ErrTrackerAdapter) {
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()

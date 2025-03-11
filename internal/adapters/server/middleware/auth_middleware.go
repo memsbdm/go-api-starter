@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"context"
-	"go-starter/internal/adapters/http/helpers"
-	"go-starter/internal/adapters/http/responses"
+	"go-starter/internal/adapters/server/helpers"
+	"go-starter/internal/adapters/server/responses"
 	"go-starter/internal/domain/ports"
 	"net/http"
 )

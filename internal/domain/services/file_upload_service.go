@@ -2,7 +2,7 @@ package services
 
 import (
 	"context"
-	"go-starter/internal/adapters/http/helpers"
+	"go-starter/internal/adapters/server/helpers"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/ports"
