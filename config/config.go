@@ -91,30 +91,30 @@ func New() *Container {
 
 	db := &DB{
 		Addr:         env.GetString("DB_ADDR"),
-		MaxOpenConns: env.GetOptionalInt("DB_MAX_OPEN_CONNS"),
-		MaxIdleConns: env.GetOptionalInt("DB_MAX_IDLE_CONNS"),
-		MaxIdleTime:  env.GetOptionalDuration("DB_MAX_IDLE_TIME"),
+		MaxOpenConns: env.GetOptionalInt("DB_MAX_OPEN_CONNS", 30),
+		MaxIdleConns: env.GetOptionalInt("DB_MAX_IDLE_CONNS", 30),
+		MaxIdleTime:  env.GetOptionalDuration("DB_MAX_IDLE_TIME", 15*time.Minute),
 	}
 
 	http := &HTTP{
-		Port: env.GetOptionalInt("HTTP_PORT"),
+		Port: env.GetOptionalInt("HTTP_PORT", 8080),
 	}
 
 	redis := &Redis{
 		Addr:     env.GetString("REDIS_ADDR"),
-		Password: env.GetOptionalString("REDIS_PASSWORD"),
-		DB:       env.GetOptionalInt("REDIS_DB"),
+		Password: env.GetOptionalString("REDIS_PASSWORD", ""),
+		DB:       env.GetOptionalInt("REDIS_DB", 0),
 	}
 
 	token := &Token{
-		AccessTokenDuration:            env.GetOptionalDuration("ACCESS_TOKEN_DURATION"),
-		EmailVerificationTokenDuration: env.GetOptionalDuration("EMAIL_VERIFICATION_TOKEN_DURATION"),
-		PasswordResetTokenDuration:     env.GetOptionalDuration("PASSWORD_RESET_TOKEN_DURATION"),
+		AccessTokenDuration:            env.GetOptionalDuration("ACCESS_TOKEN_DURATION", 15*time.Minute),
+		EmailVerificationTokenDuration: env.GetOptionalDuration("EMAIL_VERIFICATION_TOKEN_DURATION", 24*time.Hour),
+		PasswordResetTokenDuration:     env.GetOptionalDuration("PASSWORD_RESET_TOKEN_DURATION", 15*time.Minute),
 	}
 
 	errTracker := &ErrTracker{
-		DSN:              env.GetOptionalString("SENTRY_DSN"),
-		TracesSampleRate: env.GetOptionalFloat64("SENTRY_TRACES_SAMPLE_RATE"),
+		DSN:              env.GetOptionalString("SENTRY_DSN", ""),
+		TracesSampleRate: env.GetOptionalFloat64("SENTRY_TRACES_SAMPLE_RATE", 1.0),
 	}
 
 	mailer := &Mailer{
@@ -143,53 +143,12 @@ func New() *Container {
 		FileUpload:  fileUpload,
 	}
 
-	c.setDefaultValues()
 	err := c.validate()
 	if err != nil {
 		panic(err)
 	}
 
 	return c
-}
-
-// setDefaultValues sets the default values for the container if they are not set.
-func (c *Container) setDefaultValues() {
-	// DB
-	if c.DB.MaxOpenConns == 0 {
-		c.DB.MaxOpenConns = 30
-	}
-	if c.DB.MaxIdleConns == 0 {
-		c.DB.MaxIdleConns = 30
-	}
-	if c.DB.MaxIdleTime == 0 {
-		c.DB.MaxIdleTime = 15 * time.Minute
-	}
-
-	// HTTP
-	if c.HTTP.Port == 0 {
-		c.HTTP.Port = 8080
-	}
-
-	// Redis
-	if c.Redis.DB == 0 {
-		c.Redis.DB = 0
-	}
-
-	// Token
-	if c.Token.AccessTokenDuration == 0 {
-		c.Token.AccessTokenDuration = 15 * time.Minute
-	}
-	if c.Token.EmailVerificationTokenDuration == 0 {
-		c.Token.EmailVerificationTokenDuration = 24 * time.Hour
-	}
-	if c.Token.PasswordResetTokenDuration == 0 {
-		c.Token.PasswordResetTokenDuration = 15 * time.Minute
-	}
-
-	// ErrTracker
-	if c.ErrTracker.TracesSampleRate == 0 {
-		c.ErrTracker.TracesSampleRate = 1.0
-	}
 }
 
 // validate validates the container.

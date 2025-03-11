@@ -21,8 +21,12 @@ func GetString(key string) string {
 
 // GetOptionalString retrieves the value associated with the specified key from the .env file.
 // If the key is not set, it returns an empty string.
-func GetOptionalString(key string) string {
-	return os.Getenv(key)
+func GetOptionalString(key string, defaultVal string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultVal
+	}
+	return val
 }
 
 // GetInt retrieves the value associated with the specified key from the .env file,
@@ -38,14 +42,14 @@ func GetInt(key string) int {
 
 // GetOptionalInt retrieves the value associated with the specified key from the .env file,
 // converting it to an integer. If the key is not set or the value cannot be parsed to an integer, it returns 0.
-func GetOptionalInt(key string) int {
-	val := GetOptionalString(key)
+func GetOptionalInt(key string, defaultVal int) int {
+	val := GetOptionalString(key, "")
 	if val == "" {
-		return 0
+		return defaultVal
 	}
 	i, err := strconv.Atoi(val)
 	if err != nil {
-		return 0
+		return defaultVal
 	}
 	return i
 }
@@ -63,14 +67,14 @@ func GetDuration(key string) time.Duration {
 
 // GetOptionalDuration retrieves the value associated with the specified key from the .env file,
 // converting it to a time.Duration. If the key is not set or the value cannot be parsed to a duration, it returns 0.
-func GetOptionalDuration(key string) time.Duration {
-	val := GetOptionalString(key)
+func GetOptionalDuration(key string, defaultVal time.Duration) time.Duration {
+	val := GetOptionalString(key, "")
 	if val == "" {
-		return 0
+		return defaultVal
 	}
 	d, err := time.ParseDuration(val)
 	if err != nil {
-		return 0
+		return defaultVal
 	}
 	return d
 }
@@ -88,14 +92,14 @@ func GetFloat64(key string) float64 {
 
 // GetOptionalFloat64 retrieves the value associated with the specified key from the .env file,
 // converting it to a float64. If the key is not set or the value cannot be parsed to a float64, it returns 0.
-func GetOptionalFloat64(key string) float64 {
-	val := GetOptionalString(key)
+func GetOptionalFloat64(key string, defaultVal float64) float64 {
+	val := GetOptionalString(key, "")
 	if val == "" {
-		return 0
+		return defaultVal
 	}
 	f, err := strconv.ParseFloat(val, 64)
 	if err != nil {
-		return 0
+		return defaultVal
 	}
 	return f
 }
