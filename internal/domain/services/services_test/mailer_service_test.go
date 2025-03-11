@@ -31,7 +31,7 @@ func TestMailerService_Send_Debug(t *testing.T) {
 				Subject: "Test",
 				Body:    "Test",
 			},
-			expectedErr:       domain.ErrMailer,
+			expectedErr:       domain.ErrInternal,
 			expectedSentCount: 0,
 		},
 		"send an email": {
@@ -107,7 +107,7 @@ func TestMailerService_Send_Production(t *testing.T) {
 				Subject: "Test",
 				Body:    "Test",
 			},
-			expectedErr:       domain.ErrMailer,
+			expectedErr:       domain.ErrInternal,
 			expectedSentCount: 0,
 		},
 		"send an email": {

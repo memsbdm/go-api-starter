@@ -16,12 +16,6 @@ var (
 	ErrBadRequest = errors.New("bad request")
 )
 
-// Mailer errors.
-var (
-	// ErrMailer represents a mailer error.
-	ErrMailer = errors.New("mailer error")
-)
-
 // File upload errors.
 var (
 	// ErrFileUpload represents a file upload error.

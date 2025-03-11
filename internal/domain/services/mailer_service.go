@@ -26,10 +26,10 @@ func NewMailerService(
 
 // Send sends an email message through the repository.
 // In non-production environments, it modifies the message for debugging purposes.
-// Returns domain.ErrMailer if sending fails or if no recipients are specified.
+// Returns domain.ErrInternal if sending fails or if no recipients are specified.
 func (m *MailerService) Send(msg *ports.EmailMessage) error {
 	if len(msg.To) == 0 {
-		return domain.ErrMailer
+		return domain.ErrInternal
 	}
 
 	if m.cfg.Application.Env != config.EnvProduction {
@@ -38,7 +38,7 @@ func (m *MailerService) Send(msg *ports.EmailMessage) error {
 
 	err := m.adapter.Send(*msg)
 	if err != nil {
-		return domain.ErrMailer
+		return domain.ErrInternal
 	}
 
 	return nil
