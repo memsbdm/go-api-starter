@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go-starter/internal/adapters/mocks"
+	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/domain"
 	"reflect"
 	"testing"
@@ -56,7 +56,7 @@ func TestCacheService_Get(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
+			timeGenerator := timegen.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 			if tt.initCache != nil {
 				tt.initCache(builder)

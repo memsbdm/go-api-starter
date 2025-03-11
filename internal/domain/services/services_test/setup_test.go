@@ -4,7 +4,11 @@ package services_test
 
 import (
 	"go-starter/config"
-	"go-starter/internal/adapters/mocks"
+	"go-starter/internal/adapters/errtracker"
+	"go-starter/internal/adapters/mailer"
+	"go-starter/internal/adapters/storage/cache"
+	"go-starter/internal/adapters/storage/fileupload"
+	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/adapters/token"
 	"go-starter/internal/domain/ports"
@@ -33,13 +37,13 @@ type TestBuilder struct {
 }
 
 func NewTestBuilder() *TestBuilder {
-	fileUploadAdapter := mocks.NewFileUploadAdapterMock()
-	mailerAdapter := mocks.NewMailerAdapterMock()
-	errTrackerAdapter := mocks.NewErrTrackerAdapterMock()
+	fileUploadAdapter := fileupload.NewFileUploadAdapterMock()
+	mailerAdapter := mailer.NewMailerAdapterMock()
+	errTrackerAdapter := errtracker.NewErrTrackerAdapterMock()
 	timeGenerator := timegen.NewTimeGenerator()
-	cacheRepo := mocks.NewCacheRepositoryMock(timeGenerator)
+	cacheRepo := cache.NewCacheRepositoryMock(timeGenerator)
 	tokenProvider := token.NewTokenProvider(timeGenerator, errTrackerAdapter)
-	userRepo := mocks.NewUserRepositoryMock()
+	userRepo := repositories.NewUserRepositoryMock()
 
 	cfg := setConfig()
 
@@ -57,7 +61,7 @@ func NewTestBuilder() *TestBuilder {
 
 func (tb *TestBuilder) WithTimeGenerator(tg ports.TimeGenerator) *TestBuilder {
 	tb.TimeGenerator = tg
-	tb.CacheRepo = mocks.NewCacheRepositoryMock(tg)
+	tb.CacheRepo = cache.NewCacheRepositoryMock(tg)
 	tb.TokenProvider = token.NewTokenProvider(tg, tb.ErrTrackerAdapter)
 	return tb
 }

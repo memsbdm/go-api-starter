@@ -1,4 +1,4 @@
-package mocks
+package fileupload
 
 import (
 	"context"

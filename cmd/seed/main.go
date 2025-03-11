@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-starter/config"
-	"go-starter/internal/adapters/mocks"
+	"go-starter/internal/adapters/errtracker"
 	"go-starter/internal/adapters/storage/postgres"
 	"go-starter/internal/adapters/storage/postgres/seed"
 	"log/slog"
@@ -42,7 +42,7 @@ func run() error {
 }
 
 func initDatabase(ctx context.Context, cfg *config.Container) (*sql.DB, error) {
-	errTracker := mocks.NewErrTrackerAdapterMock()
+	errTracker := errtracker.NewErrTrackerAdapterMock()
 	db, err := postgres.New(ctx, cfg.DB, errTracker)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to database: %w", err)

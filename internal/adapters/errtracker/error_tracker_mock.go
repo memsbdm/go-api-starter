@@ -1,4 +1,4 @@
-package mocks
+package errtracker
 
 import (
 	"go-starter/internal/domain/ports"

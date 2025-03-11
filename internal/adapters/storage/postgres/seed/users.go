@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"go-starter/config"
-	"go-starter/internal/adapters/mocks"
+	"go-starter/internal/adapters/errtracker"
+	"go-starter/internal/adapters/mailer"
+	"go-starter/internal/adapters/storage/cache"
+	"go-starter/internal/adapters/storage/fileupload"
 	"go-starter/internal/adapters/storage/postgres/repositories"
 	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/adapters/token"
@@ -55,15 +58,15 @@ func SeedUsers(ctx context.Context, db *sql.DB) error {
 		},
 	}
 	// Initialize dependencies
-	errTrackerAdapter := mocks.NewErrTrackerAdapterMock()
+	errTrackerAdapter := errtracker.NewErrTrackerAdapterMock()
 	userRepo := repositories.NewUserRepository(db, errTrackerAdapter)
 	timeGenerator := timegen.NewTimeGenerator()
-	cacheService := mocks.NewCacheRepositoryMock(timeGenerator)
+	cacheService := cache.NewCacheRepositoryMock(timeGenerator)
 	tokenProvider := token.NewTokenProvider(timeGenerator, errTrackerAdapter)
 	tokenService := services.NewTokenService(cfg.Token, tokenProvider, cacheService)
-	mailerAdapter := mocks.NewMailerAdapterMock()
+	mailerAdapter := mailer.NewMailerAdapterMock()
 	mailerService := services.NewMailerService(cfg, mailerAdapter)
-	fileUploadAdapter := mocks.NewFileUploadAdapterMock()
+	fileUploadAdapter := fileupload.NewFileUploadAdapterMock()
 	fileUploadService := services.NewFileUploadService(fileUploadAdapter)
 	userService := services.NewUserService(cfg, userRepo, cacheService, tokenService, mailerService, fileUploadService)
 

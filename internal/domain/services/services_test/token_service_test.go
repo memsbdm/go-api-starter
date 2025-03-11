@@ -5,7 +5,7 @@ package services_test
 import (
 	"context"
 	"errors"
-	"go-starter/internal/adapters/mocks"
+	"go-starter/internal/adapters/timegen"
 	"go-starter/internal/domain"
 	"go-starter/internal/domain/entities"
 	"go-starter/internal/domain/utils"
@@ -57,7 +57,7 @@ func TestTokenService_VerifyAuthToken(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
+			timeGenerator := timegen.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 
 			user := &entities.User{
@@ -180,7 +180,7 @@ func TestTokenService_GenerateOneTimeToken(t *testing.T) {
 			t.Parallel()
 
 			// Arrange
-			timeGenerator := mocks.NewTimeGeneratorMock(time.Now())
+			timeGenerator := timegen.NewTimeGeneratorMock(time.Now())
 			builder := NewTestBuilder().WithTimeGenerator(timeGenerator).Build()
 
 			user := &entities.User{

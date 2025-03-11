@@ -7,10 +7,9 @@ import (
 	"go-starter/config"
 	"go-starter/internal/adapters/errtracker"
 	"go-starter/internal/adapters/mailer"
-	"go-starter/internal/adapters/mocks"
+	"go-starter/internal/adapters/storage/cache"
 	"go-starter/internal/adapters/storage/fileupload"
 	"go-starter/internal/adapters/storage/postgres"
-	"go-starter/internal/adapters/storage/redis"
 	"go-starter/internal/domain/ports"
 	"log/slog"
 )
@@ -70,7 +69,7 @@ func initializeExternalServices(ctx context.Context, cfg *config.Container) (*ex
 
 func initializeErrTracker(cfg *config.Container) ports.ErrTrackerAdapter {
 	var errTracker ports.ErrTrackerAdapter
-	errTracker = mocks.NewErrTrackerAdapterMock()
+	errTracker = errtracker.NewErrTrackerAdapterMock()
 	if cfg.Application.Env != config.EnvDevelopment {
 		errTracker = errtracker.NewSentryAdapter(cfg)
 	}
@@ -87,7 +86,7 @@ func initializeDatabase(ctx context.Context, cfg *config.Container, errTracker p
 }
 
 func initializeCache(ctx context.Context, cfg *config.Container, errTracker ports.ErrTrackerAdapter) (ports.CacheRepository, error) {
-	cache, err := redis.New(ctx, cfg.Redis, errTracker)
+	cache, err := cache.New(ctx, cfg.Redis, errTracker)
 	if err != nil {
 		return nil, err
 	}
