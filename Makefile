@@ -37,9 +37,6 @@ test:
 run:
 	@go run cmd/http/*.go
 
-seed:
-	@go run cmd/seed/main.go
-
 swag:
 	@swag init -g cmd/http/main.go -o ./docs --parseDependency
 
@@ -60,4 +57,4 @@ watch:
 		fi; \
 	fi
 
-.PHONY:  all build clean itest migration-down migration migration-reset migration-up test run seed swag watch
+.PHONY:  all build clean itest migration-down migration migration-reset migration-up test run swag watch
