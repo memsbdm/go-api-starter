@@ -5,15 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"go-starter/config"
-	"go-starter/internal/adapters"
-	"go-starter/internal/adapters/http"
-	"go-starter/internal/adapters/http/handlers"
+	httpx "go-starter/internal/adapters/http"
 	"go-starter/internal/adapters/logger"
-	"go-starter/internal/adapters/timegen"
-	"go-starter/internal/domain/services"
+	"go-starter/internal/app"
+	"go-starter/internal/domain/ports"
 	"log/slog"
-	httpx "net/http"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -26,7 +26,7 @@ import (
 // @name						Authorization
 // @description				Type "Bearer" followed by a space and the access token.
 func main() {
-	if err := run(); err != nil && !errors.Is(err, httpx.ErrServerClosed) {
+	if err := run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
@@ -36,42 +36,54 @@ func main() {
 func run() error {
 	// Load environment variables
 	cfg := config.New()
-
-	// Set logger
 	logger.New(cfg.Application)
 
 	slog.Info("Starting the application")
 
-	// Init database
 	ctx := context.Background()
-	extServices, cleanup, err := initializeExternalServices(ctx, cfg)
-	if err != nil {
-		return fmt.Errorf("failed to initialize external services: %w", err)
-	}
+	app, cleanup := app.New(ctx, cfg)
 	defer cleanup()
 
-	// Dependency injection
-
-	timeGenerator := timegen.NewTimeGenerator()
-
-	apiAdapters := adapters.New(extServices.db, timeGenerator, extServices.cache, extServices.errTracker, extServices.mailer, extServices.fileUpload)
-	apiServices := services.New(cfg, apiAdapters)
-	apiHandlers := handlers.New(apiServices, apiAdapters.ErrTrackerAdapter)
-
-	// Init and start server
-	srv := http.New(cfg.HTTP, apiHandlers, apiServices.TokenService, apiServices.UserService, extServices.errTracker)
+	srv := httpx.New(cfg.HTTP, app.Handlers, app.Services.TokenService, app.Services.UserService, app.ErrTracker)
 
 	done := make(chan bool)
-	go gracefulShutdown(srv, done, extServices.errTracker)
+	go gracefulShutdown(srv, done, app.ErrTracker)
 
-	err = srv.Serve()
-	if err != nil && !errors.Is(err, httpx.ErrServerClosed) {
+	err := srv.Serve()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		err = fmt.Errorf("http server error: %s", err)
-		extServices.errTracker.CaptureException(err)
+		app.ErrTracker.CaptureException(err)
 		return err
 	}
-	extServices.errTracker.Flush(2 * time.Second)
+	app.ErrTracker.Flush(2 * time.Second)
 	<-done
 	slog.Info("Graceful shutdown complete.")
 	return err
+}
+
+// gracefulShutdown manages the graceful shutdown process of the HTTP server.
+func gracefulShutdown(server *httpx.Server, done chan bool, errTrackerAdapter ports.ErrTrackerAdapter) {
+	// Create context that listens for the interrupt signal from the OS.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	// Listen for the interrupt signal.
+	<-ctx.Done()
+
+	slog.Info("shutting down gracefully, press Ctrl+C again to force")
+
+	// The context is used to inform the server it has 5 seconds to finish
+	// the request it is currently handling
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		err = fmt.Errorf("server forced to shutdown with error: %v", err)
+		errTrackerAdapter.CaptureException(err)
+		slog.Error(err.Error())
+	}
+
+	slog.Info("Server exiting")
+
+	// Notify the main goroutine that the shutdown is complete
+	done <- true
 }

@@ -18,8 +18,8 @@ type SentryAdapter struct {
 	cfg *config.Container
 }
 
-// NewSentryAdapter creates a new instance of SentryAdapter.
-func NewSentryAdapter(cfg *config.Container) *SentryAdapter {
+// New creates a new instance of SentryAdapter.
+func New(cfg *config.Container) *SentryAdapter {
 	if err := sentry.Init(sentry.ClientOptions{
 		Dsn:              cfg.ErrTracker.DSN,
 		TracesSampleRate: cfg.ErrTracker.TracesSampleRate,
