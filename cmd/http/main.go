@@ -44,7 +44,7 @@ func run() error {
 	app, cleanup := app.New(ctx, cfg)
 	defer cleanup()
 
-	handler := server.SetupRoutes(app.Handlers, app.Services, app.ErrTracker)
+	handler := server.SetupRoutes(app.Handlers, app.Services, app.Adapters)
 	srv := server.New(cfg.HTTP, handler)
 
 	done := make(chan bool)

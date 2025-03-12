@@ -16,6 +16,7 @@ type Application struct {
 	ErrTracker ports.ErrTrackerAdapter
 	Handlers   *handlers.Handlers
 	Services   *services.Services
+	Adapters   *adapters.Adapters
 }
 
 // New creates a new Application instance.
@@ -32,6 +33,7 @@ func New(ctx context.Context, cfg *config.Container) (*Application, func()) {
 		ErrTracker: errTracker,
 		Handlers:   apiHandlers,
 		Services:   apiServices,
+		Adapters:   apiAdapters,
 	}
 
 	return app, cleanup

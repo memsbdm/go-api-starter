@@ -99,3 +99,9 @@ func (cm *CacheRepositoryMock) PrintAllCache() {
 	}
 	fmt.Println("Finished printing all cache")
 }
+
+// Eval executes a Lua script on the cache server.
+// Returns the result of the script and an error if the operation fails (e.g., if there are issues executing the script).
+func (cm *CacheRepositoryMock) Eval(_ context.Context, _ string, _ []string, _ ...interface{}) (interface{}, error) {
+	return nil, nil
+}

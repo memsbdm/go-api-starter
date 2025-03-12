@@ -51,4 +51,8 @@ type CacheRepository interface {
 	// Close closes the connection to the cache server, ensuring that all resources are freed.
 	// Returns an error if the operation fails (e.g., if there are issues closing the connection).
 	Close() error
+
+	// Eval executes a Lua script on the cache server.
+	// Returns the result of the script and an error if the operation fails (e.g., if there are issues executing the script).
+	Eval(ctx context.Context, script string, keys []string, args ...interface{}) (interface{}, error)
 }

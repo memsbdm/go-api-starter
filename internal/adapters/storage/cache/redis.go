@@ -114,3 +114,14 @@ func (r *Redis) Close() error {
 	}
 	return nil
 }
+
+// Eval executes a Lua script in Redis.
+// The script is executed atomically and can access keys and arguments passed to it.
+func (r *Redis) Eval(ctx context.Context, script string, keys []string, args ...interface{}) (interface{}, error) {
+	result, err := r.client.Eval(ctx, script, keys, args...).Result()
+	if err != nil {
+		r.errTracker.CaptureException(fmt.Errorf("failed to execute Lua script in redis: %w", err))
+		return nil, err
+	}
+	return result, nil
+}
